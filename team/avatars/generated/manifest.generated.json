@@ -1,0 +1,58 @@
+{
+  "images": [
+    {
+      "id": "water-dragon",
+      "display_name": "Water Dragon",
+      "runtime_slot": "coder2",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic natural portrait of a friendly Water Dragon, elegant freshwater dragon with translucent blue and jade scales, gentle intelligent eyes, subtle smile in the face, posed beside a calm waterfall with silver mist and smooth river stone, cinematic wildlife photography, crisp realistic texture, polished scales, soft morning light, centered portrait, premium fantasy realism, inviting and beautiful, not scary.",
+      "seed": 4101,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/water-dragon.png"
+    },
+    {
+      "id": "sea-dragon",
+      "display_name": "Sea Dragon",
+      "runtime_slot": "musician",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic natural portrait of a friendly Sea Dragon, graceful ocean dragon with teal, pearl, and deep blue scales, kind face, refined horns, posed above a calm sea cliff with light sea spray and bright horizon, cinematic realism, luxurious marine texture, believable anatomy, magazine-quality fantasy creature photography, warm welcoming expression, noble and serene, not scary.",
+      "seed": 4102,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/sea-dragon.png"
+    },
+    {
+      "id": "ice-dragon",
+      "display_name": "Ice Dragon",
+      "runtime_slot": "coder1",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic natural portrait of a friendly Ice Dragon, crystalline arctic dragon with pale blue and frosted silver scales, luminous eyes, calm composed expression, surrounded by sculpted ice and clear winter air, sunrise light across snow and glacier, ultra-detailed realistic texture, cinematic portrait framing, majestic and intelligent, beautiful not threatening, not scary.",
+      "seed": 4103,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/ice-dragon.png"
+    },
+    {
+      "id": "snow-dragon",
+      "display_name": "Snow Dragon",
+      "runtime_slot": "artist",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic natural portrait of a friendly Snow Dragon, white dragon with soft snowy texture, feathered accents, pearl highlights, gentle eyes, posed in fresh snowfall with bright diffuse alpine light, comforting and elegant mood, premium fantasy creature photography, realistic fur and scale detail, centered portrait, lovely and approachable, not scary.",
+      "seed": 4104,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/snow-dragon.png"
+    },
+    {
+      "id": "fire-dragon",
+      "display_name": "Fire Dragon",
+      "runtime_slot": "director",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic close portrait of a friendly Fire Dragon, radiant dragon with amber, copper, and crimson scales, soft ember glow between polished plates, seated calmly on warm volcanic stone at golden hour, wings relaxed behind the body, closed mouth, kind intelligent eyes, gentle expression, cinematic wildlife photography, noble and welcoming, beautiful and peaceful, not scary.",
+      "seed": 5105,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/fire-dragon.png"
+    },
+    {
+      "id": "lava-dragon",
+      "display_name": "Lava Dragon",
+      "runtime_slot": "writer",
+      "model": "black-forest-labs/FLUX.1-Krea-dev",
+      "prompt": "Photorealistic close portrait of a friendly Lava Dragon, obsidian and molten bronze dragon with cooled stone texture and subtle lava seams, relaxed posture, closed mouth, warm wise eyes, composed face, posed near a slow glowing lava river at blue hour with soft background bokeh, realistic creature photography, luxurious detail, calm noble beauty, inviting instead of frightening, not scary.",
+      "seed": 5106,
+      "path": "ystack/director/state/previews/dragon-crew/studio-dragon-crew/team/avatars/generated/lava-dragon.png"
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Dragon Crew Preview</title>
+  <style>
+    :root {
+      --bg: #08131b;
+      --panel: rgba(9, 24, 35, 0.8);
+      --line: rgba(151, 195, 220, 0.2);
+      --text: #eef7fb;
+      --muted: #9eb6c3;
+      --accent: #62b6cb;
+      --accent-warm: #ff9f5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(98, 182, 203, 0.18), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(255, 159, 90, 0.16), transparent 30%),
+        linear-gradient(160deg, #071019 0%, #0d1d28 48%, #1d1110 100%);
+      min-height: 100vh;
+    }
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 48px 0 64px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 1;
+      letter-spacing: 0.03em;
+    }
+    .intro {
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .note {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+    }
+    .card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: linear-gradient(135deg, rgba(98, 182, 203, 0.2), rgba(255, 159, 90, 0.14));
+    }
+    .copy {
+      padding: 18px 18px 20px;
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .warm { color: var(--accent-warm); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>The Dragon Crew</h1>
+    <p class="intro">
+      Preview gallery for the six dragon portraits before any Director SQLite inserts, GitHub repo creation,
+      or Discord wiring. The brief is fixed: photorealistic, beautiful, and welcoming, with no horror or villain energy.
+    </p>
+    <div class="note">Expected image output path: <span class="warm">../team/avatars/generated/&lt;dragon&gt;.png</span></div>
+    <section class="grid">
+      <article class="card">
+        <img src="../team/avatars/generated/water-dragon.png" alt="Water Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Freshwater</div>
+          <h2>Water Dragon</h2>
+          <p>Graceful river light, translucent blue-green scales, reflective surfaces, and a calm expression.</p>
+        </div>
+      </article>
+      <article class="card">
+        <img src="../team/avatars/generated/sea-dragon.png" alt="Sea Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Oceanic</div>
+          <h2>Sea Dragon</h2>
+          <p>Pearl and teal tones, coastal air, open horizon, and a wise face with no aggression.</p>
+        </div>
+      </article>
+      <article class="card">
+        <img src="../team/avatars/generated/ice-dragon.png" alt="Ice Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Arctic</div>
+          <h2>Ice Dragon</h2>
+          <p>Crystalline frost detail, polished blue-white scales, winter sunrise, and a precise calm gaze.</p>
+        </div>
+      </article>
+      <article class="card">
+        <img src="../team/avatars/generated/snow-dragon.png" alt="Snow Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Alpine</div>
+          <h2>Snow Dragon</h2>
+          <p>Soft white texture, bright diffuse light, feathery accents, and a notably gentle presence.</p>
+        </div>
+      </article>
+      <article class="card">
+        <img src="../team/avatars/generated/fire-dragon.png" alt="Fire Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Ember</div>
+          <h2>Fire Dragon</h2>
+          <p>Heroic golden-hour warmth, copper and amber scales, and a welcoming face instead of a battle pose.</p>
+        </div>
+      </article>
+      <article class="card">
+        <img src="../team/avatars/generated/lava-dragon.png" alt="Lava Dragon preview">
+        <div class="copy">
+          <div class="eyebrow">Volcanic</div>
+          <h2>Lava Dragon</h2>
+          <p>Obsidian structure, molten seams, blue-hour contrast, and a calm powerful expression.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

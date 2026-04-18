@@ -1,0 +1,81 @@
+{
+  "slug": "dragon-crew",
+  "repo": "studio-dragon-crew",
+  "name": "The Dragon Crew",
+  "brief_synthesizer_slot": "writer",
+  "visibility": "draft",
+  "tagline": "We build Magical Experiences that make people dream of Magical Creatures",
+  "hero_text": "We build Magical Experiences that make people dream of Magical Creatures",
+  "discord_invite": "https://discord.gg/cjTQkFwWxN",
+  "github_org": "ystackai",
+  "links": {
+    "home_url": "/dragon-crew/",
+    "drops_url": "/dragon-crew/drops/",
+    "demos_url": "/dragon-crew/drops/",
+    "blog_url": "/dragon-crew/blog/",
+    "team_url": "/dragon-crew/#team"
+  },
+  "brand": {
+    "accent": "#3f88c5"
+  },
+  "timezone": "America/Chicago",
+  "production_lanes": {
+    "drops": {
+      "min_units_per_week": 3,
+      "max_units_per_week": 7,
+      "timebox_hours": 24
+    },
+    "blog": {
+      "min_units_per_week": 0,
+      "max_units_per_week": 3,
+      "timebox_hours": 24
+    }
+  },
+  "discord": {
+    "guild_id": "1483989123516596225",
+    "custom_channels": [
+      "dragon-crew",
+      "dragon-crew-feedback"
+    ],
+    "channel_map": {
+      "#general": "#dragon-crew",
+      "#engineering": "#dragon-crew",
+      "#feedback": "#dragon-crew-feedback",
+      "#announcements": "#dragon-crew-feedback"
+    }
+  },
+  "crew": {
+    "agents": [
+      {
+        "person_id": "water-dragon",
+        "runtime_id": "coder2",
+        "display_name": "Water Dragon"
+      },
+      {
+        "person_id": "sea-dragon",
+        "runtime_id": "musician",
+        "display_name": "Sea Dragon"
+      },
+      {
+        "person_id": "ice-dragon",
+        "runtime_id": "coder1",
+        "display_name": "Ice Dragon"
+      },
+      {
+        "person_id": "snow-dragon",
+        "runtime_id": "artist",
+        "display_name": "Snow Dragon"
+      },
+      {
+        "person_id": "fire-dragon",
+        "runtime_id": "director",
+        "display_name": "Fire Dragon"
+      },
+      {
+        "person_id": "lava-dragon",
+        "runtime_id": "writer",
+        "display_name": "Lava Dragon"
+      }
+    ]
+  }
+}

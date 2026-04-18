@@ -1,0 +1,121 @@
+name: Sync labels -> project board
+
+on:
+  issues:
+    types: [labeled, unlabeled, opened, closed, reopened]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: studio.json
+          sparse-checkout-cone-mode: false
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: 3167950
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ystackai
+
+      - name: Sync issue to project board
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name);
+            const org = context.repo.owner;
+
+            let studioConfig;
+            try {
+              studioConfig = JSON.parse(fs.readFileSync('studio.json', 'utf8'));
+            } catch (e) {
+              return console.log('No studio.json found, skipping');
+            }
+
+            const projectNumber = studioConfig.github_project_number;
+            if (!projectNumber) return console.log('No github_project_number in studio.json, skipping');
+
+            let status = 'Backlog';
+            if (issue.state === 'closed') status = 'Done';
+            else if (labels.includes('done')) status = 'Done';
+            else if (labels.includes('in-review')) status = 'In Review';
+            else if (labels.includes('in-progress')) status = 'In Progress';
+
+            const project = await github.graphql(`
+              query($org: String!, $num: Int!) {
+                organization(login: $org) {
+                  projectV2(number: $num) {
+                    id
+                    fields(first: 20) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options { id name }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `, { org, num: projectNumber });
+
+            const proj = project.organization.projectV2;
+            if (!proj) return console.log(`Project #${projectNumber} not found`);
+
+            const statusField = proj.fields.nodes.find(f => f.name === 'Status');
+            if (!statusField) return console.log('No Status field');
+
+            const option = statusField.options.find(o => o.name === status);
+            if (!option) return console.log(`No option for "${status}"`);
+
+            const items = await github.graphql(`
+              query($projId: ID!) {
+                node(id: $projId) {
+                  ... on ProjectV2 {
+                    items(first: 100) {
+                      nodes {
+                        id
+                        content { ... on Issue { number } }
+                      }
+                    }
+                  }
+                }
+              }
+            `, { projId: proj.id });
+
+            let itemId;
+            const existing = items.node.items.nodes.find(
+              n => n.content && n.content.number === issue.number
+            );
+
+            if (existing) {
+              itemId = existing.id;
+            } else {
+              const added = await github.graphql(`
+                mutation($projId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: {projectId: $projId, contentId: $contentId}) {
+                    item { id }
+                  }
+                }
+              `, { projId: proj.id, contentId: issue.node_id });
+              itemId = added.addProjectV2ItemById.item.id;
+            }
+
+            await github.graphql(`
+              mutation($projId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $projId, itemId: $itemId,
+                  fieldId: $fieldId,
+                  value: { singleSelectOptionId: $optionId }
+                }) { projectV2Item { id } }
+              }
+            `, { projId: proj.id, itemId, fieldId: statusField.id, optionId: option.id });
+            console.log(`#${issue.number} -> ${status}`);
