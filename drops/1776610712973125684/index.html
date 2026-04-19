@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>The Dragon Crew &mdash; Void Drop</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#080e17}
+canvas{display:block;width:100%;height:100%}
+#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;pointer-events:none}
+#hint{font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;color:rgba(158,203,220,.6);font-size:clamp(.85rem,1.8vw,1.1rem);letter-spacing:.04em;text-align:center;transition:opacity 2s ease}
+#breath-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);width:min(280px,60vw);height:3px;background:rgba(151,195,220,.1);border-radius:2px;z-index:10;pointer-events:none}
+#breath-fill{height:100%;width:0%;background:linear-gradient(90deg,#006b6b,#008B8B,#40e0d0);border-radius:2px;transition:width .15s ease-out}
+#click-start{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080e17;cursor:pointer;transition:opacity 1.2s ease}
+#click-start.hidden{opacity:0;pointer-events:none}
+#click-start .title{font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;color:#9ecbdcc;font-size:clamp(1.4rem,3vw,2rem);letter-spacing:.06em;margin-bottom:8px}
+#click-start .sub{color:rgba(158,203,220,.45);font-size:clamp(.75rem,1.5vw,.95rem);letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div id="overlay"><div id="hint">Hold and move to stabilize the silhouette&hellip;</div></div>
+<div id="breath-bar"><div id="breath-fill"></div></div>
+<div id="click-start">
+    <div class="title">The Void</div>
+    <div class="sub">Click or tap anywhere to begin</div>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}
+</script>
+<script type="module">
+
+import * as THREE from "three";
+import {EffectComposer} from "three/addons/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/addons/postprocessing/RenderPass.js";
+import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass.js";
+
+/* State */
+const GAP = 3.0;
+let stabilization = 0, inputVelocity = 0, gestureActive = false, time = 0, started = false;
+
+/* Renderer / Scene / Camera */
+const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance"});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080e17);
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 1.2, 14);
+camera.lookAt(0, .5, 0);
+
+/* Fog Shader Background */
+const fogVert = `varying vec3 vWP;void main(){vWP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+const fogFrag = `
+uniform float uTime,uStab;
+uniform vec2 uRes;
+varying vec3 vWP;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f*=f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 rot=mat2(cos(.5),sin(.5),-sin(.5),cos(.5));for(int i=0;i<6;i++){v+=a*noise(p);p=rot*p*2.+vec2(100.);a*=.5;}return v;}
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes; float t=uTime*.03;
+  float n1=fbm(uv*3.+vec2(t,t*.7)),n2=fbm(uv*5.-vec2(t*.6,t*.3)+10.),n3=fbm(uv*8.+vec2(sin(t*.4)*.3,cos(t*.3)*.3));
+  float fog=mix(n1,n2,.5)*.6+n3*.25;
+  fog*=smoothstep(0.,1.,uv.y)*.3+.7;
+  fog*=(1.-uStab*.85);
+  vec3 fc=mix(vec3(.02,.04,.08),vec3(.12,.18,.22),fog);
+  float cg=exp(-length(uv-.5)*2.5)*mix(.06,.32,uStab);
+  fc+=vec3(.01,.04,.04)*cg;
+  gl_FragColor=vec4(fc,1.);
+}`;
+
+const fogPlane = new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+  new THREE.ShaderMaterial({vertexShader:fogVert,fragmentShader:fogFrag,
+    uniforms:{uTime:{value:0},uRes:{value:new THREE.Vector2(innerWidth,innerHeight)},uStab:{value:0}},depthWrite:false}));
+fogPlane.renderOrder = -1;
+scene.add(fogPlane);
+
+/* Dragon Geometry */
+function buildDragonGeo(){
+  const g=[];
+  for(let i=0;i<3;i++){
+    let sg=new THREE.SphereGeometry(1-i*.12,8,6);
+    sg.scale(i===0?1.4:1-i*.1,.75-i*.05,.85-i*.06);
+    sg.translate((i-.5)*.6+i*.1,i===0?.3:i===1?1:.3,0);g.push(sg);
+  }
+  let n=new THREE.CylinderGeometry(.22,.38,1.6,8);n.translate(.65,.95,0);n.rotateZ(-.55);g.push(n);
+  let h=new THREE.SphereGeometry(.42,10,8);h.scale(1.5,.85,.9);h.translate(1.12,1.55,0);g.push(h);
+  let s=new THREE.SphereGeometry(.24,8,6);s.scale(1.3,.7,.8);s.translate(1.55,1.52,0);g.push(s);
+  for(let sd of[-1,1]){let hg=new THREE.ConeGeometry(.6,.07,5);hg.translate(.95*sd*.3+.85,1.82,-.15*sd);hg.rotateZ(sd*.4-.2);g.push(hg);}
+  for(let sd of[-1,1]){let eg=new THREE.SphereGeometry(.09,6,4);eg.translate(1.35,1.6,sd*.22);g.push(eg);}
+  for(let sd of[-1,1]){
+    let w=new THREE.PlaneGeometry(4.5,2.8,6,4),p=w.attributes.position;
+    for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i);p.setZ(i,Math.abs(x)*.15+Math.sin(y*.8)*.25);}
+    w.computeVertexNormals();w.translate(.1,1.4,sd*.08);w.rotateZ(sd*-.25);w.rotateY(sd*.45);g.push(w);
+  }
+  for(let sd of[-1,1]){let m=new THREE.PlaneGeometry(3.8,2.2,5,3),p=m.attributes.position;for(let i=0;i<p.count;i++){let x=p.getX(i);p.setZ(i,-.1+Math.sin(x*1.2)*.08);}m.computeVertexNormals();m.translate(.3,1.15,sd*-.12);m.rotateZ(sd*-.2);g.push(m);}
+  for(let i=0;i<6;i++){let t=i/5,r=.28*(1-t*.7),sg=new THREE.SphereGeometry(r,7,5);sg.scale(1.3,.9,.8);sg.translate(-1.1-i*.42,.15-Math.sin(t*Math.PI)*.35,0);g.push(sg);}
+  let tf=new THREE.PlaneGeometry(.7,.45,3,2),tp=tf.attributes.position;for(let i=0;i<tp.count;i++){let x=tp.getX(i),y=tp.getY(i);tp.setZ(i,Math.abs(x)*.3+y*.15);}tf.computeVertexNormals();tf.translate(-3.2,-.45,0);tf.rotateZ(.6);g.push(tf);
+  for(let sd of[-1,1])for(let fw of[-1,1]){let lg=new THREE.CylinderGeometry(.12,.14,.55,6);lg.translate(fw*.45,-.72,sd*.35);lg.rotateZ(fw*-.35+sd*.05);g.push(lg);}
+  for(let i=0;i<5;i++){let bg=new THREE.SphereGeometry(.12,6,4);bg.scale(1.2,.7,.9);bg.translate(-.6+i*.35,-.38,.65);g.push(bg);}
+  for(let i=0;i<4;i++){let c=new THREE.ConeGeometry(.08,.2,4);c.translate(.7+(i+1)/5*.35,1.1+(i+1)/5*.45,0);g.push(c);}
+  return g;
+}
+
+/* Dragon Shaders */
+const dVert=`uniform float uTime,uStab;varying vec3 vN,vVD;float nc(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n2(vec2 p){vec2 i=floor(p),f=fract(p);f*=f*(3.-2.*f);return mix(mix(nc(i),nc(i+vec2(1,0)),f.x),mix(nc(i+vec2(0,1)),nc(i+vec2(1,1)),f.x),f.y);}void main(){vN=normalize(normalMatrix*normal);vec3 pos=position;float drift=n2(position.xy*2.+uTime*.4)*.15+n2(position.yz*3.-uTime*.3)*.1;pos+=normal*drift*(1.-uStab*.7);pos+=normal*sin(uTime*1.2+length(position)*3.)*.025*uStab;vVD=normalize(-((modelViewMatrix*vec4(pos,1.)).xyz));gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);}`;
+
+const dFrag=`uniform float uTime,uStab;varying vec3 vN,vVD;void main(){float rim=pow(1.-max(dot(normalize(vVD),vN),0.),2.5);float pulse=sin(uTime*3.)*.5+.5;vec3 fc=vec3(.14,.18,.26),tc=vec3(0.,.545,.545),ec=vec3(.9,.25,.08);vec3 rc=mix(fc,tc,uStab)+rim*ec*pulse*(.2+uStab*.9);float fa=mix(.35,.95,uStab);vec3 cc=mix(fc,tc,uStab)+tc*pow(max(dot(normalize(vVD),vN),0.),1.5)*uStab*.4;cc=mix(cc,rc,min(rim*1.8,1.)*.7);cc+=ec*pow(rim,4.)*pulse*uStab*.6;float wf=sin(vN.x*80.+uTime)*sin(vN.y*80.+uTime*.7)*.5+.5;cc=mix(cc,cc*1.3,wf*(1.-uStab)*.25);float al=fa*(.4+rim*.6);gl_FragColor=vec4(cc,al);}`;
+
+const eVert=`varying vec3 vN,vVD;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vVD=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`;
+const eFrag=`uniform float uTime,uStab;varying vec3 vN,vVD;void main(){float rim=pow(1.-max(dot(normalize(vVD),vN),0.),1.5);gl_FragColor=vec4(mix(vec3(.4,.5,.55),vec3(1.,.65,.1),uStab*rim)*rim,uStab*rim);}`;
+
+/* Build Dragon */
+const dGroup=new THREE.Group();
+for(const geo of buildDragonGeo()){
+  let wm=new THREE.Mesh(geo,new THREE.ShaderMaterial({vertexShader:dVert,fragmentShader:dFrag,uniforms:{uTime:{value:0},uStab:{value:0}},wireframe:true,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  dGroup.add(wm);
+  let sm=new THREE.Mesh(geo,new THREE.ShaderMaterial({vertexShader:dVert,fragmentShader:dFrag,uniforms:{uTime:{value:0},uStab:{value:0}},transparent:true,depthWrite:true,side:THREE.DoubleSide}));
+  sm.visible=false;dGroup.add(sm);
+}
+for(let s of[-1,1]){let eg=new THREE.SphereGeometry(.06,8,6);eg.translate(1.45,1.58,s*.25);dGroup.add(new THREE.Mesh(eg,new THREE.ShaderMaterial({vertexShader:eVert,fragmentShader:eFrag,uniforms:{uTime:{value:0},uStab:{value:0}},transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})));}
+dGroup.position.set(0,.3,0);dGroup.scale.setScalar(1.05);scene.add(dGroup);
+
+/* Particles */
+const pc=300,parr=new Float32Array(pc*3);for(let i=0;i<pc;i++){parr[i*3]=(Math.random()-.5)*30;parr[i*3+1]=(Math.random()-.5)*16;parr[i*3+2]=(Math.random()-.5)*20-4;}
+const parts=new THREE.Points(new THREE.BufferGeometry().setAttribute("position",new THREE.BufferAttribute(parr,3)),new THREE.PointsMaterial({color:0x6aaac7,size:.06,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}));
+scene.add(parts);
+
+/* Bloom */
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.5,.4,.85);composer.addPass(bloom);
+
+/* Audio */
+let actx=null,refs={};
+function initAudio(){
+  if(actx)return;actx=new(window.AudioContext||window.webkitAudioContext)();
+  const m=actx.createGain();m.gain.value=.3;m.connect(actx.destination);refs.m=m;
+  const wba=actx.createBuffer(1,actx.sampleRate*4,actx.sampleRate),wd=wba.getChannelData(0);for(let i=0;i<wd.length;i++)wd[i]=Math.random()*2-1;
+  let ws=actx.createBufferSource();ws.buffer=wba;ws.loop=true;
+  let wf=actx.createBiquadFilter();wf.type="lowpass";wf.frequency.value=380;
+  let wg=actx.createGain();wg.gain.value=.18;
+  let wl=actx.createOscillator();wl.frequency.value=.14;let wlg=actx.createGain();wlg.gain.value=130;wl.connect(wlg);wlg.connect(wf.frequency);wl.start();
+  ws.connect(wf);wf.connect(wg);wg.connect(m);ws.start();refs.ws=ws;refs.wg=wg;
+  const wvb2=actx.createBuffer(1,actx.sampleRate*4,actx.sampleRate),wvd=wvb2.getChannelData(0);for(let i=0;i<wvd.length;i++){let t=i/actx.sampleRate;wvd[i]=(Math.sin(t*.28)*.5+.5)*(Math.random()*2-1)*.5+Math.sin(t*.65)*.15*(Math.random()*2-1);}
+  let wvs=actx.createBufferSource();wvs.buffer=wvb2;wvs.loop=true;
+  let wvf=actx.createBiquadFilter();wvf.type="lowpass";wvf.frequency.value=160;
+  let wvg=actx.createGain();wvg.gain.value=.1;
+  let wl2=actx.createOscillator();wl2.frequency.value=.07;let wl2g=actx.createGain();wl2g.gain.value=35;wl2.connect(wl2g);wl2g.connect(wvf.frequency);wl2.start();
+  wvs.connect(wvf);wvf.connect(wvg);wvg.connect(m);wvs.start();refs.wvs=wvs;refs.wvg=wvg;
+  const eb=actx.createBuffer(1,actx.sampleRate*4,actx.sampleRate),ed=eb.getChannelData(0);for(let i=0;i<ed.length;i++){if(Math.random()<.002)ed[i]=(Math.random()*2-1)*.7;}
+  let es=actx.createBufferSource();es.buffer=eb;es.loop=true;
+  let ef=actx.createBiquadFilter();ef.type="bandpass";ef.frequency.value=3000;ef.Q.value=2;
+  let eg=actx.createGain();eg.gain.value=0;es.connect(ef);ef.connect(eg);eg.connect(m);es.start();refs.es=es;refs.eg=eg;
+  let ho=actx.createOscillator();ho.type="sine";ho.frequency.value=56;
+  let hf=actx.createBiquadFilter();hf.type="lowpass";hf.frequency.value=100;
+  let hg=actx.createGain();hg.gain.value=0;
+  let hl=actx.createOscillator();hl.frequency.value=.22;let hlg=actx.createGain();hlg.gain.value=12;hl.connect(hlg);hlg.connect(hf.frequency);hl.start();
+  ho.connect(hf);hf.connect(hg);hg.connect(m);ho.start();refs.ho=ho;refs.hg=hg;
+}
+
+/* Input */
+let mx=0,my=0,pmx=0,pmy=0;
+function onPM(x,y){pmx=mx;pmy=my;mx=(x/innerWidth)*2-1;my=-(y/innerHeight)*2+1;inputVelocity=Math.sqrt((mx-pmx)**2+(my-pmy)**2);gestureActive=true;}
+window.addEventListener("mousemove",e=>{if(started)onPM(e.clientX,e.clientY);});
+window.addEventListener("touchmove",e=>{if(!started)return;e.preventDefault();const t=e.touches[0];onPM(t.clientX,t.clientY);},{passive:false});
+window.addEventListener("mouseleave",()=>{gestureActive=false;inputVelocity=0;});
+window.addEventListener("touchend",()=>{gestureActive=false;inputVelocity=0;});
+
+/* Start */
+const startBtn=document.getElementById("click-start");
+startBtn.addEventListener("click",startExp);startBtn.addEventListener("touchstart",startExp,{passive:true});
+function startExp(){if(started)return;started=true;startBtn.classList.add("hidden");initAudio();setTimeout(()=>{document.getElementById("hint").style.opacity="0";},5e3);}
+
+/* Resize */
+window.addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);fogPlane.material.uniforms.uRes.value.set(innerWidth,innerHeight);});
+
+/* Animation */
+const clock=new THREE.Clock(),bfill=document.getElementById("breath-fill");
+(function animate(){
+  requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);time+=dt;
+  if(gestureActive&&started)stabilization+=inputVelocity*GAP*1.8;else stabilization*=Math.pow(.97,dt*60);
+  stabilization=Math.max(0,Math.min(1,stabilization));bfill.style.width=(stabilization*100)+"%";
+  inputVelocity*=Math.pow(.85,dt*60);const da=1-stabilization;
+  dGroup.position.y=.3+Math.sin(time*.5)*da*.8;dGroup.rotation.z=Math.sin(time*.7)*da*.06;dGroup.rotation.x=Math.sin(time*.35)*da*.04;
+  const tx=mx*da*1.5,ty=my*da*.8;camera.position.x+=(tx-camera.position.x)*dt*2;camera.position.y+=(1.2+ty-camera.position.y)*dt*2;camera.lookAt(0,.3,0);
+  dGroup.traverse(c=>{if(c.material&&c.material.uniforms){c.material.uniforms.uTime.value=time;c.material.uniforms.uStab.value=stabilization;}});
+  fogPlane.material.uniforms.uTime.value=time;fogPlane.material.uniforms.uStab.value=stabilization;
+  parts.material.opacity=.35*(1-stabilization*.7);const ppa=parts.geometry.attributes.position;for(let i=0;i<ppa.count;i++){let px=ppa.getX(i),py=ppa.getY(i);px+=dt*Math.sin(time+py)*.15;py+=dt*.08*(1-stabilization);if(py>8)py=-8;ppa.setY(i,py);}ppa.needsUpdate=true;
+  if(refs.wg&&refs.m){refs.wg.gain.linearRampToValueAtTime(.18*(1-stabilization*.5),actx.currentTime+.1);refs.eg.gain.linearRampToValueAtTime(stabilization*.25,actx.currentTime+.1);refs.hg.gain.linearRampToValueAtTime(stabilization*.2,actx.currentTime+.1);}
+  bloom.strength=THREE.MathUtils.lerp(bloom.strength,.4+stabilization*1.8,dt*3);bloom.threshold=THREE.MathUtils.lerp(bloom.threshold,.85-stabilization*.35,dt*3);renderer.toneMappingExposure=THREE.MathUtils.lerp(renderer.toneMappingExposure,1.+stabilization*.6,dt*2);
+  composer.render();
+})();
+
+console.log("%c The Void — Grounding Mechanism ","background:#080e17;color:#008B8B;font-size:14px;padding:6px 12px;border-radius:4px");
+</script>
+</body>
+</html>
