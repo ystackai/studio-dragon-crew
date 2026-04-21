@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Project Aurora — First Spark</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0c12}
+canvas{display:block;width:100%;height:100%}
+#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;pointer-events:none}
+#hint{font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;color:rgba(160,175,200,.45);font-size:clamp(.8rem,1.6vw,1rem);letter-spacing:.05em;text-align:center;transition:opacity 1.5s ease}
+#start-screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0c12;cursor:pointer;transition:opacity .8s ease}
+#start-screen.hidden{opacity:0;pointer-events:none}
+#start-screen .title{font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;color:#c9b99a;font-size:clamp(1.3rem,2.8vw,1.9rem);letter-spacing:.07em;margin-bottom:6px}
+#start-screen .sub{color:rgba(160,175,200,.4);font-size:clamp(.7rem,1.4vw,.88rem);letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div id="overlay"><div id="hint">Tap the shard to ignite the spark…</div></div>
+<div id="start-screen">
+  <div class="title">Project Aurora</div>
+  <div class="sub">Click or tap anywhere to begin</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/","tone":"https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"}}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import {EffectComposer} from "three/addons/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/addons/postprocessing/RenderPass.js";
+import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass.js";
+
+/* ─── State ─────────────────────────────────────────────── */
+const IGNITION_DURATION = 800; // ms – bloom window
+let started = false, ignitionTriggered = false, ignitionTime = 0;
+let isTouching = false, touchStartTime = 0;
+const clock = new THREE.Clock();
+
+/* ─── Renderer / Scene / Camera ─────────────────────────── */
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-performance"});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0c12);
+scene.fog = new THREE.FogExp2(0x0a0c12, 0.12);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 0.5, 4.5);
+camera.lookAt(0, 0, 0);
+
+/* ─── Bloom Post-Processing ─────────────────────────────── */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(innerWidth, innerHeight), 0.0, 0.4, 0.85
+);
+composer.addPass(bloomPass);
+
+/* ─── Shard Shader Material ────────────────────────────── */
+const shardVertShader = `
+  uniform float uIgnition;
+  uniform float uTime;
+
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying vec2 vUv;
+  varying float vDisplacement;
+
+  // simplex-ish noise
+  vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 perm(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+  float noise(vec3 p){
+    vec3 a=floor(p),d=p-a; d=d*d*(3.0-2.0*d);
+    vec4 b=a.xxyy+vec4(0,1,0,1),
+         k1=perm(b.xyxy),
+         k2=perm(k1.xyxy+b.zzww);
+    vec4 c=k2+a.zzzz,
+         k3=perm(c),k4=perm(c+1.0),
+         o1=fract(k3*(1.0/41.0)),
+         o2=fract(k4*(1.0/41.0));
+    vec4 o3=o2*d.z+o1*(1.0-d.z);
+    vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
+    return o4.y*d.y+o4.x*(1.0-d.y);
+  }
+
+  void main(){
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+
+    // crack line: dark seam through center
+    float dist = length(position.xz);
+    float crack1 = abs(sin(position.y * 3.5 + position.x * 2.0));
+    float crack2 = abs(sin(position.y * 5.0 - position.z * 3.0 + 1.2));
+    float crack3 = abs(cos(position.y * 7.0 + position.x * position.z * 2.0 + 0.8));
+    float fissure = min(crack1, min(crack2, crack3));
+    float isFissure = smoothstep(0.0, 0.12, fissure);
+
+    // rough displacement (idle) fading to smooth (ignited)
+    float n = noise(position * 4.0) * 0.15;
+    float displaceRough = n * (1.0 - isFissure * 0.5);
+    float displaceSmooth = n * 0.03;
+    float displacement = mix(displaceRough, displaceSmooth, uIgnition);
+
+    // glow along fissure during ignition
+    vec3 pos = position + normal * displacement;
+    vDisplacement = displacement;
+    vWorldPos = (modelMatrix * vec4(pos,1.0)).xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+const shardFragShader = `
+  uniform float uIgnition;
+  uniform float uTime;
+
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying vec2 vUv;
+  varying float vDisplacement;
+
+  vec3 lerpColor(vec3 a, vec3 b, float t){
+    return mix(a, b, clamp(t,0.0,1.0));
+  }
+
+  void main(){
+    // Base idle color: dark slate-grey, desaturated
+    vec3 idleColor = vec3(0.18, 0.20, 0.24);
+
+    // Ignited magma colors
+    vec3 deepLava = vec3(0.85, 0.25, 0.03);
+    vec3 hotLava  = vec3(1.0,  0.65, 0.08);
+    vec3 goldCore = vec3(1.0,  0.92, 0.45);
+
+    // Rough-to-smooth color transition via specular
+    float spec = pow(max(dot(normalize(vNormal), normalize(vec3(1.0,1.0,1.0))), 0.0), 64.0);
+
+    // Fissure glow emerges at ignition
+    float distFromCenter = length(vUv - 0.5);
+    float fissureGlow = smoothstep(0.45, 0.0, distFromCenter) * uIgnition;
+
+    // Magma color bleeding in from inside
+    float magmaBlend = uIgnition * (0.6 + spec * 0.4);
+    vec3 igniteColor = lerpColor(deepLava, hotLava, sin(uTime * 1.5) * 0.3 + 0.5);
+    igniteColor = mix(igniteColor, goldCore, fissureGlow * 0.6);
+
+    vec3 finalColor = mix(idleColor, igniteColor, magmaBlend);
+
+    // Fresnel rim glow during ignition
+    vec3 viewDir = normalize(cameraPosition - vWorldPos);
+    float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
+    finalColor += vec3(0.95, 0.55, 0.1) * fresnel * uIgnition * 0.6;
+
+    // Fissure crack glow (bright gold inside cracks when ignited)
+    float dist = length(vWorldPos.xz);
+    float crack1 = abs(sin(vWorldPos.y * 3.5 + vWorldPos.x * 2.0));
+    float crack2 = abs(sin(vWorldPos.y * 5.0 - vWorldPos.z * 3.0 + 1.2));
+    float crack3 = abs(cos(vWorldPos.y * 7.0 + vWorldPos.x * vWorldPos.z * 2.0 + 0.8));
+    float fissure = min(crack1, min(crack2, crack3));
+    float isFissure = smoothstep(0.0, 0.12, fissure);
+    finalColor += vec3(1.0, 0.75, 0.2) * isFissure * uIgnition * 1.8;
+
+    // Subtle pulsing glow at lock state
+    float pulse = sin(uTime * 2.0) * 0.5 + 0.5;
+    finalColor += vec3(1.0, 0.6, 0.1) * pulse * uIgnition * 0.08 * fresnel;
+
+    // Tone mapping friendly – add slight emissive lift
+    finalColor *= 1.0 + uIgnition * 0.4;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+/* ─── Shard Geometry (procedural crystal) ──────────────── */
+function createShardGeometry(){
+  const geo = new THREE.ConeGeometry(0.7, 2.2, 8, 24);
+  // Taper top more sharply for crystal look
+  const pos = geo.attributes.position;
+  for(let i=0; i<pos.count; i++){
+    const y = pos.getY(i);
+    const taper = y > 0 ? Math.pow(0.15, y/2.2) : 1.0;
+    const x = pos.getX(i) * taper;
+    const z = pos.getZ(i) * taper;
+    // Random-ish perturbation for natural crystal look
+    const ang = Math.atan2(z, x) + (Math.random()-0.5)*0.3;
+    const r = Math.sqrt(x*x + z*z) * (0.85 + Math.random()*0.15);
+    pos.setXYZ(i, Math.cos(ang)*r, y, Math.sin(ang)*r);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const shardMat = new THREE.ShaderMaterial({
+  vertexShader: shardVertShader,
+  fragmentShader: shardFragShader,
+  uniforms: {
+    uIgnition: {value: 0.0},
+    uTime:     {value: 0.0},
+  }
+});
+
+const shardGeo = createShardGeometry();
+const shard = new THREE.Mesh(shardGeo, shardMat);
+shard.rotation.z = Math.PI * 0.08; // slight tilt for dynamic look
+scene.add(shard);
+
+// subtle ambient point light (very dim – only lit by shader)
+const ambLight = new THREE.AmbientLight(0x1a2030, 0.4);
+scene.add(ambLight);
+
+/* ─── Particle System (Spark) ──────────────────────────── */
+const MAX_PARTICLES = 180;
+const sparkPositions = new Float32Array(MAX_PARTICLES * 3);
+const sparkVelocities = [];
+const sparkLifetimes = new Float32Array(MAX_PARTICLES);
+const sparkSizes = new Float32Array(MAX_PARTICLES);
+const sparkAlphas = new Float32Array(MAX_PARTICLES);
+
+// Initialize all particles as dead
+for(let i=0; i<MAX_PARTICLES; i++){
+  sparkLifetimes[i] = -1; // negative = dead
+  sparkSizes[i] = 0;
+  sparkAlphas[i] = 0;
+}
+
+const sparkGeo = new THREE.BufferGeometry();
+sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+sparkGeo.setAttribute('aSize', new THREE.BufferAttribute(sparkSizes, 1));
+sparkGeo.setAttribute('aAlpha', new THREE.BufferAttribute(sparkAlphas, 1));
+
+const sparkVertShader = `
+  attribute float aSize;
+  attribute float aAlpha;
+  varying float vAlpha;
+  void main(){
+    vAlpha = aAlpha;
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = aSize * (200.0 / -mvPos.z);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const sparkFragShader = `
+  varying float vAlpha;
+  void main(){
+    float d = length(gl_PointCoord - vec2(0.5));
+    if(d > 0.5) discard;
+    float glow = exp(-d * 6.0);
+    gl_FragColor = vec4(vec3(1.0, 0.78, 0.22), vAlpha * glow);
+  }
+`;
+
+const sparkMat = new THREE.ShaderMaterial({
+  vertexShader: sparkVertShader,
+  fragmentShader: sparkFragShader,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+
+const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
+scene.add(sparkPoints);
+
+// Eye of fire – single stable particle that forms at lock
+const eyeGeo = new THREE.SphereGeometry(0.12, 16, 16);
+const eyeMat = new THREE.MeshBasicMaterial({color: 0xffcc33});
+const eyeOfFire = new THREE.Mesh(eyeGeo, eyeMat);
+eyeOfFire.position.set(0, 0.3, 0.15);
+eyeOfFire.visible = false;
+scene.add(eyeOfFire);
+
+// Glow sphere around eye of fire
+const eyeGlowGeo = new THREE.SphereGeometry(0.25, 16, 16);
+const eyeGlowMat = new THREE.MeshBasicMaterial({
+  color: 0xffaa22,
+  transparent: true,
+  opacity: 0,
+});
+const eyeGlow = new THREE.Mesh(eyeGlowGeo, eyeGlowMat);
+scene.add(eyeGlow);
+
+let nextParticle = 0;
+
+function spawnSpark(x, y, z){
+  const i = nextParticle;
+  nextParticle = (nextParticle + 1) % MAX_PARTICLES;
+
+  sparkPositions[i*3]   = x;
+  sparkPositions[i*3+1] = y;
+  sparkPositions[i*3+2] = z;
+  sparkSizes[i] = 0.04 + Math.random()*0.06;
+  sparkAlphas[i] = 1.0;
+
+  // velocity: burst upward and outward from shard center fissure
+  const spread = 0.8;
+  sparkVelocities[i] = new THREE.Vector3(
+    (Math.random()-0.5)*spread*2,
+    1.5 + Math.random()*2.0,
+    (Math.random()-0.5)*spread*2
+  );
+}
+
+function updateParticles(dt){
+  const now = clock.elapsedTime * 1000; // ms
+  for(let i=0; i<MAX_PARTICLES; i++){
+    if(sparkLifetimes[i] < 0) continue; // dead
+    const age = now - sparkLifetimes[i];
+    if(age > 900){ sparkLifetimes[i]=-1; sparkSizes[i]=0; sparkAlphas[i]=0; continue; }
+
+    const lifeRatio = age / 900;
+    sparkAlphas[i] = Math.max(0, 1.0 - lifeRatio*lifeRatio);
+    sparkSizes[i] *= 0.995; // very slow shrink
+
+    sparkPositions[i*3]   += sparkVelocities[i].x * dt;
+    sparkPositions[i*3+1] += sparkVelocities[i].y * dt;
+    sparkPositions[i*3+2] += sparkVelocities[i].z * dt;
+    sparkVelocities[i].y -= 0.4 * dt; // slight gravity
+  }
+  sparkGeo.attributes.position.needsUpdate = true;
+  sparkGeo.attributes.aSize.needsUpdate = true;
+  sparkGeo.attributes.aAlpha.needsUpdate = true;
+}
+
+function triggerParticleBurst(){
+  for(let i=0; i<MAX_PARTICLES; i++){
+    // Spawn from shard center fissure
+    const angle = Math.random()*Math.PI*2;
+    const r = Math.random()*0.15;
+    spawnSpark(
+      Math.cos(angle)*r,
+      0.2 + (Math.random()-0.5)*0.4,
+      Math.sin(angle)*r + 0.1
+    );
+    sparkLifetimes[i] = clock.elapsedTime * 1000;
+  }
+}
+
+/* ─── Procedural Audio (Tone.js) ───────────────────────── */
+let audioCtxReady = false;
+let sparkChime, swellOsc, lockDrone, lockFilter, lockLFO, lockGain, noiseSynth;
+
+function initAudio(){
+  if(audioCtxReady) return;
+  audioCtxReady = true;
+
+  // Spark chime: sharp metallic attack
+  sparkChime = new Tone.MetalBar({
+    pitch: "C7",
+    duration: "8n",
+    output: {gain: -3}
+  }).toDestination();
+
+  // Rising swell: frequency sweep that feels like breath catching
+  swellOsc = new Tone.Oscillator({
+    type: "sine",
+    frequency: 180,
+    detune: 0
+  }).connect(new Tone.Gain().connect(Tone.Destination));
+  swellOsc.volume.value = -12;
+
+  // Noise burst for texture
+  const noiseFilter = new Tone.Filter(800, "bandpass").toDestination();
+  noiseSynth = new Tone.Noise("pink").connect(noiseFilter);
+  noiseSynth.volume.value = -18;
+
+  // Lock drone: warm bass ambient hum
+  lockDrone = new Tone.FatOscillator({
+    type: "sine",
+    frequency: 72,
+    spread: 20,
+    count: 3,
+    detune: 5
+  }).connect(new Tone.Gain());
+
+  const droneGain = new Tone.Gain(-20);
+  lockDrone.chain(droneGain, Tone.Destination);
+
+  // LFO for gentle pulsing on drone
+  lockLFO = new Tone.LFO(0.3, 68, 76).start();
+  lockLFO.connect(lockDrone.frequency);
+
+  const filter = new Tone.Filter("lowpass", "allpole");
+  filter.frequency.value = 200;
+  lockFilter = filter;
+  // Re-route: we don't need filter on drone for now but keeping for polish
+
+  startLockDrone();
+}
+
+function playSparkSound(){
+  if(!audioCtxReady) return;
+  const t = Tone.now();
+
+  // Sharp chime attack
+  sparkChime.triggerAttackRelease("C8", "16n", t);
+  sparkChime.triggerAttackRelease("E7", "16n", t + 0.02);
+  sparkChime.triggerAttackRelease("G7", "32n", t + 0.04);
+
+  // Rising swell – breath catching in throat
+  swellOsc.frequency.setValueAtTime(180, t);
+  swellOsc.frequency.exponentialRampToValueAtTime(900, t+0.35);
+  swellOsc.start(t);
+  const swellGain = swellOsc.get(Tone.Gain);
+  swellGain.gain.setValueAtTime(-12, t);
+  swellGain.gain.exponentialRampToValueAtTime(-24, t+0.5);
+
+  // Noise texture – brief whoosh
+  noiseSynth.start(t);
+  noiseSynth.stop(t + 0.3);
+}
+
+function startLockDrone(){
+  if(!audioCtxReady) return;
+  lockDrone.start();
+  lockLFO.start();
+  // Slowly bring up drone volume
+  const t = Tone.now();
+  lockDrone.get(Tone.Gain).gain.setValueAtTime(-20, t);
+  lockDrone.get(Tone.Gain).exponentialRampToValueAtTime(-14, t+1.0);
+}
+
+function stopLockDrone(){
+  if(!audioCtxReady) return;
+  const t = Tone.now();
+  lockDrone.get(Tone.Gain).gain.exponentialRampToValueAtTime(-60, t+1.5);
+  lockDrone.stop(t+2.0);
+}
+
+/* ─── Interaction ──────────────────────────────────────── */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let ignitionHandled = false;
+
+function getShardHit(e){
+  const cx = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+  const cy = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+  if(cx == null) return false;
+  mouse.set((cx/innerWidth)*2-1, -(cy/innerHeight)*2+1);
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(shard);
+  return hits.length > 0;
+}
+
+function triggerIgnition(){
+  if(ignitionHandled) return;
+  ignitionHandled = true;
+  ignitionTriggered = true;
+  ignitionTime = performance.now();
+
+  initAudio();
+  playSparkSound();
+  triggerParticleBurst();
+
+  // Hide hint text
+  const hint = document.getElementById("hint");
+  if(hint) hint.style.opacity = "0";
+
+  // Fade out start screen
+  const ss = document.getElementById("start-screen");
+  if(ss) ss.classList.add("hidden");
+}
+
+document.addEventListener("pointerdown", (e)=>{
+  if(!started){ started=true; document.getElementById("start-screen")?.classList.add("hidden"); }
+  if(getShardHit(e)){
+    isTouching = true;
+    touchStartTime = performance.now();
+  }
+});
+
+document.addEventListener("pointerup", (e)=>{
+  if(isTouching && !ignitionHandled){
+    // Check if touch was long enough to count as intentional
+    const holdDuration = performance.now() - touchStartTime;
+    if(holdDuration >= 50){
+      triggerIgnition();
+    }
+  }
+  isTouching = false;
+});
+
+// Also trigger on quick tap (pointerdown + pointerup within threshold)
+let quickTapTimeout = null;
+document.addEventListener("pointerdown", ()=>{
+  if(!ignitionHandled && getShardHit(event)){
+    quickTapTimeout = setTimeout(()=>{
+      // If still held after 150ms, wait for release to trigger
+    }, 150);
+  }
+});
+document.addEventListener("pointerup", ()=>{
+  if(quickTapTimeout){ clearTimeout(quickTapTimeout); quickTapTimeout=null; }
+  if(isTouching && !ignitionHandled){
+    triggerIgnition();
+    isTouching = false;
+  }
+});
+
+/* ─── Resize ───────────────────────────────────────────── */
+window.addEventListener("resize", ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+/* ─── Animation Loop ──────────────────────────────────── */
+function animate(){
+  requestAnimationFrame(animate);
+  const elapsed = performance.now() - ignitionTime; // ms since ignition started
+  const t = clock.getElapsedTime();
+
+  // Update shard shader time
+  shardMat.uniforms.uTime.value = t;
+
+  if(!ignitionTriggered){
+    // IDLE STATE: subtle floating motion, no glow
+    shard.rotation.y = Math.sin(t*0.3)*0.15;
+    shard.position.y = Math.sin(t*0.5)*0.05;
+    shardMat.uniforms.uIgnition.value = 0.0;
+    bloomPass.strength = 0.0;
+    renderer.toneMappingExposure = 0.9;
+  } else {
+    // IGNITION PROGRESS (0-800ms)
+    const progress = Math.min(elapsed / IGNITION_DURATION, 1.0);
+    // Ease in-out cubic for smooth feel
+    const eased = progress < 0.5
+      ? 4*progress*progress*progress
+      : 1 - Math.pow(-2*progress+2,3)/2;
+
+    // Smooth transition from stone to magma via ignition uniform
+    shardMat.uniforms.uIgnition.value = eased;
+
+    if(progress < 1.0){
+      // Bloom ramps up during ignition
+      const bloomTarget = eased * 1.8;
+      bloomPass.strength += (bloomTarget - bloomPass.strength) * 0.15;
+      renderer.toneMappingExposure = 0.9 + eased * 0.6;
+    } else {
+      // LOCK STATE: stable after 800ms
+      shardMat.uniforms.uIgnition.value = 1.0;
+      bloomPass.strength += (0.9 - bloomPass.strength) * 0.05;
+      renderer.toneMappingExposure = 1.5;
+
+      // Eye of fire emerges
+      if(!eyeOfFire.visible){
+        eyeOfFire.visible = true;
+      }
+      const eyePulse = Math.sin(t*2.0)*0.5+0.5;
+      eyeMat.color.setHSL(0.1 + eyePulse*0.02, 0.9, 0.55 + eyePulse*0.1);
+      eyeGlow.material.opacity = 0.25 + eyePulse * 0.15;
+      eyeGlow.scale.setScalar(1.0 + eyePulse*0.3);
+
+      // Gentle shard breathing at lock
+      shard.rotation.y = Math.sin(t*0.4)*0.05;
+    }
+  }
+
+  // Update particles every frame
+  updateParticles(0.016);
+
+  // Continuous spark emission during ignition (200-600ms)
+  if(ignitionTriggered && elapsed > 150 && elapsed < 700){
+    const rate = Math.max(0, 1 - (elapsed-150)/400);
+    if(Math.random() < rate * 0.3){ // ~3 sparks per frame at start
+      spawnSpark(
+        (Math.random()-0.5)*0.2,
+        0.2 + Math.random()*0.3,
+        0.1 + Math.random()*0.1
+      );
+      sparkLifetimes[nextParticle] = performance.now();
+    }
+  }
+
+  // Fade particles at lock state
+  if(elapsed > IGNITION_DURATION){
+    for(let i=0; i<MAX_PARTICLES; i++){
+      if(sparkAlphas[i] > 0){
+        sparkAlphas[i] *= 0.97; // gently fade remaining sparks
+      }
+    }
+    sparkGeo.attributes.aAlpha.needsUpdate = true;
+  }
+
+  composer.render();
+}
+
+/* ─── Start screen click to dismiss ────────────────────── */
+document.getElementById("start-screen")?.addEventListener("click", ()=>{
+  if(!started){ started=true; document.getElementById("start-screen").classList.add("hidden"); }
+});
+document.getElementById("start-screen")?.addEventListener("touchend", (e)=>{
+  e.preventDefault();
+  if(!started){ started=true; document.getElementById("start-screen").classList.add("hidden"); }
+});
+
+/* ─── Boot ─────────────────────────────────────────────── */
+animate();
+
+</script>
+</body>
+</html>
