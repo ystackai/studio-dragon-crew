@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>Rhythm Drift</title>
+   <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+   <canvas id="gl-canvas"></canvas>
+   <div id="hud">
+      <div id="score-display">Flow: <span id="score-val">0.00</span></div>
+      <div id="state-display">State: <span id="state-val">Active</span></div>
+      <div id="cadence-display">Beat: <span id="beat-val">--</span>ms</div>
+   </div>
+   <script src="assets/textures.js"></script>
+   <script src="shaders/twilight.js"></script>
+   <script src="shaders/ripple.js"></script>
+   <script src="shaders/creature.js"></script>
+   <script src="game.js"></script>
+</body>
+</html>
