@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Warm Exhale</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="ui">
+    <div id="queue-status">
+      <span id="queue-label">Path queue</span>
+      <div id="buffer-bar">
+        <div id="buffer-fill"></div>
+      </div>
+      <span id="buffer-count">0 / 8</span>
+    </div>
+    <button id="sync-btn" disabled>Sync Lock</button>
+    <div id="state-label">AWAITING INPUT</div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
