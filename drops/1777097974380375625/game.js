@@ -266,9 +266,27 @@ class Renderer {
     this.ctx.fillStyle = '#0a0806';
     this.ctx.fillRect(0, 0, this.width, this.height);
     this.ctx.globalAlpha = 1;
-  }
+   }
 
-  // Draw plush-edge paths with soft glow
+  // Subtle stone texture overlay
+  drawStoneTexture() {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    for (let i = 0; i < 40; i++) {
+      const x = (i * 137.5) % this.width;
+      const y = (i * 97.3) % this.height;
+      const size = 30 + (i % 5) * 20;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+      grad.addColorStop(0, 'rgba(60, 45, 35, 0.5)');
+      grad.addColorStop(1, 'rgba(10, 8, 6, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x - size, y - size, size * 2, size * 2);
+    }
+    ctx.restore();
+   }
+
+   // Draw plush-edge paths with soft glow and melt effect
   drawPath(path, progress) {
     if (!path || path.points.length < 2) return;
 
@@ -281,18 +299,39 @@ class Renderer {
     this.ctx.save();
     this.ctx.translate(cx, cy);
     this.ctx.scale(path.scale, path.scale);
-    this.ctx.globalAlpha = alpha;
 
-    // Plush glow layer
+      // Third pass: deep ambient glow (widest, softest)
+    this.ctx.globalAlpha = alpha * 0.15;
     this.ctx.shadowColor = path.color;
-    this.ctx.shadowBlur = 12 + this.glowIntensity * 20;
+    this.ctx.shadowBlur = 50 + this.glowIntensity * 40;
     this.ctx.strokeStyle = path.color;
-    this.ctx.lineWidth = 3;
+    this.ctx.lineWidth = 12;
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
-    this.ctx.beginPath();
+    this._drawSmoothPath(path, progress);
+    this.ctx.stroke();
 
+      // Second pass: plush edge glow
+    this.ctx.globalAlpha = alpha * 0.4;
+    this.ctx.shadowBlur = 25 + this.glowIntensity * 25;
+    this.ctx.lineWidth = 6;
+    this._drawSmoothPath(path, progress);
+    this.ctx.stroke();
+
+      // First pass: core stroke
+    this.ctx.globalAlpha = alpha;
+    this.ctx.shadowBlur = 10 + this.glowIntensity * 15;
+    this.ctx.lineWidth = 2.5;
+    this._drawSmoothPath(path, progress);
+    this.ctx.stroke();
+
+    this.ctx.restore();
+   }
+
+   // Helper: draw the smoothed path curve
+   _drawSmoothPath(path, progress) {
     const drawCount = Math.max(2, Math.floor(progress * path.points.length));
+    this.ctx.beginPath();
     this.ctx.moveTo(path.points[0].x, path.points[0].y);
     for (let i = 1; i < drawCount; i++) {
       const prev = path.points[i - 1];
@@ -300,17 +339,8 @@ class Renderer {
       const cpx = (prev.x + curr.x) / 2;
       const cpy = (prev.y + curr.y) / 2;
       this.ctx.quadraticCurveTo(prev.x, prev.y, cpx, cpy);
+     }
     }
-    this.ctx.stroke();
-
-    // Second pass: ultra-soft outer edge
-    this.ctx.shadowBlur = 25 + this.glowIntensity * 35;
-    this.ctx.lineWidth = 6;
-    this.ctx.globalAlpha = alpha * 0.3;
-    this.ctx.stroke();
-
-    this.ctx.restore();
-  }
 
   // Ambient warmth vignette centered on canvas
   drawWarmth() {
@@ -509,6 +539,11 @@ class Game {
         this.ui.updateBuffer();
         if (this.stateMachine.currentState === STATE.AWAITING_INPUT) {
           this.stateMachine.transition(STATE.QUEUING);
+        }
+        // Auto-trigger sync lock when buffer reaches threshold
+        if (this.buffer.count >= CONFIG.syncThreshold &&
+            this.stateMachine.currentState === STATE.QUEUING) {
+          this._triggerSyncLock();
         }
       }
       this.currentPoints = [];
@@ -787,13 +822,16 @@ class Game {
   }
 
   // ---------- Render frame ----------
-  _render() {
+    _render() {
     const r = this.renderer;
 
-    // Base clear
+     // Base clear
     r.clear();
 
-    // Warmth vignette
+     // Stone texture (subtle, always present)
+    r.drawStoneTexture();
+
+     // Warmth vignette
     r.drawWarmth();
 
     // Heartbeat ring
