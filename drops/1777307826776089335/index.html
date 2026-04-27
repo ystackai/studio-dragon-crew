@@ -2,39 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Crystalline Garden</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #05050d; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #04040c; }
   canvas { display: block; position: absolute; top: 0; left: 0; }
+  #bloomLayer { mix-blend-mode: screen; opacity: 0.4; }
   #hint {
     position: fixed;
     bottom: 32px;
     left: 50%;
     transform: translateX(-50%);
     color: rgba(180, 200, 230, 0.35);
-    font-family: system-ui, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     font-size: 13px;
     letter-spacing: 0.6px;
     pointer-events: none;
     user-select: none;
-    transition: opacity 2.5s ease;
+    transition: opacity 3s ease;
   }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<canvas id="bloomLayer" style="opacity:0.5; mix-blend-mode:screen;"></canvas>
+<canvas id="bloomLayer"></canvas>
 <div id="hint">drag or hold to breathe</div>
 <script>
+"use strict";
+
 /* ============================================================
    MASTER 56 BPM CLOCK
    ============================================================ */
 const BPM = 56;
 const BEAT_DURATION = 60 / BPM;
 const QUANTIZATION_MS = 15;
-const QUANTIZATION_BEAT = QUANTIZATION_MS / (BEAT_DURATION * 1000);
+const QUANT_BEAT_FUDGE = 1 + QUANTIZATION_MS / (BEAT_DURATION * 1000);
 
 let startTime = 0;
 
@@ -45,7 +48,7 @@ function getMasterTime() {
 function getCurrentBeatPhase() {
   const t = getMasterTime() / 1000;
   const raw = t / BEAT_DURATION;
-  const q = Math.round(raw / (1 + QUANTIZATION_BEAT)) * (1 + QUANTIZATION_BEAT);
+  const q = Math.round(raw / QUANT_BEAT_FUDGE) * QUANT_BEAT_FUDGE;
   return q % 1;
 }
 
@@ -59,8 +62,10 @@ function getBeatPulse(phase) {
 const FLUID_DAMPING = 0.65;
 
 function dampedEase(from, to, t, phase) {
-  const raw = (to - from) * (0.5 + 0.5 * Math.sin((t * Math.PI * 2 + phase * Math.PI) * FLUID_DAMPING));
-  return from + raw * (1 - Math.exp(-3 * t));
+  const tClamped = Math.max(0, Math.min(1, t));
+  const sinVal = 0.5 + 0.5 * Math.sin((tClamped * Math.PI * 2 + phase * Math.PI) * FLUID_DAMPING);
+  const expFade = 1 - Math.exp(-3 * tClamped);
+  return from + (to - from) * sinVal * expFade;
 }
 
 function smoothstep(t) {
@@ -68,18 +73,34 @@ function smoothstep(t) {
   return t * t * (3 - 2 * t);
 }
 
+function smootherstep(t) {
+  t = Math.max(0, Math.min(1, t));
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
 /* ============================================================
    BREATH INTENSITY — low-pass filtered, drift-free
    ============================================================ */
 let breathIntensity = 0;
 let breathIntensityFiltered = 0;
-const LOWPASS_ALPHA = 0.05;
+const LOWPASS_ALPHA = 0.06;
 let releaseTimer = 0;
-const RELEASE_DECAY = 0.012;
+const RELEASE_DECAY = 0.008;
+let prevBreathFiltered = 0;
 
 function updateBreathIntensity(raw) {
   breathIntensity = Math.max(0, Math.min(1, raw));
   breathIntensityFiltered += (breathIntensity - breathIntensityFiltered) * LOWPASS_ALPHA;
+
+  const breathDelta = breathIntensityFiltered - prevBreathFiltered;
+  prevBreathFiltered = breathIntensityFiltered;
+
+  if (!pointerDown && breathIntensityFiltered > 0.01) {
+    releaseTimer = Math.min(1, releaseTimer + RELEASE_DECAY);
+  } else {
+    releaseTimer = Math.max(0, releaseTimer - 0.004);
+  }
+
   return breathIntensityFiltered;
 }
 
@@ -89,11 +110,13 @@ function updateBreathIntensity(raw) {
 const STATE_FROST = 0;
 const STATE_MOSS = 1;
 const STATE_GEODE = 2;
+const STATE_RELEASE = 3;
 
 let currentState = STATE_FROST;
 let frostLevel = 1;
 let mossLevel = 0;
 let geodeLevel = 0;
+let releaseLevel = 0;
 
 const FROST_THRESHOLD = 0.12;
 const MOSS_THRESHOLD = 0.42;
@@ -102,23 +125,29 @@ const GEODE_THRESHOLD = 0.68;
 function updateStateMachine() {
   const v = breathIntensityFiltered;
 
-  frostLevel = Math.max(0, 1 - smoothstep(v / (FROST_THRESHOLD + 0.1)));
-  mossLevel = dampedEase(0, 1, smoothstep(Math.max(0, v - FROST_THRESHOLD) / (GEODE_THRESHOLD - FROST_THRESHOLD)), 0);
-  mossLevel *= (1 - smoothstep(Math.max(0, v - MOSS_THRESHOLD) / (1 - MOSS_THRESHOLD)));
-  geodeLevel = smoothstep(Math.max(0, v - GEODE_THRESHOLD) / (1 - GEODE_THRESHOLD));
+  frostLevel = Math.max(0, 1 - smootherstep(v / (FROST_THRESHOLD + 0.08)));
+  mossLevel = smootherstep(Math.max(0, v - FROST_THRESHOLD) / (GEODE_THRESHOLD - FROST_THRESHOLD));
+  mossLevel *= (1 - smootherstep(Math.max(0, v - MOSS_THRESHOLD) / (1 - MOSS_THRESHOLD)));
+  geodeLevel = smootherstep(Math.max(0, v - GEODE_THRESHOLD) / (1 - GEODE_THRESHOLD));
+  releaseLevel = dampedEase(0, 1, releaseTimer, 0);
 
   if (v > GEODE_THRESHOLD) currentState = STATE_GEODE;
-  else if (v > FROST_THRESHOLD) currentState = STATE_MOSS;
+  else if (v > MOSS_THRESHOLD) currentState = STATE_MOSS;
+  else if (v > FROST_THRESHOLD) currentState = STATE_FROST;
+  else if (releaseLevel > 0.1) currentState = STATE_RELEASE;
   else currentState = STATE_FROST;
 }
 
 /* ============================================================
-   NOISE — simple hash-based pseudo-noise
+   NOISE — hash-based pseudo-noise with complete FBM
    ============================================================ */
+const NOISE_CACHE = {};
+
 function hash(x, y) {
-  let h = (x * 374761393 + y * 668265263) & 0x7fffffff;
-  h = ((h ^ (h >> 13)) * 1274126177) & 0x7fffffff;
-  return (h ^ (h >> 16)) / 0x7fffffff;
+  let h = ((x * 374761393) | 0) + ((y * 668265263) | 0);
+  h = (h ^ (h >>> 13)) * 1274126177;
+  h = (h ^ (h >>> 16)) | 0;
+  return (h & 0x7fffffff) / 0x7fffffff;
 }
 
 function smoothNoise(x, y) {
@@ -134,13 +163,27 @@ function smoothNoise(x, y) {
 }
 
 function fbm(x, y, octaves) {
-  let v = 0, amp = 0.5, freq = 1;
+  octaves = octaves || 4;
+  let v = 0, amp = 0.5, freq = 1, max = 0;
   for (let i = 0; i < octaves; i++) {
     v += amp * smoothNoise(x * freq, y * freq);
+    max += amp;
     amp *= 0.5;
     freq *= 2.1;
   }
-  return v;
+  return v / max;
+}
+
+function fbm3d(x, y, t, octaves) {
+  octaves = octaves || 4;
+  let v = 0, amp = 0.5, freq = 1, max = 0;
+  for (let i = 0; i < octaves; i++) {
+    v += amp * smoothNoise(x * freq + t * 0.0003 * (i + 1), y * freq + t * 0.0002 * (i + 1));
+    max += amp;
+    amp *= 0.5;
+    freq *= 2.1;
+  }
+  return v / max;
 }
 
 /* ============================================================
@@ -162,26 +205,25 @@ function initAudio() {
   audioStarted = true;
 
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.7;
+  masterGain.gain.value = 0.65;
   masterGain.connect(audioCtx.destination);
 
   /* --- Layer 1: Sea/Water — tidal swell --- */
   l1Filter = audioCtx.createBiquadFilter();
   l1Filter.type = 'lowpass';
-  l1Filter.frequency.value = 200;
-  l1Filter.Q.value = 1.2;
+  l1Filter.frequency.value = 180;
+  l1Filter.Q.value = 1.0;
 
   l1Gain = audioCtx.createGain();
   l1Gain.gain.value = 0;
 
-  /* Sub-oscillators: deep drones */
-  const l1freqs = [42, 55, 68, 82, 102, 136];
+  const l1freqs = [38, 52, 65, 78, 98, 130];
   l1freqs.forEach((f, i) => {
     const osc = audioCtx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = f;
     const g = audioCtx.createGain();
-    g.gain.value = 1 / Math.sqrt(i + 1) * 0.4;
+    g.gain.value = 0.3 / Math.sqrt(i + 1);
     osc.connect(g);
     g.connect(l1Filter);
     osc.start();
@@ -194,14 +236,14 @@ function initAudio() {
   const nd = noiseBuf.getChannelData(0);
   let last = 0;
   for (let i = 0; i < bufLen; i++) {
-    last = (last + (0.02 * (Math.random() * 2 - 1))) / 1.02;
+    last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
     nd[i] = last * 3.5;
   }
   noiseNode = audioCtx.createBufferSource();
   noiseNode.buffer = noiseBuf;
   noiseNode.loop = true;
   l1NoiseGain = audioCtx.createGain();
-  l1NoiseGain.gain.value = 0.15;
+  l1NoiseGain.gain.value = 0.12;
   noiseNode.connect(l1NoiseGain);
   l1NoiseGain.connect(l1Filter);
   noiseNode.start();
@@ -212,14 +254,14 @@ function initAudio() {
   /* --- Layer 2: Ice/Snow — crystalline chimes --- */
   l2Filter = audioCtx.createBiquadFilter();
   l2Filter.type = 'bandpass';
-  l2Filter.frequency.value = 2800;
-  l2Filter.Q.value = 0.6;
+  l2Filter.frequency.value = 2600;
+  l2Filter.Q.value = 0.5;
 
   l2LFO = audioCtx.createOscillator();
   l2LFO.type = 'sine';
   l2LFO.frequency.value = BPM / 60 * 0.5;
   const l2lfoGain = audioCtx.createGain();
-  l2lfoGain.gain.value = 400;
+  l2lfoGain.gain.value = 350;
   l2LFO.connect(l2lfoGain);
   l2lfoGain.connect(l2Filter.frequency);
   l2LFO.start();
@@ -227,17 +269,17 @@ function initAudio() {
   l2Gain = audioCtx.createGain();
   l2Gain.gain.value = 0;
 
-  const l2freqs = [1200, 1400, 1568, 1866, 2093, 2480, 2938];
+  const l2freqs = [1180, 1380, 1556, 1850, 2080, 2460, 2920];
   l2freqs.forEach((f, i) => {
     const osc = audioCtx.createOscillator();
     osc.type = i % 2 === 0 ? 'sine' : 'triangle';
     osc.frequency.value = f;
     const g = audioCtx.createGain();
-    g.gain.value = 0.6;
+    g.gain.value = 0;
     osc.connect(g);
     g.connect(l2Filter);
     osc.start();
-    l2Oscs.push({ osc, gain: g });
+    l2Oscs.push({ osc, gain: g, baseFreq: f });
   });
 
   l2Filter.connect(l2Gain);
@@ -246,14 +288,14 @@ function initAudio() {
   /* --- Layer 3: Fire/Lava — warm pads --- */
   l3Filter = audioCtx.createBiquadFilter();
   l3Filter.type = 'lowpass';
-  l3Filter.frequency.value = 400;
-  l3Filter.Q.value = 1.8;
+  l3Filter.frequency.value = 380;
+  l3Filter.Q.value = 1.5;
 
   l3LFO = audioCtx.createOscillator();
   l3LFO.type = 'sine';
   l3LFO.frequency.value = BPM / 60;
   const l3lfoGain = audioCtx.createGain();
-  l3lfoGain.gain.value = 8;
+  l3lfoGain.gain.value = 6;
   l3LFO.connect(l3lfoGain);
   l3lfoGain.connect(l3Filter.frequency);
   l3LFO.start();
@@ -261,17 +303,17 @@ function initAudio() {
   l3Gain = audioCtx.createGain();
   l3Gain.gain.value = 0;
 
-  const l3freqs = [65, 82, 98, 110, 127, 146, 174, 196];
+  const l3freqs = [62, 79, 96, 108, 125, 144, 172, 194];
   l3freqs.forEach((f, i) => {
     const osc = audioCtx.createOscillator();
-    osc.type = i < 4 ? 'sine' : 'sawtooth';
+    osc.type = i < 4 ? 'sine' : 'triangle';
     osc.frequency.value = f;
     const g = audioCtx.createGain();
-    g.gain.value = i < 4 ? 0.5 : 0.2;
+    g.gain.value = 0;
     osc.connect(g);
     g.connect(l3Filter);
     osc.start();
-    l3Oscs.push({ osc, gain: g });
+    l3Oscs.push({ osc, gain: g, baseFreq: f });
   });
 
   l3Filter.connect(l3Gain);
@@ -280,42 +322,52 @@ function initAudio() {
   audioReady = true;
 }
 
+let lastAudioUpdate = 0;
+const AUDIO_UPDATE_INTERVAL = 150;
+
 function updateAudio() {
   if (!audioReady) return;
+  const now = performance.now();
+  if (now - lastAudioUpdate < AUDIO_UPDATE_INTERVAL) return;
+  lastAudioUpdate = now;
+
   const phase = getCurrentBeatPhase();
   const pulse = getBeatPulse(phase);
   const v = breathIntensityFiltered;
-  const now = audioCtx.currentTime;
-  const smooth = 0.35;
+  const t = audioCtx.currentTime;
 
-  /* Layer 1: tidal swell — always breathing, intensity modulated */
-  const l1Target = (0.06 + pulse * 0.035) * (0.4 + v * 0.6);
-  l1Gain.gain.setTargetAtTime(l1Target, now, smooth);
-  l1NoiseGain.gain.setTargetAtTime(l1Target * 0.4, now, smooth);
-  l1Filter.frequency.setTargetAtTime(160 + v * 100 + pulse * 30, now, smooth);
+  /* Layer 1: tidal swell — always breathing */
+  const l1Target = (0.05 + pulse * 0.03) * (0.35 + v * 0.65);
+  l1Gain.gain.setTargetAtTime(l1Target, t, 0.4);
+  l1NoiseGain.gain.setTargetAtTime(l1Target * 0.35, t, 0.4);
+  l1Filter.frequency.setTargetAtTime(150 + v * 90 + pulse * 25, t, 0.35);
 
-  /* Layer 2: chimes — frost/moss phase, LFO modulated */
-  const l2Target = Math.max(0, (1 - smoothstep(v / 0.5)) * pulse * 0.025);
-  l2Gain.gain.setTargetAtTime(l2Target, now, 0.2);
+  l1Oscs.forEach((o, i) => {
+    const base = [38, 52, 65, 78, 98, 130][i];
+    o.osc.frequency.setTargetAtTime(base + pulse * 1.5 * (i % 2 ? 0.8 : -0.8), t, 0.25);
+  });
+
+  /* Layer 2: chimes — frost phase, fades during engagement */
+  const frostAudioStrength = 1 - smoothstep(v / 0.55);
+  const l2Target = frostAudioStrength * pulse * 0.02;
+  l2Gain.gain.setTargetAtTime(l2Target, t, 0.18);
+
+  l2Oscs.forEach((o, i) => {
+    const individualGain = frostAudioStrength * pulse * (i < 4 ? 0.5 : 0.25);
+    o.gain.gain.setTargetAtTime(individualGain, t, 0.12);
+    o.osc.frequency.setTargetAtTime(o.baseFreq + Math.sin(getMasterTime() * 0.0008 + i * 2.1) * 15, t, 0.2);
+  });
 
   /* Layer 3: warm pad — geode bloom, slow attack/release */
-  const l3Target = geodeLevel * (0.04 + pulse * 0.025);
-  l3Gain.gain.setTargetAtTime(l3Target, now, 0.5);
-  l3Filter.frequency.setTargetAtTime(320 + geodeLevel * 120 + pulse * 40, now, 0.4);
+  const l3Target = geodeLevel * (0.035 + pulse * 0.02);
+  l3Gain.gain.setTargetAtTime(l3Target, t, 0.5);
+  l3Filter.frequency.setTargetAtTime(300 + geodeLevel * 140 + pulse * 35, t, 0.4);
 
-  /* Modulate individual osc frequencies with BPM */
-  const t = getMasterTime() / 1000;
-  l1Oscs.forEach((o, i) => {
-    const base = [42, 55, 68, 82, 102, 136][i];
-    o.osc.frequency.setTargetAtTime(base + pulse * 2 * (i % 2 ? 1 : -1), now, 0.2);
-  });
   l3Oscs.forEach((o, i) => {
-    const base = [65, 82, 98, 110, 127, 146, 174, 196][i];
-    o.osc.frequency.setTargetAtTime(base + Math.sin(t * 0.3 + i * 1.7) * 1.5 + pulse * 3, now, 0.3);
-  });
-  l2Oscs.forEach((o, i) => {
-    const base = [1200, 1400, 1568, 1866, 2093, 2480, 2938][i];
-    o.gain.gain.setTargetAtTime((i < 4 ? 0.6 : 0.3) * (1 - smoothstep(v / 0.4)), now, 0.15);
+    const t2 = getMasterTime() / 1000;
+    const mod = Math.sin(t2 * 0.25 + i * 1.7) * 1.2 + pulse * 2.5;
+    o.osc.frequency.setTargetAtTime(o.baseFreq + mod, t, 0.3);
+    o.gain.gain.setTargetAtTime(geodeLevel * (i < 4 ? 0.45 : 0.18), t, 0.25);
   });
 }
 
@@ -327,13 +379,26 @@ const ctx = canvas.getContext('2d');
 const bloomCanvas = document.getElementById('bloomLayer');
 const bCtx = bloomCanvas.getContext('2d');
 let W = 0, H = 0;
-const DPR = Math.min(devicePixelRatio || 1, 2);
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+/* Offscreen buffer for bloom downsampling */
+let offscreen = null;
+let offCtx = null;
+
+function initOffscreen() {
+  const scale = 0.25;
+  offscreen = document.createElement('canvas');
+  offscreen.width = Math.ceil(W * scale);
+  offscreen.height = Math.ceil(H * scale);
+  offCtx = offscreen.getContext('2d', { willReadFrequently: false });
+}
 
 function resize() {
   W = canvas.width = bloomCanvas.width = window.innerWidth * DPR;
   H = canvas.height = bloomCanvas.height = window.innerHeight * DPR;
   canvas.style.width = bloomCanvas.style.width = window.innerWidth + 'px';
   canvas.style.height = bloomCanvas.style.height = window.innerHeight + 'px';
+  initOffscreen();
   initSceneObjects();
 }
 window.addEventListener('resize', resize);
@@ -348,9 +413,11 @@ class FrostCrystal {
     this.size = size;
     this.angle = angle;
     this.depth = Math.min(depth, 4);
-    this.baseAlpha = 0.15 + Math.random() * 0.25;
+    this.baseAlpha = 0.12 + Math.random() * 0.22;
     this.phase = Math.random() * Math.PI * 2;
-    this.pulseSpeed = 0.3 + Math.random() * 0.6;
+    this.pulseSpeed = 0.25 + Math.random() * 0.5;
+    this.driftPhaseX = Math.random() * Math.PI * 2;
+    this.driftPhaseY = Math.random() * Math.PI * 2;
     this.branches = [];
     this._buildBranches();
   }
@@ -358,7 +425,7 @@ class FrostCrystal {
   _buildBranches() {
     const arms = 5 + Math.floor(Math.random() * 3);
     for (let i = 0; i < arms; i++) {
-      const a = (Math.PI * 2 / arms) * i + (Math.random() - 0.5) * 0.3;
+      const a = (Math.PI * 2 / arms) * i + (Math.random() - 0.5) * 0.25;
       this.branches.push({
         angle: a,
         segments: this._makeSegments(this.depth),
@@ -368,66 +435,96 @@ class FrostCrystal {
 
   _makeSegments(depth) {
     if (depth <= 0) return [];
-    const len = 0.4 + Math.random() * 0.3;
-    const angle = (Math.random() - 0.5) * 0.5;
-    return [{ len, angle }, ...this._makeSegments(depth - 1)];
+    const len = 0.35 + Math.random() * 0.3;
+    const angle = (Math.random() - 0.5) * 0.45;
+    const child = this._makeSegments(depth - 1);
+    return [{ len, angle }, ...child];
   }
 
   draw(ctx, frostLevel, beatPhase, time) {
+    if (frostLevel < 0.01) return;
+
     const pulse = getBeatPulse(beatPhase);
-    const breathe = Math.sin(time / 3000 * this.pulseSpeed + this.phase) * 0.12;
+    const breathe = Math.sin(time / 3000 * this.pulseSpeed + this.phase) * 0.1;
     const alpha = this.baseAlpha * frostLevel * (0.6 + pulse * 0.4 + breathe);
     if (alpha < 0.005) return;
 
-    const sz = this.size * (1 + breathe * 0.25);
+    const driftX = Math.sin(time * 0.00008 + this.driftPhaseX) * 8;
+    const driftY = Math.cos(time * 0.00006 + this.driftPhaseY) * 5;
+    const sz = this.size * (1 + breathe * 0.2);
 
     ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle + Math.sin(time / 8000 + this.phase) * 0.05);
+    ctx.translate(this.x + driftX, this.y + driftY);
+    ctx.rotate(this.angle + Math.sin(time / 9000 + this.phase) * 0.04);
 
-    /* Draw each dendrite arm */
     for (const branch of this.branches) {
-      this._drawSegment(ctx, sz, 0, 0, branch.angle, branch.segments, alpha, sz / 60);
+      this._drawSegmentChain(ctx, sz, 0, 0, branch.angle, branch.segments, alpha, sz / 55);
     }
 
     /* Soft glow at crystal center */
-    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * 0.45);
-    glow.addColorStop(0, `rgba(210, 230, 255, ${alpha * 0.35})`);
-    glow.addColorStop(0.5, `rgba(180, 210, 255, ${alpha * 0.1})`);
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * 0.4);
+    glow.addColorStop(0, `rgba(210, 230, 255, ${alpha * 0.3})`);
+    glow.addColorStop(0.5, `rgba(180, 210, 255, ${alpha * 0.08})`);
     glow.addColorStop(1, 'rgba(180, 210, 255, 0)');
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(0, 0, sz * 0.45, 0, Math.PI * 2);
+    ctx.arc(0, 0, sz * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
   }
 
-  _drawSegment(ctx, parentSize, x, y, angle, segments, alpha, lineW) {
-    if (segments.length === 0) return;
+  _drawSegmentChain(ctx, parentSize, ox, oy, baseAngle, segments, alpha, lw) {
+    let cx = ox, cy = oy, ca = baseAngle;
 
-    const seg = segments[0];
-    const a = angle + seg.angle;
-    const nx = x + Math.cos(a) * parentSize * seg.len;
-    const ny = y + Math.sin(a) * parentSize * seg.len;
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const a = ca + seg.angle;
+      const len = parentSize * seg.len;
+      const nx = cx + Math.cos(a) * len;
+      const ny = cy + Math.sin(a) * len;
+      const remaining = segments.length - i;
+      const depthFade = remaining / segments.length;
 
-    const grad = ctx.createLinearGradient(x, y, nx, ny);
-    grad.addColorStop(0, `rgba(210, 235, 255, ${alpha * 0.9})`);
-    grad.addColorStop(1, `rgba(180, 210, 255, ${alpha * 0.3})`);
+      const grad = ctx.createLinearGradient(cx, cy, nx, ny);
+      grad.addColorStop(0, `rgba(215, 238, 255, ${alpha * depthFade})`);
+      grad.addColorStop(1, `rgba(185, 215, 255, ${alpha * depthFade * 0.35})`);
 
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(nx, ny);
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = lineW;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(nx, ny);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = lw * depthFade;
+      ctx.lineCap = 'round';
+      ctx.stroke();
 
-    const childSegs = segments.slice(1);
-    if (childSegs.length > 0) {
-      for (let s = 0; s < childSegs.length; s++) {
-        this._drawSegment(ctx, parentSize * 0.55, nx, ny, a, [childSegs[s], ...childSegs.slice(s + 1)], alpha * 0.7, lineW * 0.7);
+      /* Micro-sparkle at segment joints */
+      if (depthFade > 0.3 && alpha > 0.15) {
+        const sg = ctx.createRadialGradient(nx, ny, 0, nx, ny, lw * 3);
+        sg.addColorStop(0, `rgba(230, 245, 255, ${alpha * 0.15})`);
+        sg.addColorStop(1, 'rgba(230, 245, 255, 0)');
+        ctx.fillStyle = sg;
+        ctx.beginPath();
+        ctx.arc(nx, ny, lw * 3, 0, Math.PI * 2);
+        ctx.fill();
       }
+
+      cx = nx;
+      cy = ny;
+      ca = a;
+      parentSize *= 0.58;
+      lw *= 0.72;
+    }
+
+    /* End-point bloom sparkle */
+    if (alpha > 0.1) {
+      const spark = ctx.createRadialGradient(cx, cy, 0, cx, cy, lw * 4);
+      spark.addColorStop(0, `rgba(225, 240, 255, ${alpha * 0.12})`);
+      spark.addColorStop(1, 'rgba(225, 240, 255, 0)');
+      ctx.fillStyle = spark;
+      ctx.beginPath();
+      ctx.arc(cx, cy, lw * 4, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 }
@@ -439,38 +536,39 @@ class MossParticle {
   constructor(x, y) {
     this.ox = x; this.oy = y;
     this.x = x; this.y = y;
-    this.vx = (Math.random() - 0.5) * 0.25;
-    this.vy = (Math.random() - 0.5) * 0.25;
-    this.size = 2.5 + Math.random() * 5;
-    this.hue = 85 + Math.random() * 50;
-    this.sat = 35 + Math.random() * 30;
-    this.light = 35 + Math.random() * 25;
+    this.vx = (Math.random() - 0.5) * 0.2;
+    this.vy = (Math.random() - 0.5) * 0.2;
+    this.size = 2 + Math.random() * 5;
+    this.hue = 80 + Math.random() * 55;
+    this.sat = 30 + Math.random() * 35;
+    this.light = 32 + Math.random() * 28;
     this.phase = Math.random() * Math.PI * 2;
-    this.noiseX = Math.random() * 100;
-    this.noiseY = Math.random() * 100;
+    this.noiseX = Math.random() * 200;
+    this.noiseY = Math.random() * 200;
   }
 
   draw(ctx, mossLevel, beatPhase, time) {
     if (mossLevel < 0.01) return;
 
     const pulse = getBeatPulse(beatPhase);
-    const breathe = Math.sin(time / 4000 + this.phase) * 0.08;
-    const n = fbm(this.noiseX + time * 0.00008, this.noiseY, 3) * 0.3;
-    const alpha = mossLevel * (0.25 + n + pulse * 0.15 + breathe);
+    const breathe = Math.sin(time / 4000 + this.phase) * 0.07;
+    const n = fbm3d(this.noiseX, this.noiseY, time, 3) * 0.35;
+    const alpha = mossLevel * (0.22 + n + pulse * 0.12 + breathe);
     if (alpha < 0.005) return;
 
-    const sz = this.size * (1 + breathe * 0.15) * DPR;
+    const sz = this.size * (1 + breathe * 0.12) * DPR;
 
-    this.x = this.ox + Math.sin(time * 0.00025 + this.phase) * this.vx * 40;
-    this.y = this.oy + Math.cos(time * 0.00018 + this.phase * 1.3) * this.vy * 25;
+    this.x = this.ox + Math.sin(time * 0.00022 + this.phase) * this.vx * 35;
+    this.y = this.oy + Math.cos(time * 0.00016 + this.phase * 1.3) * this.vy * 22;
 
-    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 2.5);
-    g.addColorStop(0, `hsla(${this.hue}, ${this.sat}%, ${this.light + 15}%, ${Math.min(1, alpha * 1.5)})`);
-    g.addColorStop(0.5, `hsla(${this.hue}, ${this.sat}%, ${this.light}%, ${alpha * 0.5})`);
-    g.addColorStop(1, `hsla(${this.hue + 10}, ${this.sat - 5}%, ${this.light - 10}%, 0)`);
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 2.8);
+    g.addColorStop(0, `hsla(${this.hue}, ${this.sat}%, ${this.light + 18}%, ${Math.min(1, alpha * 1.4)})`);
+    g.addColorStop(0.4, `hsla(${this.hue}, ${this.sat}%, ${this.light + 5}%, ${alpha * 0.55})`);
+    g.addColorStop(0.8, `hsla(${this.hue + 8}, ${this.sat - 3}%, ${this.light - 5}%, ${alpha * 0.15})`);
+    g.addColorStop(1, `hsla(${this.hue + 15}, ${this.sat - 5}%, ${this.light - 12}%, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, sz * 2.5, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, sz * 2.8, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -485,65 +583,68 @@ class GeodeBloom {
     this.length = length;
     this.width = width;
     this.phase = Math.random() * Math.PI * 2;
-    this.hue = 250 + Math.random() * 70;
-    this.saturation = 50 + Math.random() * 30;
+    this.hue = 248 + Math.random() * 74;
+    this.saturation = 48 + Math.random() * 32;
     this.facets = facets || 3;
+    this.innerGlowIntensity = 0.3 + Math.random() * 0.5;
   }
 
   draw(ctx, geodeLevel, beatPhase, time) {
     if (geodeLevel < 0.01) return;
 
     const pulse = getBeatPulse(beatPhase);
-    const breathe = Math.sin(time / 2500 + this.phase) * 0.08;
-    const alpha = geodeLevel * (0.4 + pulse * 0.35 + breathe);
-    const ext = this.length * geodeLevel * (0.7 + breathe + pulse * 0.15);
+    const breathe = Math.sin(time / 2500 + this.phase) * 0.07;
+    const alpha = geodeLevel * (0.35 + pulse * 0.35 + breathe);
+    const ext = this.length * geodeLevel * (0.65 + breathe + pulse * 0.12);
 
     ctx.save();
     ctx.translate(this.cx, this.cy);
-    ctx.rotate(this.angle + Math.sin(time / 10000 + this.phase) * 0.03);
+    ctx.rotate(this.angle + Math.sin(time / 11000 + this.phase) * 0.025);
 
     for (let f = 0; f < this.facets; f++) {
-      const fOffset = (f / this.facets - 0.5) * this.width * 0.5;
-      const fHue = this.hue + f * 15;
-      const fAlpha = alpha * (0.6 + f * 0.1);
+      const fOffset = (f / this.facets - 0.5) * this.width * 0.45;
+      const fHue = this.hue + f * 12;
+      const fAlpha = alpha * (0.55 + f * 0.1);
 
-      /* Facet shape — curved crystal */
+      /* Facet shape — curved crystal with gradient falloff */
       const g = ctx.createLinearGradient(0, fOffset, ext, fOffset);
-      g.addColorStop(0, `hsla(${fHue}, ${this.saturation}%, ${55 + pulse * 10}%, ${fAlpha})`);
-      g.addColorStop(0.3, `hsla(${fHue + 15}, ${this.saturation + 10}%, ${45 + pulse * 8}%, ${fAlpha * 0.75})`);
-      g.addColorStop(0.7, `hsla(${fHue + 30}, ${this.saturation}%, ${40 + pulse * 5}%, ${fAlpha * 0.4})`);
-      g.addColorStop(1, `hsla(${fHue + 50}, ${this.saturation - 10}%, ${30}%, 0)`);
+      g.addColorStop(0, `hsla(${fHue}, ${this.saturation}%, ${52 + pulse * 8}%, ${fAlpha})`);
+      g.addColorStop(0.25, `hsla(${fHue + 12}, ${this.saturation + 8}%, ${44 + pulse * 6}%, ${fAlpha * 0.78})`);
+      g.addColorStop(0.55, `hsla(${fHue + 22}, ${this.saturation}%, ${38 + pulse * 4}%, ${fAlpha * 0.45})`);
+      g.addColorStop(0.85, `hsla(${fHue + 38}, ${this.saturation - 5}%, ${30 + pulse * 3}%, ${fAlpha * 0.15})`);
+      g.addColorStop(1, `hsla(${fHue + 50}, ${this.saturation - 10}%, ${25}%, 0)`);
 
       ctx.beginPath();
       ctx.moveTo(0, fOffset - this.width * 0.12);
       ctx.bezierCurveTo(
-        ext * 0.25, fOffset - this.width * (0.25 + pulse * 0.08),
-        ext * 0.65, fOffset - this.width * (0.08 + pulse * 0.03),
+        ext * 0.22, fOffset - this.width * (0.22 + pulse * 0.07),
+        ext * 0.62, fOffset - this.width * (0.07 + pulse * 0.025),
         ext, fOffset
       );
       ctx.bezierCurveTo(
-        ext * 0.65, fOffset + this.width * (0.08 + pulse * 0.03),
-        ext * 0.25, fOffset + this.width * (0.25 + pulse * 0.08),
+        ext * 0.62, fOffset + this.width * (0.07 + pulse * 0.025),
+        ext * 0.22, fOffset + this.width * (0.22 + pulse * 0.07),
         0, fOffset + this.width * 0.12
       );
       ctx.closePath();
       ctx.fillStyle = g;
       ctx.fill();
 
-      /* Edge highlight: simulates light catching crystal facets */
-      ctx.strokeStyle = `hsla(${fHue}, ${this.saturation + 20}%, 75%, ${fAlpha * 0.25 * (1 + pulse * 0.5)})`;
-      ctx.lineWidth = 1 * DPR;
+      /* Edge highlight: light catching crystal facets */
+      ctx.strokeStyle = `hsla(${fHue}, ${this.saturation + 18}%, 72%, ${fAlpha * 0.2 * (0.8 + pulse * 0.6)})`;
+      ctx.lineWidth = 0.8 * DPR;
       ctx.stroke();
     }
 
-    /* Bloom glow for this segment */
+    /* Bloom glow at segment tip */
     const endX = ext;
-    const gg = ctx.createRadialGradient(endX, 0, 0, endX, 0, this.width * 3);
-    gg.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, 65%, ${alpha * 0.15})`);
-    gg.addColorStop(1, `hsla(${this.hue}, ${this.saturation}%, 65%, 0)`);
+    const gg = ctx.createRadialGradient(endX, 0, 0, endX, 0, this.width * 3.5);
+    gg.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, 62%, ${alpha * 0.12 * this.innerGlowIntensity})`);
+    gg.addColorStop(0.5, `hsla(${this.hue}, ${this.saturation - 5}%, 55%, ${alpha * 0.04})`);
+    gg.addColorStop(1, `hsla(${this.hue}, ${this.saturation - 10}%, 48%, 0)`);
     ctx.fillStyle = gg;
     ctx.beginPath();
-    ctx.arc(endX, 0, this.width * 3, 0, Math.PI * 2);
+    ctx.arc(endX, 0, this.width * 3.5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -551,26 +652,29 @@ class GeodeBloom {
 }
 
 /* ============================================================
-    AMBIENT STARS — twinkling background field
-    ============================================================= */
+   AMBIENT STARS — twinkling background field
+   ============================================================ */
 class AmbientStar {
   constructor(x, y) {
     this.x = x; this.y = y;
-    this.baseSize = 0.5 + Math.random() * 1.5;
+    this.baseSize = 0.4 + Math.random() * 1.4;
     this.phase = Math.random() * Math.PI * 2;
-    this.twinkleSpeed = 0.5 + Math.random() * 2;
-    this.brightness = 0.15 + Math.random() * 0.35;
-    this.hueShift = Math.random() * 30;
+    this.twinkleSpeed = 0.4 + Math.random() * 1.8;
+    this.brightness = 0.12 + Math.random() * 0.32;
+    this.hueShift = Math.random() * 35;
   }
+
   draw(ctx, time, pulse) {
-    const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time / 1000 * this.twinkleSpeed + this.phase));
-    const alpha = this.brightness * twinkle * (0.6 + pulse * 0.4);
-    if (alpha < 0.01) return;
+    const twinkle = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(time / 1000 * this.twinkleSpeed + this.phase));
+    const alpha = this.brightness * twinkle * (0.55 + pulse * 0.45);
+    if (alpha < 0.008) return;
+
     const sz = this.baseSize * DPR;
+    const hue = 218 + this.hueShift + breathIntensityFiltered * 35;
     const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 3);
-    const hue = 220 + this.hueShift + breathIntensityFiltered * 40;
-    g.addColorStop(0, `hsla(${hue}, 30%, 80%, ${alpha})`);
-    g.addColorStop(1, `hsla(${hue}, 20%, 60%, 0)`);
+    g.addColorStop(0, `hsla(${hue}, 28%, 78%, ${alpha})`);
+    g.addColorStop(0.6, `hsla(${hue + 8}, 22%, 65%, ${alpha * 0.3})`);
+    g.addColorStop(1, `hsla(${hue}, 18%, 55%, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(this.x, this.y, sz * 3, 0, Math.PI * 2);
@@ -579,33 +683,38 @@ class AmbientStar {
 }
 
 /* ============================================================
-    FLORE SPORES — floating ambient particles
-    ============================================================= */
+   FLORE SPORES — floating ambient particles
+   ============================================================ */
 class Spore {
   constructor(x, y) {
     this.ox = x; this.oy = y;
     this.x = x; this.y = y;
     this.phase = Math.random() * Math.PI * 2;
-    this.driftSpeed = 0.05 + Math.random() * 0.15;
-    this.wobbleAmp = 5 + Math.random() * 20;
-    this.size = 1 + Math.random() * 3;
-    this.hue = 260 + Math.random() * 80;
+    this.driftSpeed = 0.04 + Math.random() * 0.14;
+    this.wobbleAmp = 4 + Math.random() * 18;
+    this.size = 0.8 + Math.random() * 2.8;
+    this.hue = 255 + Math.random() * 85;
     this.altitude = Math.random();
+    this.driftOffset = Math.random() * Math.PI * 2;
   }
+
   draw(ctx, time, geodeLevel, mossLevel, pulse) {
     const active = Math.max(geodeLevel * 0.7, mossLevel * 0.4);
     if (active < 0.01) return;
-    const drift = time * 0.0003 * this.driftSpeed;
-    this.x = this.ox + Math.sin(time * 0.0004 + this.phase) * this.wobbleAmp;
-    const driftCycle = ((time * 0.008 * this.driftSpeed + this.phase) % (Math.PI * 2));
-    this.y = this.oy + Math.sin(driftCycle) * H * 0.3;
-    this.y = Math.max(-20 * DPR, Math.min(H + 20 * DPR, this.y));
-    const alpha = active * 0.2 * (0.5 + pulse * 0.5 + Math.sin(time / 2000 + this.phase) * 0.3);
-    if (alpha < 0.005) return;
-    const sz = this.size * DPR * (0.8 + geodeLevel * 0.5);
+
+    this.x = this.ox + Math.sin(time * 0.00038 + this.phase) * this.wobbleAmp;
+    const driftCycle = (time * 0.007 * this.driftSpeed + this.phase) % (Math.PI * 2);
+    this.y = this.oy + Math.sin(driftCycle) * H * 0.28;
+    this.y = Math.max(-15 * DPR, Math.min(H + 15 * DPR, this.y));
+
+    const alpha = active * 0.18 * (0.45 + pulse * 0.55 + Math.sin(time / 2000 + this.phase) * 0.25);
+    if (alpha < 0.004) return;
+
+    const sz = this.size * DPR * (0.75 + geodeLevel * 0.55);
     const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 4);
-    g.addColorStop(0, `hsla(${this.hue}, 50%, 70%, ${alpha})`);
-    g.addColorStop(1, `hsla(${this.hue}, 40%, 50%, 0)`);
+    g.addColorStop(0, `hsla(${this.hue}, 48%, 68%, ${alpha})`);
+    g.addColorStop(0.5, `hsla(${this.hue}, 38%, 55%, ${alpha * 0.35})`);
+    g.addColorStop(1, `hsla(${this.hue}, 30%, 45%, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(this.x, this.y, sz * 4, 0, Math.PI * 2);
@@ -614,49 +723,82 @@ class Spore {
 }
 
 /* ============================================================
-    COOLING OBSIDIAN — release phase visual overlay
-    ============================================================= */
+   COOLING OBSIDIAN — release phase visual overlay
+   ============================================================ */
 function drawCoolingObsidian(ctx, time) {
-  if (releaseTimer < 0.05) return;
-  const alpha = Math.min(0.35, releaseTimer * 0.2);
-  const g = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.1, W * 0.5, H * 0.5, W * 0.6);
-  const coolHue = 250 + Math.sin(time * 0.001) * 15;
-  g.addColorStop(0, `hsla(${coolHue}, 30%, 15%, ${alpha * 0.3})`);
-  g.addColorStop(0.5, `hsla(${coolHue + 10}, 25%, 8%, ${alpha * 0.6})`);
-  g.addColorStop(1, `hsla(${coolHue + 20}, 20%, 3%, ${alpha})`);
+  if (releaseLevel < 0.05) return;
+
+  const expDecay = Math.exp(-Math.log(2) * releaseTimer * 0.3);
+  const alpha = Math.min(0.32, releaseLevel * 0.22);
+  const coolHue = 248 + Math.sin(time * 0.0008) * 12;
+
+  /* Deep violet-black gradient simulating cooling obsidian glass */
+  const g = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.08, W * 0.5, H * 0.5, W * 0.65);
+  g.addColorStop(0, `hsla(${coolHue}, 28%, 12%, ${alpha * 0.25})`);
+  g.addColorStop(0.3, `hsla(${coolHue + 8}, 24%, 7%, ${alpha * 0.45})`);
+  g.addColorStop(0.6, `hsla(${coolHue + 14}, 20%, 4%, ${alpha * 0.7})`);
+  g.addColorStop(1, `hsla(${coolHue + 22}, 16%, 2%, ${alpha * expDecay})`);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
+
+  /* Subtle internal fracture lines that shimmer as obsidian cools */
+  if (releaseLevel > 0.15) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 5; i++) {
+      const nVal = smoothNoise(i * 3.7 + time * 0.00005, i * 2.3);
+      const lx = W * (0.2 + 0.6 * nVal);
+      const ly = H * (0.25 + 0.5 * smoothNoise(i * 5.1, time * 0.00003));
+      const shimmerAlpha = alpha * 0.08 * (0.5 + Math.sin(time / 3000 + i * 1.9) * 0.5);
+      const sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, W * 0.06);
+      sg.addColorStop(0, `hsla(${coolHue + 20}, 35%, 40%, ${shimmerAlpha})`);
+      sg.addColorStop(1, `hsla(${coolHue}, 20%, 25%, 0)`);
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.arc(lx, ly, W * 0.06, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.restore();
+  }
 }
 
 /* ============================================================
-    LIGHT CAUSTICS — soft moving light patches
-    ============================================================= */
+   LIGHT CAUSTICS — soft moving light patches, noise-driven
+   ============================================================ */
 function drawCaustics(ctx, time, pulse) {
-  const intensity = Math.max(frostLevel, mossLevel, geodeLevel) * 0.04;
-  if (intensity < 0.005) return;
+  const intensity = Math.max(frostLevel, mossLevel, geodeLevel) * 0.035;
+  if (intensity < 0.004) return;
+
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
+
   for (let i = 0; i < 4; i++) {
-    const cx = W * (0.2 + 0.6 * ((Math.sin(time * 0.0002 + i * 1.8) + 1) / 2));
-    const cy = H * (0.15 + 0.7 * ((Math.cos(time * 0.00015 + i * 2.3) + 1) / 2));
-    const r = W * (0.12 + pulse * 0.05 + Math.sin(time * 0.0004 + i) * 0.04);
+    const n1 = fbm3d(i * 7.3, 0, time, 3);
+    const n2 = fbm3d(0, i * 5.7, time, 3);
+    const cx = W * (0.15 + 0.7 * n1);
+    const cy = H * (0.12 + 0.76 * n2);
+    const r = W * (0.1 + pulse * 0.04 + Math.sin(time * 0.00035 + i) * 0.035);
+
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    const hue = 210 + i * 25 + breathIntensityFiltered * 30;
-    g.addColorStop(0, `hsla(${hue}, 45%, 65%, ${intensity * (0.6 + pulse * 0.4)})`);
-    g.addColorStop(0.6, `hsla(${hue}, 35%, 45%, ${intensity * 0.2})`);
-    g.addColorStop(1, `hsla(${hue}, 25%, 30%, 0)`);
+    const hue = 208 + i * 22 + breathIntensityFiltered * 28;
+    g.addColorStop(0, `hsla(${hue}, 42%, 62%, ${intensity * (0.55 + pulse * 0.45)})`);
+    g.addColorStop(0.5, `hsla(${hue}, 32%, 42%, ${intensity * 0.18})`);
+    g.addColorStop(0.85, `hsla(${hue}, 22%, 30%, ${intensity * 0.04})`);
+    g.addColorStop(1, `hsla(${hue}, 18%, 25%, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
   }
+
   ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 }
 
 /* ============================================================
-    SCENE INITIALIZATION
-    ============================================================= */
+   SCENE INITIALIZATION
+   ============================================================ */
 const frostCrystals = [];
 const mossParticles = [];
 let geodeBlooms = [];
@@ -665,38 +807,38 @@ const spores = [];
 
 function initSceneObjects() {
   frostCrystals.length = 0;
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 45; i++) {
     frostCrystals.push(new FrostCrystal(
       Math.random() * W,
       Math.random() * H,
-      15 + Math.random() * 50,
+      12 + Math.random() * 55,
       Math.random() * Math.PI * 2,
       2 + Math.floor(Math.random() * 3)
     ));
   }
 
   mossParticles.length = 0;
-  for (let i = 0; i < 250; i++) {
+  for (let i = 0; i < 220; i++) {
     const x = Math.random() * W;
-    const y = H * 0.3 + Math.random() * H * 0.7;
+    const y = H * 0.25 + Math.random() * H * 0.75;
     mossParticles.push(new MossParticle(x, y));
   }
 
   geodeBlooms = [];
   const cx = W * 0.5, cy = H * 0.45;
-  for (let i = 0; i < 36; i++) {
-    const a = (Math.PI * 2 / 36) * i + (Math.random() - 0.5) * 0.15;
-    const len = W * (0.12 + Math.random() * 0.18);
-    geodeBlooms.push(new GeodeBloom(cx, cy, a, len, 3 + Math.random() * 6, 2 + Math.floor(Math.random() * 3)));
+  for (let i = 0; i < 40; i++) {
+    const a = (Math.PI * 2 / 40) * i + (Math.random() - 0.5) * 0.12;
+    const len = W * (0.1 + Math.random() * 0.2);
+    geodeBlooms.push(new GeodeBloom(cx, cy, a, len, 2.5 + Math.random() * 6, 2 + Math.floor(Math.random() * 3)));
   }
 
   ambientStars.length = 0;
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 130; i++) {
     ambientStars.push(new AmbientStar(Math.random() * W, Math.random() * H));
   }
 
   spores.length = 0;
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 55; i++) {
     spores.push(new Spore(Math.random() * W, Math.random() * H));
   }
 }
@@ -725,6 +867,11 @@ canvas.addEventListener('pointerup', () => {
   holdStart = 0;
 });
 
+canvas.addEventListener('pointercancel', () => {
+  pointerDown = false;
+  holdStart = 0;
+});
+
 canvas.addEventListener('pointermove', (e) => {
   if (!pointerDown) return;
   const dx = e.clientX - lastPointerX;
@@ -732,52 +879,76 @@ canvas.addEventListener('pointermove', (e) => {
   lastPointerX = e.clientX;
   lastPointerY = e.clientY;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  rawBreath = Math.max(rawBreath * 0.95, Math.min(1, dist / 250 + 0.08));
+  rawBreath = Math.max(rawBreath * 0.96, Math.min(1, dist / 280 + 0.06));
 });
 
 /* ============================================================
-   BLOOM POST-PROCESSING
+   BLOOM POST-PROCESSING — multi-pass with downsampling
    ============================================================ */
 function applyBloom() {
-  if (geodeLevel < 0.05 && mossLevel < 0.05) {
+  const bloomWeight = 0.15 + geodeLevel * 0.35 + mossLevel * 0.1;
+  if (geodeLevel < 0.03 && mossLevel < 0.03) {
     bCtx.clearRect(0, 0, W, H);
+    bloomCanvas.style.opacity = '0.1';
     return;
   }
 
+  blurRadius:
   bCtx.clearRect(0, 0, W, H);
-  bCtx.filter = `blur(${20 * DPR}px)`;
-  bCtx.globalAlpha = 0.3;
+
+  /* Pass 1: wide blur via downsampled copy */
+  if (offscreen && offCtx) {
+    offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+    offCtx.drawImage(canvas, 0, 0, offscreen.width, offscreen.height);
+
+    bCtx.filter = 'blur(22px)';
+    bCtx.globalAlpha = 0.28 * bloomWeight;
+    bCtx.drawImage(offscreen, 0, 0, offscreen.width, offscreen.height, 0, 0, W, H);
+
+    bCtx.filter = 'blur(10px)';
+    bCtx.globalAlpha = 0.22 * bloomWeight;
+    bCtx.drawImage(offscreen, 0, 0, offscreen.width, offscreen.height, 0, 0, W, H);
+  }
+
+  /* Pass 2: tight blur on original */
+  bCtx.filter = 'blur(5px)';
+  bCtx.globalAlpha = 0.18 * bloomWeight;
   bCtx.drawImage(canvas, 0, 0);
-  bCtx.filter = `blur(${8 * DPR}px)`;
-  bCtx.globalAlpha = 0.2;
-  bCtx.drawImage(canvas, 0, 0);
+
   bCtx.filter = 'none';
   bCtx.globalAlpha = 1;
+
+  bloomCanvas.style.opacity = String(Math.min(0.55, bloomWeight));
 }
 
 /* ============================================================
-   RENDER LOOP — 60fps target, no double rAF
+   RENDER LOOP — 60fps target, frame-capped
    ============================================================ */
 let lastFrameTime = 0;
-const FRAME_MIN = 14;
+const FRAME_MIN_MS = 14;
 
 function clearCanvas(pulse) {
-  const baseBright = 5 + breathIntensityFiltered * 6;
+  const baseBright = 4.5 + breathIntensityFiltered * 5.5;
+
+  /* Deep background gradient with state-dependent hue shift */
+  const bgHue = 232 + breathIntensityFiltered * 18 + geodeLevel * 12;
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, `hsl(230, 25%, ${baseBright}%)`);
-  g.addColorStop(0.4, `hsl(240, 20%, ${baseBright - 1}%)`);
-  g.addColorStop(1, `hsl(235, 22%, ${Math.max(3, baseBright - 3)}%)`);
+  g.addColorStop(0, `hsl(${bgHue}, 24%, ${baseBright + 0.5}%)`);
+  g.addColorStop(0.35, `hsl(${bgHue + 5}, 20%, ${baseBright - 0.5}%)`);
+  g.addColorStop(0.7, `hsl(${bgHue + 2}, 21%, ${baseBright - 1.5}%)`);
+  g.addColorStop(1, `hsl(${bgHue - 3}, 22%, ${Math.max(2.5, baseBright - 3)}%)`);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 
-  /* Ambient haze that breathes */
-  const hazeAlpha = (0.02 + breathIntensityFiltered * 0.05) * (0.7 + pulse * 0.3);
-  const hx = W * (0.42 + Math.sin(getMasterTime() * 0.0003) * 0.08);
-  const hy = H * (0.4 + Math.cos(getMasterTime() * 0.0002) * 0.1);
-  const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, W * 0.55);
-  const hazeHue = 230 + breathIntensityFiltered * 25;
-  hg.addColorStop(0, `hsla(${hazeHue}, 40%, 50%, ${hazeAlpha})`);
-  hg.addColorStop(0.5, `hsla(${hazeHue}, 30%, 35%, ${hazeAlpha * 0.3})`);
+  /* Ambient breathing haze */
+  const hazeAlpha = (0.018 + breathIntensityFiltered * 0.04) * (0.65 + pulse * 0.35);
+  const hx = W * (0.4 + Math.sin(getMasterTime() * 0.00028) * 0.09);
+  const hy = H * (0.38 + Math.cos(getMasterTime() * 0.00018) * 0.1);
+  const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, W * 0.52);
+  const hazeHue = bgHue + breathIntensityFiltered * 22;
+  hg.addColorStop(0, `hsla(${hazeHue}, 38%, 48%, ${hazeAlpha})`);
+  hg.addColorStop(0.4, `hsla(${hazeHue}, 28%, 33%, ${hazeAlpha * 0.35})`);
+  hg.addColorStop(0.8, `hsla(${hazeHue}, 20%, 28%, ${hazeAlpha * 0.1})`);
   hg.addColorStop(1, 'transparent');
   ctx.fillStyle = hg;
   ctx.fillRect(0, 0, W, H);
@@ -790,7 +961,7 @@ function render(timestamp) {
   }
 
   const elapsed = timestamp - lastFrameTime;
-  if (elapsed < FRAME_MIN) {
+  if (elapsed < FRAME_MIN_MS) {
     requestAnimationFrame(render);
     return;
   }
@@ -798,84 +969,78 @@ function render(timestamp) {
   const time = performance.now();
   lastFrameTime = timestamp;
 
-  /* --- Update --- */
+  /* --- Update state --- */
   if (pointerDown && holdStart) {
-    const dur = (time - holdStart) / 7000;
-    rawBreath = Math.max(rawBreath, Math.min(1, rawBreath + dur * 0.02 + 0.03));
+    const dur = Math.min(1, (time - holdStart) / 8000);
+    rawBreath = Math.max(rawBreath, Math.min(1, rawBreath + 0.02 + dur * 0.015));
   }
   if (!pointerDown) {
-    rawBreath *= 0.965;
+    rawBreath *= 0.96;
+    if (rawBreath < 0.003) rawBreath = 0;
   }
   updateBreathIntensity(rawBreath);
-
-  if (!pointerDown && breathIntensityFiltered > 0.008) {
-    releaseTimer += RELEASE_DECAY;
-  } else {
-    releaseTimer = Math.max(0, releaseTimer - 0.005);
-  }
-
   updateStateMachine();
 
   const beatPhase = getCurrentBeatPhase();
   const pulse = getBeatPulse(beatPhase);
   const t = getMasterTime();
 
-  /* --- Audio --- */
+  /* --- Audio (throttled) --- */
   updateAudio();
 
   /* --- Draw --- */
   clearCanvas(pulse);
 
-   /* Ambient starfield — always twinkling, hue shifts with state */
-  ambientStars.forEach(s => s.draw(ctx, t, pulse));
+  /* Layer 1: Stars */
+  ambientStars.forEach((s) => s.draw(ctx, t, pulse));
 
-   /* Caustic light patches — soft, moving */
+  /* Layer 2: Caustics */
   drawCaustics(ctx, t, pulse);
 
-     /* Frost layer: soft blur via ctx.filter with morning-snow diffusion */
+  /* Layer 3: Frost */
   if (frostLevel > 0.01) {
     ctx.save();
-    const frostBlur = Math.max(1.5, frostLevel * 5);
+    const frostBlur = Math.max(1.5, frostLevel * 4.5);
     ctx.filter = `blur(${frostBlur}px)`;
-    frostCrystals.forEach(c => c.draw(ctx, frostLevel, beatPhase, t));
+    frostCrystals.forEach((c) => c.draw(ctx, frostLevel, beatPhase, t));
     ctx.filter = 'none';
 
-       /* Morning-snow haze — two-layer radial glow for depth */
+    /* Morning-snow haze overlay */
     ctx.globalCompositeOperation = 'screen';
-    const hazePulse = 0.7 + pulse * 0.3;
-    const frostGlowAlpha = frostLevel * 0.08 * hazePulse;
-    const fg = ctx.createRadialGradient(W * 0.35, H * 0.3, 0, W * 0.35, H * 0.3, W * 0.5);
-    fg.addColorStop(0, `rgba(210, 228, 255, ${frostGlowAlpha})`);
-    fg.addColorStop(0.5, `rgba(185, 205, 240, ${frostGlowAlpha * 0.35})`);
+    const frostGlowAlpha = frostLevel * 0.07 * (0.65 + pulse * 0.35);
+    const fg = ctx.createRadialGradient(W * 0.32, H * 0.28, 0, W * 0.32, H * 0.28, W * 0.48);
+    fg.addColorStop(0, `rgba(210, 226, 255, ${frostGlowAlpha})`);
+    fg.addColorStop(0.45, `rgba(185, 204, 240, ${frostGlowAlpha * 0.3})`);
     fg.addColorStop(1, 'transparent');
     ctx.fillStyle = fg;
     ctx.fillRect(0, 0, W, H);
 
-       /* Secondary frost haze — wider, softer field during engagement */
     if (breathIntensityFiltered > FROST_THRESHOLD) {
-      const engageAlpha = smoothstep((breathIntensityFiltered - FROST_THRESHOLD) / 0.3) * 0.04;
-      const fg2 = ctx.createRadialGradient(W * 0.5, H * 0.45, W * 0.05, W * 0.5, H * 0.45, W * 0.6);
-      fg2.addColorStop(0, `rgba(220, 235, 255, ${engageAlpha * (0.6 + pulse * 0.4)})`);
-      fg2.addColorStop(0.6, `rgba(200, 218, 245, ${engageAlpha * 0.2})`);
+      const engageAlpha = smoothstep((breathIntensityFiltered - FROST_THRESHOLD) / 0.3) * 0.035;
+      const fg2 = ctx.createRadialGradient(W * 0.5, H * 0.43, W * 0.04, W * 0.5, H * 0.43, W * 0.58);
+      fg2.addColorStop(0, `rgba(220, 234, 255, ${engageAlpha * (0.55 + pulse * 0.45)})`);
+      fg2.addColorStop(0.55, `rgba(200, 217, 245, ${engageAlpha * 0.18})`);
       fg2.addColorStop(1, 'transparent');
       ctx.fillStyle = fg2;
       ctx.fillRect(0, 0, W, H);
     }
+
     ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
-   }
+  }
 
-    /* Moss layer: gradient falloff, organic clustering with batched glow */
+  /* Layer 4: Moss */
   if (mossLevel > 0.01) {
     ctx.save();
     ctx.filter = `blur(${1.5 * DPR}px)`;
-    mossParticles.forEach(p => p.draw(ctx, mossLevel, beatPhase, t));
+    mossParticles.forEach((p) => p.draw(ctx, mossLevel, beatPhase, t));
     ctx.filter = 'none';
 
-      /* Moss ambient glow — single gradient pass for performance */
+    /* Moss ambient glow */
     ctx.globalCompositeOperation = 'screen';
-    const mg = ctx.createRadialGradient(W * 0.5, H * 0.65, 0, W * 0.5, H * 0.65, W * 0.35);
-    mg.addColorStop(0, `hsla(105, 40%, 40%, ${mossLevel * 0.06 * (0.6 + pulse * 0.4)})`);
+    const mg = ctx.createRadialGradient(W * 0.5, H * 0.63, 0, W * 0.5, H * 0.63, W * 0.33);
+    mg.addColorStop(0, `hsla(102, 42%, 38%, ${mossLevel * 0.05 * (0.55 + pulse * 0.45)})`);
+    mg.addColorStop(0.6, `hsla(105, 35%, 30%, ${mossLevel * 0.015})`);
     mg.addColorStop(1, 'transparent');
     ctx.fillStyle = mg;
     ctx.fillRect(0, 0, W, H);
@@ -883,50 +1048,52 @@ function render(timestamp) {
     ctx.restore();
   }
 
-   /* Floating spores — ambient particles that drift during moss/geode states */
-  spores.forEach(s => s.draw(ctx, t, geodeLevel, mossLevel, pulse));
+  /* Layer 5: Spores */
+  spores.forEach((s) => s.draw(ctx, t, geodeLevel, mossLevel, pulse));
 
-   /* Geode bloom: central node + crystalline rays */
+  /* Layer 6: Geode Bloom */
   if (geodeLevel > 0.01) {
-    const cx = W * 0.5, cy = H * 0.45;
+    const cx = W * 0.5, cy = H * 0.44;
 
-       /* Core bloom — Gaussian soft-edge glow, 3-pass layered */
     ctx.save();
-    ctx.filter = `blur(${10 * DPR}px)`;
-    const coreSize = (40 + geodeLevel * 150) * DPR;
+
+    /* Core glow — 3-pass Gaussian bloom */
+    ctx.filter = `blur(${9 * DPR}px)`;
+    const coreSize = (35 + geodeLevel * 145) * DPR;
     const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreSize);
-    cg.addColorStop(0, `hsla(285, 80%, 72%, ${geodeLevel * (0.35 + pulse * 0.2) * 0.9})`);
-    cg.addColorStop(0.15, `hsla(280, 78%, 68%, ${geodeLevel * (0.28 + pulse * 0.15) * 0.85})`);
-    cg.addColorStop(0.35, `hsla(270, 75%, 55%, ${geodeLevel * (0.18 + pulse * 0.1) * 0.8})`);
-    cg.addColorStop(0.6, `hsla(255, 65%, 40%, ${geodeLevel * 0.06 * 0.7})`);
-    cg.addColorStop(0.85, `hsla(245, 55%, 35%, ${geodeLevel * 0.015})`);
+    cg.addColorStop(0, `hsla(284, 78%, 70%, ${geodeLevel * (0.32 + pulse * 0.18)})`);
+    cg.addColorStop(0.12, `hsla(278, 76%, 66%, ${geodeLevel * 0.26})`);
+    cg.addColorStop(0.32, `hsla(268, 72%, 52%, ${geodeLevel * 0.16})`);
+    cg.addColorStop(0.55, `hsla(252, 62%, 38%, ${geodeLevel * 0.05})`);
+    cg.addColorStop(0.8, `hsla(242, 52%, 32%, ${geodeLevel * 0.012})`);
     cg.addColorStop(1, 'transparent');
     ctx.fillStyle = cg;
     ctx.beginPath();
     ctx.arc(cx, cy, coreSize, 0, Math.PI * 2);
     ctx.fill();
-    ctx.filter = 'none';
 
-        /* Second bloom pass — tighter, brighter with Gaussian falloff */
-    const coreSize2 = (20 + geodeLevel * 70) * DPR;
+    /* Second core pass — tighter, brighter */
+    ctx.filter = `blur(${4 * DPR}px)`;
+    const coreSize2 = (18 + geodeLevel * 65) * DPR;
     const cg2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreSize2);
-    cg2.addColorStop(0, `hsla(295, 85%, 82%, ${geodeLevel * (0.45 + pulse * 0.18)})`);
-    cg2.addColorStop(0.2, `hsla(290, 82%, 78%, ${geodeLevel * (0.35 + pulse * 0.12)})`);
-    cg2.addColorStop(0.5, `hsla(275, 70%, 58%, ${geodeLevel * 0.12})`);
-    cg2.addColorStop(0.8, `hsla(265, 60%, 45%, ${geodeLevel * 0.025})`);
+    cg2.addColorStop(0, `hsla(294, 84%, 80%, ${geodeLevel * (0.42 + pulse * 0.16)})`);
+    cg2.addColorStop(0.18, `hsla(288, 80%, 76%, ${geodeLevel * (0.32 + pulse * 0.1)})`);
+    cg2.addColorStop(0.45, `hsla(272, 68%, 56%, ${geodeLevel * 0.1})`);
+    cg2.addColorStop(0.75, `hsla(262, 58%, 42%, ${geodeLevel * 0.02})`);
     cg2.addColorStop(1, 'transparent');
     ctx.fillStyle = cg2;
     ctx.beginPath();
     ctx.arc(cx, cy, coreSize2, 0, Math.PI * 2);
     ctx.fill();
 
-        /* Third pass — outer halo for Gaussian bloom spread */
-    const haloSize = coreSize * 1.3;
+    /* Third pass — outer halo */
+    ctx.filter = 'none';
     ctx.globalCompositeOperation = 'screen';
-    const cg3 = ctx.createRadialGradient(cx, cy, coreSize2 * 0.5, cx, cy, haloSize);
-    cg3.addColorStop(0, `hsla(280, 70%, 50%, ${geodeLevel * 0.06 * (0.7 + pulse * 0.3)})`);
-    cg3.addColorStop(0.4, `hsla(265, 55%, 40%, ${geodeLevel * 0.025})`);
-    cg3.addColorStop(0.75, `hsla(250, 40%, 30%, ${geodeLevel * 0.008})`);
+    const haloSize = coreSize * 1.25;
+    const cg3 = ctx.createRadialGradient(cx, cy, coreSize2 * 0.4, cx, cy, haloSize);
+    cg3.addColorStop(0, `hsla(278, 68%, 48%, ${geodeLevel * 0.05 * (0.65 + pulse * 0.35)})`);
+    cg3.addColorStop(0.35, `hsla(262, 52%, 38%, ${geodeLevel * 0.022})`);
+    cg3.addColorStop(0.7, `hsla(248, 38%, 28%, ${geodeLevel * 0.006})`);
     cg3.addColorStop(1, 'transparent');
     ctx.fillStyle = cg3;
     ctx.beginPath();
@@ -934,35 +1101,37 @@ function render(timestamp) {
     ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
 
-     /* Draw all geode crystals */
+    /* Crystal facets — draw from center */
     for (const b of geodeBlooms) {
       b.draw(ctx, geodeLevel, beatPhase, t);
-     }
+    }
 
-     /* Frost edge interaction: geode light reflects on frost edges */
+    /* Frost-edge interaction: geode light reflects on frost */
     if (frostLevel > 0.05) {
-      const blendAlpha = frostLevel * geodeLevel * 0.06 * (0.5 + pulse * 0.5);
-      const ig = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.35);
-      ig.addColorStop(0, `hsla(280, 60%, 70%, ${blendAlpha})`);
+      const blendAlpha = frostLevel * geodeLevel * 0.05 * (0.45 + pulse * 0.55);
+      const ig = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.32);
+      ig.addColorStop(0, `hsla(278, 58%, 68%, ${blendAlpha})`);
+      ig.addColorStop(0.5, `hsla(272, 48%, 55%, ${blendAlpha * 0.3})`);
       ig.addColorStop(1, 'transparent');
       ctx.globalCompositeOperation = 'screen';
       ctx.fillStyle = ig;
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over';
-     }
+    }
 
-     /* Geode micro-sparkles along crystal tips */
-    ctx.filter = `blur(${2 * DPR}px)`;
+    /* Tip sparkles */
+    ctx.filter = `blur(${1.5 * DPR}px)`;
     for (const b of geodeBlooms) {
-      const tipX = b.cx + Math.cos(b.angle) * b.length * geodeLevel * (0.7 + pulse * 0.15);
-      const tipY = b.cy + Math.sin(b.angle) * b.length * geodeLevel * (0.7 + pulse * 0.15);
-      const sparkleAlpha = geodeLevel * 0.15 * (0.5 + pulse * 0.5);
-      const sg = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 8 * DPR);
-      sg.addColorStop(0, `hsla(${b.hue}, 70%, 85%, ${sparkleAlpha})`);
-      sg.addColorStop(1, `hsla(${b.hue}, 60%, 70%, 0)`);
+      const tipX = b.cx + Math.cos(b.angle) * b.length * geodeLevel * (0.65 + pulse * 0.13);
+      const tipY = b.cy + Math.sin(b.angle) * b.length * geodeLevel * (0.65 + pulse * 0.13);
+      const sparkleAlpha = geodeLevel * 0.12 * (0.45 + pulse * 0.55);
+      const sg = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 7 * DPR);
+      sg.addColorStop(0, `hsla(${b.hue}, 68%, 82%, ${sparkleAlpha})`);
+      sg.addColorStop(0.6, `hsla(${b.hue}, 55%, 68%, ${sparkleAlpha * 0.3})`);
+      sg.addColorStop(1, `hsla(${b.hue}, 45%, 58%, 0)`);
       ctx.fillStyle = sg;
       ctx.beginPath();
-      ctx.arc(tipX, tipY, 8 * DPR, 0, Math.PI * 2);
+      ctx.arc(tipX, tipY, 7 * DPR, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.filter = 'none';
@@ -970,21 +1139,21 @@ function render(timestamp) {
     ctx.restore();
   }
 
-        /* Breathing mist — idle atmosphere layer, fades during geode peak */
+  /* Layer 7: Breathing mist */
   {
-    const mistWeight = frostLevel * 0.35 + Math.max(0, releaseTimer) * 0.2;
-    if (mistWeight > 0.01) {
+    const mistWeight = frostLevel * 0.3 + Math.max(0, releaseLevel) * 0.18;
+    if (mistWeight > 0.008) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
-      for (let i = 0; i < 6; i++) {
-        const phase = t * 0.00015 * (1 + i * 0.1) + i * 1.7;
-        const mx = W * (0.15 + 0.7 * ((Math.sin(phase + i * 2.3) + 1) / 2));
-        const my = H * (0.25 + 0.5 * ((Math.cos(phase * 0.7 + i * 1.1) + 1) / 2));
-        const mr = W * (0.18 + Math.sin(t * 0.0002 + i * 3.1) * 0.06);
+      for (let i = 0; i < 5; i++) {
+        const mPhase = t * 0.00013 * (1 + i * 0.08) + i * 1.6;
+        const mx = W * (0.12 + 0.76 * ((Math.sin(mPhase + i * 2.1) + 1) / 2));
+        const my = H * (0.22 + 0.56 * ((Math.cos(mPhase * 0.65 + i * 1.0) + 1) / 2));
+        const mr = W * (0.16 + Math.sin(t * 0.00018 + i * 2.9) * 0.055);
         const mg = ctx.createRadialGradient(mx, my, 0, mx, my, mr);
-        const mistHue = 215 + i * 8 + breathIntensityFiltered * 15;
-        mg.addColorStop(0, `hsla(${mistHue}, 25%, 55%, ${mistWeight * 0.03 * (0.5 + pulse * 0.5)})`);
-        mg.addColorStop(0.5, `hsla(${mistHue + 5}, 20%, 45%, ${mistWeight * 0.012})`);
+        const mistHue = 212 + i * 7 + breathIntensityFiltered * 13;
+        mg.addColorStop(0, `hsla(${mistHue}, 24%, 52%, ${mistWeight * 0.028 * (0.45 + pulse * 0.55)})`);
+        mg.addColorStop(0.5, `hsla(${mistHue + 4}, 18%, 42%, ${mistWeight * 0.01})`);
         mg.addColorStop(1, 'transparent');
         ctx.fillStyle = mg;
         ctx.beginPath();
@@ -993,25 +1162,22 @@ function render(timestamp) {
       }
       ctx.globalCompositeOperation = 'source-over';
       ctx.restore();
-     }
     }
+  }
 
-        /* Cooling obsidian overlay during release */
+  /* Layer 8: Cooling obsidian overlay */
   drawCoolingObsidian(ctx, t);
 
-   /* Subtle vignette — always present, darkens edges */
-  const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.15, W * 0.5, H * 0.5, W * 0.75);
+  /* Layer 9: Vignette */
+  const vg = ctx.createRadialGradient(W * 0.5, H * 0.48, W * 0.12, W * 0.5, H * 0.48, W * 0.72);
   vg.addColorStop(0, 'transparent');
-  vg.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');
-  vg.addColorStop(1, `rgba(0, 0, 0, ${0.4 + Math.max(0, releaseTimer * 0.15)})`);
+  vg.addColorStop(0.65, 'rgba(0, 0, 0, 0.12)');
+  vg.addColorStop(1, `rgba(0, 0, 0, ${0.35 + Math.max(0, releaseLevel * 0.18)})`);
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, W, H);
 
-   /* Apply bloom post-process */
+  /* Layer 10: Bloom post-process */
   applyBloom();
-
-   /* Bloom canvas opacity scales with geode/moss */
-  bloomCanvas.style.opacity = Math.min(0.6, 0.15 + geodeLevel * 0.35 + mossLevel * 0.1);
 
   requestAnimationFrame(render);
 }
