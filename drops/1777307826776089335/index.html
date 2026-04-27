@@ -551,11 +551,115 @@ class GeodeBloom {
 }
 
 /* ============================================================
-   SCENE INITIALIZATION
-   ============================================================ */
+    AMBIENT STARS — twinkling background field
+    ============================================================= */
+class AmbientStar {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.baseSize = 0.5 + Math.random() * 1.5;
+    this.phase = Math.random() * Math.PI * 2;
+    this.twinkleSpeed = 0.5 + Math.random() * 2;
+    this.brightness = 0.15 + Math.random() * 0.35;
+    this.hueShift = Math.random() * 30;
+  }
+  draw(ctx, time, pulse) {
+    const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time / 1000 * this.twinkleSpeed + this.phase));
+    const alpha = this.brightness * twinkle * (0.6 + pulse * 0.4);
+    if (alpha < 0.01) return;
+    const sz = this.baseSize * DPR;
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 3);
+    const hue = 220 + this.hueShift + breathIntensityFiltered * 40;
+    g.addColorStop(0, `hsla(${hue}, 30%, 80%, ${alpha})`);
+    g.addColorStop(1, `hsla(${hue}, 20%, 60%, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, sz * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ============================================================
+    FLORE SPORES — floating ambient particles
+    ============================================================= */
+class Spore {
+  constructor(x, y) {
+    this.ox = x; this.oy = y;
+    this.x = x; this.y = y;
+    this.phase = Math.random() * Math.PI * 2;
+    this.driftSpeed = 0.05 + Math.random() * 0.15;
+    this.wobbleAmp = 5 + Math.random() * 20;
+    this.size = 1 + Math.random() * 3;
+    this.hue = 260 + Math.random() * 80;
+    this.altitude = Math.random();
+  }
+  draw(ctx, time, geodeLevel, mossLevel, pulse) {
+    const active = Math.max(geodeLevel * 0.7, mossLevel * 0.4);
+    if (active < 0.01) return;
+    const drift = time * 0.0003 * this.driftSpeed;
+    this.x = this.ox + Math.sin(time * 0.0004 + this.phase) * this.wobbleAmp;
+    this.y = this.oy - ((time * 0.01 * this.driftSpeed + this.phase) % (H * 1.2)) + H * 0.3;
+    const alpha = active * 0.2 * (0.5 + pulse * 0.5 + Math.sin(time / 2000 + this.phase) * 0.3);
+    if (alpha < 0.005) return;
+    const sz = this.size * DPR * (0.8 + geodeLevel * 0.5);
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, sz * 4);
+    g.addColorStop(0, `hsla(${this.hue}, 50%, 70%, ${alpha})`);
+    g.addColorStop(1, `hsla(${this.hue}, 40%, 50%, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, sz * 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ============================================================
+    COOLING OBSIDIAN — release phase visual overlay
+    ============================================================= */
+function drawCoolingObsidian(ctx, time) {
+  if (releaseTimer < 0.05) return;
+  const alpha = Math.min(0.35, releaseTimer * 0.2);
+  const g = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.1, W * 0.5, H * 0.5, W * 0.6);
+  const coolHue = 250 + Math.sin(time * 0.001) * 15;
+  g.addColorStop(0, `hsla(${coolHue}, 30%, 15%, ${alpha * 0.3})`);
+  g.addColorStop(0.5, `hsla(${coolHue + 10}, 25%, 8%, ${alpha * 0.6})`);
+  g.addColorStop(1, `hsla(${coolHue + 20}, 20%, 3%, ${alpha})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================================================
+    LIGHT CAUSTICS — soft moving light patches
+    ============================================================= */
+function drawCaustics(ctx, time, pulse) {
+  const intensity = Math.max(frostLevel, mossLevel, geodeLevel) * 0.04;
+  if (intensity < 0.005) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 4; i++) {
+    const cx = W * (0.2 + 0.6 * ((Math.sin(time * 0.0002 + i * 1.8) + 1) / 2));
+    const cy = H * (0.15 + 0.7 * ((Math.cos(time * 0.00015 + i * 2.3) + 1) / 2));
+    const r = W * (0.12 + pulse * 0.05 + Math.sin(time * 0.0004 + i) * 0.04);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    const hue = 210 + i * 25 + breathIntensityFiltered * 30;
+    g.addColorStop(0, `hsla(${hue}, 45%, 65%, ${intensity * (0.6 + pulse * 0.4)})`);
+    g.addColorStop(0.6, `hsla(${hue}, 35%, 45%, ${intensity * 0.2})`);
+    g.addColorStop(1, `hsla(${hue}, 25%, 30%, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+}
+
+/* ============================================================
+    SCENE INITIALIZATION
+    ============================================================= */
 const frostCrystals = [];
 const mossParticles = [];
 let geodeBlooms = [];
+const ambientStars = [];
+const spores = [];
 
 function initSceneObjects() {
   frostCrystals.length = 0;
@@ -582,6 +686,16 @@ function initSceneObjects() {
     const a = (Math.PI * 2 / 36) * i + (Math.random() - 0.5) * 0.15;
     const len = W * (0.12 + Math.random() * 0.18);
     geodeBlooms.push(new GeodeBloom(cx, cy, a, len, 3 + Math.random() * 6, 2 + Math.floor(Math.random() * 3)));
+  }
+
+  ambientStars.length = 0;
+  for (let i = 0; i < 120; i++) {
+    ambientStars.push(new AmbientStar(Math.random() * W, Math.random() * H));
+  }
+
+  spores.length = 0;
+  for (let i = 0; i < 60; i++) {
+    spores.push(new Spore(Math.random() * W, Math.random() * H));
   }
 }
 
@@ -710,14 +824,20 @@ function render(timestamp) {
   /* --- Draw --- */
   clearCanvas(pulse);
 
-  /* Frost layer: soft blur via ctx.filter */
+   /* Ambient starfield — always twinkling, hue shifts with state */
+  ambientStars.forEach(s => s.draw(ctx, t, pulse));
+
+   /* Caustic light patches — soft, moving */
+  drawCaustics(ctx, t, pulse);
+
+   /* Frost layer: soft blur via ctx.filter */
   if (frostLevel > 0.01) {
     ctx.save();
     ctx.filter = `blur(${Math.max(1.5, frostLevel * 4.5)}px)`;
     frostCrystals.forEach(c => c.draw(ctx, frostLevel, beatPhase, t));
     ctx.filter = 'none';
 
-    /* Frost edge glow — morning-snow haze effect */
+     /* Frost edge glow — morning-snow haze effect */
     ctx.globalCompositeOperation = 'screen';
     const frostGlowAlpha = frostLevel * 0.08 * (0.7 + pulse * 0.3);
     const fg = ctx.createRadialGradient(W * 0.35, H * 0.3, 0, W * 0.35, H * 0.3, W * 0.4);
@@ -729,14 +849,14 @@ function render(timestamp) {
     ctx.restore();
   }
 
-  /* Moss layer: gradient falloff, organic clustering */
+   /* Moss layer: gradient falloff, organic clustering */
   if (mossLevel > 0.01) {
     ctx.save();
     ctx.filter = `blur(${1.5 * DPR}px)`;
     mossParticles.forEach(p => p.draw(ctx, mossLevel, beatPhase, t));
     ctx.filter = 'none';
 
-    /* Moss ambient glow */
+     /* Moss ambient glow */
     ctx.globalCompositeOperation = 'screen';
     const mg = ctx.createRadialGradient(W * 0.5, H * 0.65, 0, W * 0.5, H * 0.65, W * 0.35);
     mg.addColorStop(0, `hsla(105, 40%, 40%, ${mossLevel * 0.06 * (0.6 + pulse * 0.4)})`);
@@ -747,11 +867,14 @@ function render(timestamp) {
     ctx.restore();
   }
 
-  /* Geode bloom: central node + crystalline rays */
+   /* Floating spores — ambient particles that drift during moss/geode states */
+  spores.forEach(s => s.draw(ctx, t, geodeLevel, mossLevel, pulse));
+
+   /* Geode bloom: central node + crystalline rays */
   if (geodeLevel > 0.01) {
     const cx = W * 0.5, cy = H * 0.45;
 
-    /* Core bloom — intense warm glow */
+     /* Core bloom — intense warm glow */
     ctx.save();
     ctx.filter = `blur(${10 * DPR}px)`;
     const coreSize = (40 + geodeLevel * 150) * DPR;
@@ -766,7 +889,7 @@ function render(timestamp) {
     ctx.fill();
     ctx.filter = 'none';
 
-    /* Second bloom pass — tighter, brighter */
+     /* Second bloom pass — tighter, brighter */
     const coreSize2 = (20 + geodeLevel * 70) * DPR;
     const cg2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreSize2);
     cg2.addColorStop(0, `hsla(295, 85%, 82%, ${geodeLevel * (0.45 + pulse * 0.18)})`);
@@ -777,12 +900,12 @@ function render(timestamp) {
     ctx.arc(cx, cy, coreSize2, 0, Math.PI * 2);
     ctx.fill();
 
-    /* Draw all geode crystals */
+     /* Draw all geode crystals */
     for (const b of geodeBlooms) {
       b.draw(ctx, geodeLevel, beatPhase, t);
-    }
+     }
 
-    /* Frost edge interaction: geode light reflects on frost edges */
+     /* Frost edge interaction: geode light reflects on frost edges */
     if (frostLevel > 0.05) {
       const blendAlpha = frostLevel * geodeLevel * 0.06 * (0.5 + pulse * 0.5);
       const ig = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.35);
@@ -792,12 +915,31 @@ function render(timestamp) {
       ctx.fillStyle = ig;
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over';
+     }
+
+     /* Geode micro-sparkles along crystal tips */
+    ctx.filter = `blur(${2 * DPR}px)`;
+    for (const b of geodeBlooms) {
+      const tipX = b.cx + Math.cos(b.angle) * b.length * geodeLevel * (0.7 + pulse * 0.15);
+      const tipY = b.cy + Math.sin(b.angle) * b.length * geodeLevel * (0.7 + pulse * 0.15);
+      const sparkleAlpha = geodeLevel * 0.15 * (0.5 + pulse * 0.5);
+      const sg = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 8 * DPR);
+      sg.addColorStop(0, `hsla(${b.hue}, 70%, 85%, ${sparkleAlpha})`);
+      sg.addColorStop(1, `hsla(${b.hue}, 60%, 70%, 0)`);
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 8 * DPR, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.filter = 'none';
 
     ctx.restore();
   }
 
-  /* Subtle vignette — always present, darkens edges */
+   /* Cooling obsidian overlay during release */
+  drawCoolingObsidian(ctx, t);
+
+   /* Subtle vignette — always present, darkens edges */
   const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.15, W * 0.5, H * 0.5, W * 0.75);
   vg.addColorStop(0, 'transparent');
   vg.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');
@@ -805,10 +947,10 @@ function render(timestamp) {
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, W, H);
 
-  /* Apply bloom post-process */
+   /* Apply bloom post-process */
   applyBloom();
 
-  /* Bloom canvas opacity scales with geode/moss */
+   /* Bloom canvas opacity scales with geode/moss */
   bloomCanvas.style.opacity = Math.min(0.6, 0.15 + geodeLevel * 0.35 + mossLevel * 0.1);
 
   requestAnimationFrame(render);
