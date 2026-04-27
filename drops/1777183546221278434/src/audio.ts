@@ -1,208 +1,221 @@
 // src/audio.ts — Web Audio API synthesis (zero external assets)
 
 const BPM = 56;
-const BEAT_INTERVAL = 60 / BPM; // ~1.07s per beat
+const BEAT_HZ = BPM / 60; // ~0.933 Hz
 
 let audioCtx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let compressor: DynamicsCompressorNode | null = null;
-let tidalOsc: OscillatorNode | null = null;
-let tidalGain: GainNode | null = null;
-let tidalFilter: BiquadFilterNode | null = null;
-let reverbDelay: DelayNode | null = null;
-let reverbFeedback: GainNode | null = null;
-let reverbDry: GainNode | null = null;
-let reverbWet: GainNode | null = null;
-let noiseBuffer: AudioBuffer | null = null;
 
-let initialized = false;
+// Tidal pulse
+let tidalOsc: OscillatorNode | null = null;
+let tidalLfo: OscillatorNode | null = null;
+let tidalFilter: BiquadFilterNode | null = null;
+let tidalGain: GainNode | null = null;
+
+// Breath layer
 let breathGain: GainNode | null = null;
 let breathOsc: OscillatorNode | null = null;
 let breathOsc2: OscillatorNode | null = null;
 
+// Reverb delay network
+let reverbDelay: DelayNode | null = null;
+let reverbFeedbackGain: GainNode | null = null;
+let reverbDryGain: GainNode | null = null;
+let reverbWetGain: GainNode | null = null;
+
+// Noise buffer for coral chimes
+let noiseBuffer: AudioBuffer | null = null;
+
+let initialized = false;
+
 /**
- * Initialize audio graph. Called once on first user gesture.
- * Creates all nodes, connects them, starts tidal pulse oscillator.
+ * Initialize audio graph on first user gesture.
+ * Builds: tidal pulse → LFO modulated filter → breath layer → reverb → compressor → master → destination
  */
 export function initAudio(): void {
-   if (initialized) return;
+    if (initialized) return;
 
-   audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = audioCtx.currentTime;
 
-   // Compressor — prevents clipping during peak input
-   compressor = audioCtx.createDynamicsCompressor();
-   compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
-   compressor.knee.setValueAtTime(10, audioCtx.currentTime);
-   compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-   compressor.attack.setValueAtTime(0.005, audioCtx.currentTime);
-   compressor.release.setValueAtTime(0.1, audioCtx.currentTime);
+    // ---------------------------------------------------------------
+    // DynamicsCompressor — prevents clipping during peak input
+    // ---------------------------------------------------------------
+    compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-18, now);
+    compressor.knee.setValueAtTime(8, now);
+    compressor.ratio.setValueAtTime(10, now);
+    compressor.attack.setValueAtTime(0.003, now);
+    compressor.release.setValueAtTime(0.08, now);
 
-   // Reverb via delay network: 0.8s feedback, 0.3 wet/dry mix
-   reverbDelay = audioCtx.createDelay(2.0);
-   reverbDelay.delayTime.setValueAtTime(0.8, audioCtx.currentTime);
+    // ---------------------------------------------------------------
+    // Reverb delay network — 0.8 s feedback, 0.3 wet / 0.7 dry
+    // ---------------------------------------------------------------
+    reverbDelay = audioCtx.createDelay(2.0);
+    reverbDelay.delayTime.setValueAtTime(0.8, now);
 
-   reverbFeedback = audioCtx.createGain();
-   reverbFeedback.gain.setValueAtTime(0.45, audioCtx.currentTime);
+    reverbFeedbackGain = audioCtx.createGain();
+    reverbFeedbackGain.gain.setValueAtTime(0.4, now);
 
-   reverbDry = audioCtx.createGain();
-   reverbDry.gain.setValueAtTime(0.7, audioCtx.currentTime);
+    reverbDryGain = audioCtx.createGain();
+    reverbDryGain.gain.setValueAtTime(0.7, now);
 
-   reverbWet = audioCtx.createGain();
-   reverbWet.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    reverbWetGain = audioCtx.createGain();
+    reverbWetGain.gain.setValueAtTime(0.3, now);
 
-   // Tidal pulse: 60Hz sine, low-pass filtered
-   tidalOsc = audioCtx.createOscillator();
-   tidalOsc.type = 'sine';
-   tidalOsc.frequency.setValueAtTime(60, audioCtx.currentTime);
+    // ---------------------------------------------------------------
+    // Tidal pulse — 60 Hz sine, low-pass filtered, LFO modulated
+    // ---------------------------------------------------------------
+    tidalOsc = audioCtx.createOscillator();
+    tidalOsc.type = 'sine';
+    tidalOsc.frequency.setValueAtTime(60, now);
 
-   tidalFilter = audioCtx.createBiquadFilter();
-   tidalFilter.type = 'lowpass';
-   tidalFilter.frequency.setValueAtTime(120, audioCtx.currentTime);
-   tidalFilter.Q.setValueAtTime(1.5, audioCtx.currentTime);
+    tidalLfo = audioCtx.createOscillator();
+    tidalLfo.type = 'sine';
+    tidalLfo.frequency.setValueAtTime(BEAT_HZ, now); // 56 BPM
 
-   tidalGain = audioCtx.createGain();
-   tidalGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    const tidalLfoGain = audioCtx.createGain();
+    tidalLfoGain.gain.setValueAtTime(6, now);
 
-   // Breath layer — two oscillators for warmth
-   breathOsc = audioCtx.createOscillator();
-   breathOsc.type = 'sine';
-   breathOsc.frequency.setValueAtTime(180, audioCtx.currentTime);
+    tidalLfo.connect(tidalLfoGain);
+    tidalLfoGain.connect(tidalOsc.frequency);
 
-   breathOsc2 = audioCtx.createOscillator();
-   breathOsc2.type = 'triangle';
-   breathOsc2.frequency.setValueAtTime(270, audioCtx.currentTime);
+    tidalFilter = audioCtx.createBiquadFilter();
+    tidalFilter.type = 'lowpass';
+    tidalFilter.frequency.setValueAtTime(110, now);
+    tidalFilter.Q.setValueAtTime(1.8, now);
 
-   breathGain = audioCtx.createGain();
-   breathGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    // Second LFO modulates filter cutoff for "pull" feel
+    const filterLfo = audioCtx.createOscillator();
+    filterLfo.type = 'sine';
+    filterLfo.frequency.setValueAtTime(BEAT_HZ * 0.5, now);
+    const filterLfoG = audioCtx.createGain();
+    filterLfoG.gain.setValueAtTime(35, now);
+    filterLfo.connect(filterLfoG);
+    filterLfoG.connect(tidalFilter.frequency);
 
-   // Noise buffer for coral chimes
-   const bufferSize = audioCtx.sampleRate * 2;
-   noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-   const data = noiseBuffer.getChannelData(0);
-   for (let i = 0; i < bufferSize; i++) {
-       data[i] = Math.random() * 2 - 1;
-   }
+    tidalGain = audioCtx.createGain();
+    tidalGain.gain.setValueAtTime(0.22, now);
 
-   // Connection graph:
-   // tidalOsc -> tidalFilter -> tidalGain -> compressor
-   tidalOsc.connect(tidalFilter);
-   tidalFilter.connect(tidalGain);
-   tidalGain.connect(compressor);
+    tidalOsc.connect(tidalFilter);
+    tidalFilter.connect(tidalGain);
 
-   // breathOsc + breathOsc2 -> breathGain -> compressor
-   breathOsc.connect(breathGain);
-   breathOsc2.connect(breathGain);
-   breathGain.connect(compressor);
+    // ---------------------------------------------------------------
+    // Breath layer — sine + triangle warm pad
+    // ---------------------------------------------------------------
+    breathOsc = audioCtx.createOscillator();
+    breathOsc.type = 'sine';
+    breathOsc.frequency.setValueAtTime(185, now);
 
-   // compressor -> reverbDry + reverbDelay
-   compressor.connect(reverbDry);
-   compressor.connect(reverbDelay);
+    breathOsc2 = audioCtx.createOscillator();
+    breathOsc2.type = 'triangle';
+    breathOsc2.frequency.setValueAtTime(277, now);
 
-   // reverbDelay -> reverbFeedback -> reverbDelay (feedback loop)
-   reverbDelay.connect(reverbFeedback);
-   reverbFeedback.connect(reverbDelay);
-   reverbDelay.connect(reverbWet);
+    breathGain = audioCtx.createGain();
+    breathGain.gain.setValueAtTime(0, now);
 
-   // Dry + wet -> master -> destination
-   masterGain = audioCtx.createGain();
-   masterGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+    breathOsc.connect(breathGain);
+    breathOsc2.connect(breathGain);
 
-   reverbDry.connect(masterGain);
-   reverbWet.connect(masterGain);
-   masterGain.connect(audioCtx.destination);
+    // ---------------------------------------------------------------
+    // Noise buffer for coral chimes
+    // ---------------------------------------------------------------
+    const bufLen = audioCtx.sampleRate * 2;
+    noiseBuffer = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+    const chData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+        chData[i] = Math.random() * 2 - 1;
+    }
 
-   // Start oscillators
-   tidalOsc.start();
-   breathOsc.start();
-   breathOsc2.start();
+    // ---------------------------------------------------------------
+    // Wire signal chain
+    // ---------------------------------------------------------------
+    // tidal + breath → compressor
+    tidalGain.connect(compressor);
+    breathGain.connect(compressor);
 
-   // Modulate tidal pulse at BPM rate
-   const lfo = audioCtx.createOscillator();
-   lfo.type = 'sine';
-   lfo.frequency.setValueAtTime(1 / BEAT_INTERVAL, audioCtx.currentTime); // 56 BPM
+    // compressor → dry path · reverb delay
+    compressor.connect(reverbDryGain);
+    compressor.connect(reverbDelay);
 
-   const lfoGain = audioCtx.createGain();
-   lfoGain.gain.setValueAtTime(8, audioCtx.currentTime);
+    // reverb feedback loop
+    reverbDelay.connect(reverbFeedbackGain);
+    reverbFeedbackGain.connect(reverbDelay);
+    reverbDelay.connect(reverbWetGain);
 
-   lfo.connect(lfoGain);
-   lfoGain.connect(tidalOsc.frequency);
-   lfo.start();
+    // dry + wet → master → destination
+    masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0.65, now);
 
-   // Modulate filter at BPM — creates the tidal "pull" effect
-   const filterLfo = audioCtx.createOscillator();
-   filterLfo.type = 'sine';
-   filterLfo.frequency.setValueAtTime(1 / BEAT_INTERVAL, audioCtx.currentTime);
+    reverbDryGain.connect(masterGain);
+    reverbWetGain.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
 
-   const filterLfoGain = audioCtx.createGain();
-   filterLfoGain.gain.setValueAtTime(40, audioCtx.currentTime);
+    // Start all oscillators
+    tidalOsc.start();
+    tidalLfo.start();
+    filterLfo.start();
+    breathOsc.start();
+    breathOsc2.start();
 
-   filterLfo.connect(filterLfoGain);
-   filterLfoGain.connect(tidalFilter.frequency);
-   filterLfo.start();
-
-   initialized = true;
+    initialized = true;
 }
 
-/** Resume audio context (browser autoplay compliance) */
+/** Resume context for browser autoplay policy */
 export function resumeAudio(): void {
-   if (audioCtx && audioCtx.state === 'suspended') {
-       audioCtx.resume();
-   }
+    if (audioCtx?.state === 'suspended') {
+        audioCtx.resume();
+    }
 }
 
-/** Play a coral chime — high-pass filtered noise burst */
+/** High-pass noise burst mapped to input velocity — coral chimes */
 export function playCoralChime(intensity: number): void {
-   if (!initialized || !audioCtx || !noiseBuffer) return;
+    if (!initialized || !audioCtx || !noiseBuffer) return;
 
-   const now = audioCtx.currentTime;
-   const source = audioCtx.createBufferSource();
-   source.buffer = noiseBuffer;
+    const now = audioCtx.currentTime;
+    const src = audioCtx.createBufferSource();
+    src.buffer = noiseBuffer;
 
-   const chimeFilter = audioCtx.createBiquadFilter();
-   chimeFilter.type = 'highpass';
-   chimeFilter.frequency.setValueAtTime(2000 + intensity * 3000, now);
-   chimeFilter.Q.setValueAtTime(2 + intensity * 3, now);
+    const hp = audioCtx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(1800 + intensity * 4000, now);
+    hp.Q.setValueAtTime(2.5 + intensity * 3.5, now);
 
-   const chimeGain = audioCtx.createGain();
-   const vol = intensity * 0.15;
-   chimeGain.gain.setValueAtTime(0, now);
-   chimeGain.gain.linearRampToValueAtTime(vol, now + 0.01);
-   chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3 + intensity * 0.2);
+    const g = audioCtx.createGain();
+    const peakVol = intensity * 0.14;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(peakVol, now + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0005, now + 0.35 + intensity * 0.18);
 
-   source.connect(chimeFilter);
-   chimeFilter.connect(chimeGain);
-   chimeGain.connect(compressor!);
+    src.connect(hp);
+    hp.connect(g);
+    g.connect(compressor!);
 
-   source.start(now);
-   source.stop(now + 0.6);
+    src.start(now);
+    src.stop(now + 0.7);
 }
 
 /**
- * Update breath audio — called every frame based on breathIntensity.
- * Uses smooth ramping via setTargetAtTime for <16ms latency.
+ * Update breath audio per frame — setTargetAtTime for sub-16 ms latency.
  */
-export function updateBreathAudio(breathIntensity: number): void {
-   if (!initialized || !audioCtx || !breathGain || !breathOsc || !breathOsc2) return;
+export function updateBreathAudio(breath: number): void {
+    if (!initialized || !audioCtx || !breathGain) return;
+    const now = audioCtx.currentTime;
 
-   const now = audioCtx.currentTime;
+    breathGain.gain.setTargetAtTime(breath * 0.17, now, 0.035);
 
-   // Smooth gain ramp
-   breathGain.gain.setTargetAtTime(breathIntensity * 0.18, now, 0.04);
+    const baseFreq = 185 + breath * 55;
+    if (breathOsc) breathOsc.frequency.setTargetAtTime(baseFreq, now, 0.04);
+    if (breathOsc2) breathOsc2.frequency.setTargetAtTime(baseFreq * 1.495, now, 0.04);
 
-   // Slight frequency modulation for organic feel
-   const baseFreq = 180 + breathIntensity * 60;
-   breathOsc.frequency.setTargetAtTime(baseFreq, now, 0.05);
-   breathOsc2.frequency.setTargetAtTime(baseFreq * 1.5, now, 0.05);
-
-   // Increase tidal volume with breath
-   if (tidalGain) {
-       tidalGain.gain.setTargetAtTime(0.25 + breathIntensity * 0.12, now, 0.04);
-   }
+    if (tidalGain) {
+        tidalGain.gain.setTargetAtTime(0.22 + breath * 0.1, now, 0.035);
+    }
 }
 
-/** Gradually drain breath audio when input released */
+/** Graceful drain on release — exponential fade to silence */
 export function drainBreathAudio(): void {
-   if (!initialized || !audioCtx || !breathGain) return;
-   const now = audioCtx.currentTime;
-   breathGain.gain.setTargetAtTime(0, now, 0.08);
+    if (!initialized || !audioCtx || !breathGain) return;
+    breathGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.07);
 }
