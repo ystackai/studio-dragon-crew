@@ -1,221 +1,154 @@
-// src/audio.ts — Web Audio API synthesis (zero external assets)
+export class AudioEngine {
+  private ctx: AudioContext | null = null;
+  private masterGain: GainNode | null = null;
+  private tidalOsc: OscillatorNode | null = null;
+  private tidalLpf: BiquadFilterNode | null = null;
+  private tidalGain: GainNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
+  noiseSource: AudioBufferSourceNode | null = null;
+  private noiseHpf: BiquadFilterNode | null = null;
+  private noiseGain: GainNode | null = null;
+  private delayNode: DelayNode | null = null;
+  private delayFeedback: GainNode | null = null;
+  private delayWet: GainNode | null = null;
+  private compressor: DynamicsCompressorNode | null = null;
+  private started = false;
 
-const BPM = 56;
-const BEAT_HZ = BPM / 60; // ~0.933 Hz
+  init() {
+    this.ctx = new AudioContext();
+    this.compressor = this.ctx.createDynamicsCompressor();
+    this.compressor.threshold.value = -20;
+    this.compressor.knee.value = 10;
+    this.compressor.ratio.value = 4;
+    this.compressor.attack.value = 0.003;
+    this.compressor.release.value = 0.1;
 
-let audioCtx: AudioContext | null = null;
-let masterGain: GainNode | null = null;
-let compressor: DynamicsCompressorNode | null = null;
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = 0.7;
 
-// Tidal pulse
-let tidalOsc: OscillatorNode | null = null;
-let tidalLfo: OscillatorNode | null = null;
-let tidalFilter: BiquadFilterNode | null = null;
-let tidalGain: GainNode | null = null;
+     // 56 BPM tidal pulse: 60 Hz sine, low-pass filtered
+    this.tidalOsc = this.ctx.createOscillator();
+    this.tidalOsc.type = 'sine';
+    this.tidalOsc.frequency.value = 60;
 
-// Breath layer
-let breathGain: GainNode | null = null;
-let breathOsc: OscillatorNode | null = null;
-let breathOsc2: OscillatorNode | null = null;
+    this.tidalLpf = this.ctx.createBiquadFilter();
+    this.tidalLpf.type = 'lowpass';
+    this.tidalLpf.frequency.value = 200;
+    this.tidalLpf.Q.value = 1.5;
 
-// Reverb delay network
-let reverbDelay: DelayNode | null = null;
-let reverbFeedbackGain: GainNode | null = null;
-let reverbDryGain: GainNode | null = null;
-let reverbWetGain: GainNode | null = null;
+    this.tidalGain = this.ctx.createGain();
+    this.tidalGain.gain.value = 0.3;
 
-// Noise buffer for coral chimes
-let noiseBuffer: AudioBuffer | null = null;
+    this.tidalOsc.connect(this.tidalLpf);
+    this.tidalLpf.connect(this.tidalGain);
 
-let initialized = false;
+     // Delay network: 0.8s feedback
+    this.delayNode = this.ctx.createDelay(2);
+    this.delayNode.delayTime.value = 0.8;
 
-/**
- * Initialize audio graph on first user gesture.
- * Builds: tidal pulse → LFO modulated filter → breath layer → reverb → compressor → master → destination
- */
-export function initAudio(): void {
-    if (initialized) return;
+    this.delayFeedback = this.ctx.createGain();
+    this.delayFeedback.gain.value = 0.3;
 
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const now = audioCtx.currentTime;
+    this.delayWet = this.ctx.createGain();
+    this.delayWet.gain.value = 0.3;
 
-    // ---------------------------------------------------------------
-    // DynamicsCompressor — prevents clipping during peak input
-    // ---------------------------------------------------------------
-    compressor = audioCtx.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-18, now);
-    compressor.knee.setValueAtTime(8, now);
-    compressor.ratio.setValueAtTime(10, now);
-    compressor.attack.setValueAtTime(0.003, now);
-    compressor.release.setValueAtTime(0.08, now);
+    this.masterGain.connect(this.compressor);
+    this.masterGain.connect(this.delayNode);
+    this.delayNode.connect(this.delayFeedback);
+    this.delayFeedback.connect(this.delayNode);
+    this.delayNode.connect(this.delayWet);
+    this.delayWet.connect(this.compressor);
 
-    // ---------------------------------------------------------------
-    // Reverb delay network — 0.8 s feedback, 0.3 wet / 0.7 dry
-    // ---------------------------------------------------------------
-    reverbDelay = audioCtx.createDelay(2.0);
-    reverbDelay.delayTime.setValueAtTime(0.8, now);
+    this.tidalGain.connect(this.masterGain);
+    this.compressor.connect(this.ctx.destination);
 
-    reverbFeedbackGain = audioCtx.createGain();
-    reverbFeedbackGain.gain.setValueAtTime(0.4, now);
+    this.tidalOsc.start();
 
-    reverbDryGain = audioCtx.createGain();
-    reverbDryGain.gain.setValueAtTime(0.7, now);
+     // Pre-generate white noise buffer for coral chimes
+    const sampleRate = this.ctx.sampleRate;
+    const bufferSize = sampleRate * 2;
+    this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+    const data = this.noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+     }
 
-    reverbWetGain = audioCtx.createGain();
-    reverbWetGain.gain.setValueAtTime(0.3, now);
+    this.noiseHpf = this.ctx.createBiquadFilter();
+    this.noiseHpf.type = 'highpass';
+    this.noiseHpf.frequency.value = 2000;
+    this.noiseHpf.Q.value = 0.7;
 
-    // ---------------------------------------------------------------
-    // Tidal pulse — 60 Hz sine, low-pass filtered, LFO modulated
-    // ---------------------------------------------------------------
-    tidalOsc = audioCtx.createOscillator();
-    tidalOsc.type = 'sine';
-    tidalOsc.frequency.setValueAtTime(60, now);
+    this.noiseGain = this.ctx.createGain();
+    this.noiseGain.gain.value = 0;
 
-    tidalLfo = audioCtx.createOscillator();
-    tidalLfo.type = 'sine';
-    tidalLfo.frequency.setValueAtTime(BEAT_HZ, now); // 56 BPM
+    this.noiseHpf.connect(this.noiseGain);
+    this.noiseGain.connect(this.masterGain);
+  }
 
-    const tidalLfoGain = audioCtx.createGain();
-    tidalLfoGain.gain.setValueAtTime(6, now);
+  resume() {
+    if (!this.ctx) this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    if (!this.started) {
+      this.started = true;
+    }
+  }
 
-    tidalLfo.connect(tidalLfoGain);
-    tidalLfoGain.connect(tidalOsc.frequency);
-
-    tidalFilter = audioCtx.createBiquadFilter();
-    tidalFilter.type = 'lowpass';
-    tidalFilter.frequency.setValueAtTime(110, now);
-    tidalFilter.Q.setValueAtTime(1.8, now);
-
-    // Second LFO modulates filter cutoff for "pull" feel
-    const filterLfo = audioCtx.createOscillator();
-    filterLfo.type = 'sine';
-    filterLfo.frequency.setValueAtTime(BEAT_HZ * 0.5, now);
-    const filterLfoG = audioCtx.createGain();
-    filterLfoG.gain.setValueAtTime(35, now);
-    filterLfo.connect(filterLfoG);
-    filterLfoG.connect(tidalFilter.frequency);
-
-    tidalGain = audioCtx.createGain();
-    tidalGain.gain.setValueAtTime(0.22, now);
-
-    tidalOsc.connect(tidalFilter);
-    tidalFilter.connect(tidalGain);
-
-    // ---------------------------------------------------------------
-    // Breath layer — sine + triangle warm pad
-    // ---------------------------------------------------------------
-    breathOsc = audioCtx.createOscillator();
-    breathOsc.type = 'sine';
-    breathOsc.frequency.setValueAtTime(185, now);
-
-    breathOsc2 = audioCtx.createOscillator();
-    breathOsc2.type = 'triangle';
-    breathOsc2.frequency.setValueAtTime(277, now);
-
-    breathGain = audioCtx.createGain();
-    breathGain.gain.setValueAtTime(0, now);
-
-    breathOsc.connect(breathGain);
-    breathOsc2.connect(breathGain);
-
-    // ---------------------------------------------------------------
-    // Noise buffer for coral chimes
-    // ---------------------------------------------------------------
-    const bufLen = audioCtx.sampleRate * 2;
-    noiseBuffer = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
-    const chData = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufLen; i++) {
-        chData[i] = Math.random() * 2 - 1;
+  playNoiseBurst(velocity: number, offset?: number) {
+    if (!this.ctx || !this.noiseBuffer || !this.noiseSource || this.noiseSource === null) {
+      if (!this.ctx || !this.noiseBuffer) return;
+      this.noiseSource = this.ctx.createBufferSource();
+      this.noiseSource.buffer = this.noiseBuffer;
+      this.noiseSource.connect(this.noiseHpf!);
     }
 
-    // ---------------------------------------------------------------
-    // Wire signal chain
-    // ---------------------------------------------------------------
-    // tidal + breath → compressor
-    tidalGain.connect(compressor);
-    breathGain.connect(compressor);
+    if (!this.noiseSource) return;
 
-    // compressor → dry path · reverb delay
-    compressor.connect(reverbDryGain);
-    compressor.connect(reverbDelay);
+    const t = this.ctx.currentTime + (offset || 0);
+    const volume = Math.min(velocity * 0.4, 0.35);
 
-    // reverb feedback loop
-    reverbDelay.connect(reverbFeedbackGain);
-    reverbFeedbackGain.connect(reverbDelay);
-    reverbDelay.connect(reverbWetGain);
+    try {
+      this.noiseSource.stop(t + 0.6);
+    } catch (_) {}
 
-    // dry + wet → master → destination
-    masterGain = audioCtx.createGain();
-    masterGain.gain.setValueAtTime(0.65, now);
+    this.noiseSource = this.ctx.createBufferSource();
+    this.noiseSource.buffer = this.noiseBuffer;
+    this.noiseSource.connect(this.noiseHpf!);
+    this.noiseSource.start(t);
 
-    reverbDryGain.connect(masterGain);
-    reverbWetGain.connect(masterGain);
-    masterGain.connect(audioCtx.destination);
+    this.noiseGain!.gain.setTargetAtTime(volume, t, 0.02);
+    this.noiseGain!.gain.setTargetAtTime(0, t + 0.15, 0.08);
+   }
 
-    // Start all oscillators
-    tidalOsc.start();
-    tidalLfo.start();
-    filterLfo.start();
-    breathOsc.start();
-    breathOsc2.start();
+  update(intensity: number, velocity: number, time: number) {
+    if (!this.ctx) return;
 
-    initialized = true;
-}
+     // Tidal pulse: 56 BPM means ~0.93s per beat
+    const bpm56Freq = 56 / 60;
+    const tidalMod = Math.sin(time * bpm56Freq * Math.PI * 2) * 0.5 + 0.5;
+    this.tidalGain!.gain.value = 0.15 + tidalMod * 0.25;
 
-/** Resume context for browser autoplay policy */
-export function resumeAudio(): void {
-    if (audioCtx?.state === 'suspended') {
-        audioCtx.resume();
+     // LPF opens slightly with breath
+    if (this.tidalLpf) {
+      this.tidalLpf.frequency.value = 180 + intensity * 400;
+     }
+
+     // Noise chime mapped to velocity
+    if (velocity > 0.02) {
+      this.playNoiseBurst(velocity);
     }
-}
+  }
 
-/** High-pass noise burst mapped to input velocity — coral chimes */
-export function playCoralChime(intensity: number): void {
-    if (!initialized || !audioCtx || !noiseBuffer) return;
+  drain() {
+    if (!this.ctx || !this.noiseGain) return;
+    const t = this.ctx.currentTime;
+    this.noiseGain.gain.setTargetAtTime(0, t, 0.05);
+  }
 
-    const now = audioCtx.currentTime;
-    const src = audioCtx.createBufferSource();
-    src.buffer = noiseBuffer;
-
-    const hp = audioCtx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.setValueAtTime(1800 + intensity * 4000, now);
-    hp.Q.setValueAtTime(2.5 + intensity * 3.5, now);
-
-    const g = audioCtx.createGain();
-    const peakVol = intensity * 0.14;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(peakVol, now + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0005, now + 0.35 + intensity * 0.18);
-
-    src.connect(hp);
-    hp.connect(g);
-    g.connect(compressor!);
-
-    src.start(now);
-    src.stop(now + 0.7);
-}
-
-/**
- * Update breath audio per frame — setTargetAtTime for sub-16 ms latency.
- */
-export function updateBreathAudio(breath: number): void {
-    if (!initialized || !audioCtx || !breathGain) return;
-    const now = audioCtx.currentTime;
-
-    breathGain.gain.setTargetAtTime(breath * 0.17, now, 0.035);
-
-    const baseFreq = 185 + breath * 55;
-    if (breathOsc) breathOsc.frequency.setTargetAtTime(baseFreq, now, 0.04);
-    if (breathOsc2) breathOsc2.frequency.setTargetAtTime(baseFreq * 1.495, now, 0.04);
-
-    if (tidalGain) {
-        tidalGain.gain.setTargetAtTime(0.22 + breath * 0.1, now, 0.035);
-    }
-}
-
-/** Graceful drain on release — exponential fade to silence */
-export function drainBreathAudio(): void {
-    if (!initialized || !audioCtx || !breathGain) return;
-    breathGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.07);
+  destroy() {
+    if (this.tidalOsc) this.tidalOsc.stop();
+    if (this.noiseSource) this.noiseSource.stop();
+    if (this.ctx) this.ctx.close();
+  }
 }
