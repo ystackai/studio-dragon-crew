@@ -1,5 +1,5 @@
-import { render } from './visuals';
-import { AudioEngine } from './audio';
+import { render } from './visuals.js';
+import { AudioEngine } from './audio.js';
 /* ---- Easing functions ---- */
 function easeInCubic(t) {
     return t * t * t;

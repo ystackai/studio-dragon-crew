@@ -15,9 +15,9 @@ uniform mat3 u_normalMat;
 void main() {
     v_uv = a_uv;
     v_normal = normalize(u_normalMat * a_normal);
-    vec4 wp = u_model * vec4(a_position, 1.0);
+    vec4 wp = u_model * vec4(a_position, 0.0, 1.0);
     v_worldPos = wp.xyz;
-    gl_Position = u_mvp * vec4(a_position, 1.0);
+    gl_Position = u_mvp * vec4(a_position, 0.0, 1.0);
 }`;
 
 const CreatureFragmentSrc = `#version 300 es
@@ -43,7 +43,7 @@ uniform sampler2D u_driftDiffuseTex;
 // State transition
 uniform float u_driftFactor;   // 0.0 = fully Active, 1.0 = fully Drift
 uniform vec3  u_lightDir;
-uniform vec2  u_cameraPos;
+uniform vec3  u_cameraPos;
 uniform float u_time;
 
 // Noise for SSS texture variation

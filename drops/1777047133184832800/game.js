@@ -272,7 +272,7 @@ function renderCreature(time) {
      // Shared uniforms
     gl.uniform1f(p.uDriftFactor, driftFactor);
     gl.uniform3f(p.uLightDir, 0.4, 0.6, 0.7);
-    gl.uniform2f(p.uCameraPos, 0, 0);
+    gl.uniform3f(p.uCameraPos, 0, 0, 1);
     gl.uniform1f(p.uTime, time);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, geo.posBuf);

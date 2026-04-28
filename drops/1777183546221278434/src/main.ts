@@ -1,5 +1,5 @@
-import { render, SceneConfig } from './visuals';
-import { AudioEngine } from './audio';
+import { render, SceneConfig } from './visuals.js';
+import { AudioEngine } from './audio.js';
 
 /* ---- Easing functions ---- */
 function easeInCubic(t: number): number {

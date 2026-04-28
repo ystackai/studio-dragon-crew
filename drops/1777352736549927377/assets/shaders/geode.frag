@@ -91,7 +91,7 @@ float geodeShape(vec2 uv, vec2 center, float radius, float time) {
 
   // Noise-based edge deformation for organic crystal look
   float angle = atan(d.y, d.x);
-  float edgeNoise = snoise(vec3(angle * 3.0 + time * 0.05, time * 0.1)) * 0.15;
+  float edgeNoise = snoise(vec3(angle * 3.0 + time * 0.05, time * 0.1, 0.0)) * 0.15;
   float crystalNoise = snoise(vec3(d * 4.0 + time * 0.03, 10.0)) * 0.08;
 
   float r = radius + edgeNoise + crystalNoise;
