@@ -47,43 +47,10 @@ uniform vec3  u_cameraPos;
 uniform float u_time;
 
 void main() {
-    vec3 N = normalize(v_normal);
-
-    // --- ACTIVE MATERIAL ---
-    vec3 activeColor = u_activeBaseColor;
-    vec3 activeNorm = N;
-    float activeDiffuse = max(dot(activeNorm, normalize(u_lightDir)), 0.0);
-    // Specular for sharp luminous look
-    vec3 viewDir = normalize(u_cameraPos - v_worldPos);
-    vec3 halfDir = normalize(u_lightDir + viewDir);
-    float spec = pow(max(dot(activeNorm, halfDir), 0.0), 64.0);
-    activeColor += spec * vec3(1.0, 0.95, 0.8) * 0.6;
-    activeColor += u_activeEmissive * u_activeLuminosity;
-    // Pulsing glow
-    activeColor += sin(u_time * 2.5) * 0.08 * u_activeEmissive;
-
-    // --- DRIFT MATERIAL (velvety SSS approximation) ---
-    vec3 driftColor = u_driftBaseColor;
-    // Subsurface scattering fake: offset sample along light direction projection
-    vec2 sssOffset = v_normal.xz * u_driftSSSStrength * 0.15;
-    vec3 sssSample = driftColor;
-    driftColor += sssSample * u_driftSSSStrength * 0.3;
-    driftColor += u_driftWarmTint * (1.0 - abs(dot(N, normalize(u_lightDir)))) * 0.25;
-    // Gaussian blur approximation via multi-tap sampling
-    float sigma = u_driftGaussianSigma;
-    vec3 blur = driftColor;
-    driftColor = blur;
-    // Low saturation warm/cool tone
-    float lum = dot(driftColor, vec3(0.299, 0.587, 0.114));
-    driftColor = mix(vec3(lum), driftColor, 0.45);
-
-    // --- CROSSFADE ---
+    vec3 activeColor = u_activeBaseColor + u_activeEmissive * u_activeLuminosity;
+    vec3 driftColor = u_driftBaseColor + u_driftWarmTint * 0.25;
     vec3 result = mix(activeColor, driftColor, u_driftFactor);
-    // Smooth normal transition
-    N = mix(activeNorm, N, u_driftFactor);
-    float finalDiffuse = max(dot(N, normalize(u_lightDir)), 0.0);
-    result *= 0.6 + finalDiffuse * 0.4;
-
+    result += sin(u_time * 2.5) * 0.05 * u_activeEmissive;
     fragColor = vec4(result, 1.0);
 }`;
 
