@@ -340,17 +340,43 @@ function pressureFromPos(mx, my) {
   return 0.25 + (1 - Math.min(dist * 2.828, 1)) * 0.75;
 }
 
-canvas.addEventListener('mousedown', e => { mouseDown = true; inputActive = true; inputPressure = pressureFromPos(e.clientX, e.clientY); });
-canvas.addEventListener('mousemove', e => { if (mouseDown) { inputPressure = pressureFromPos(e.clientX, e.clientY); if (guide) guide.classList.add('hidden'); } });
-canvas.addEventListener('mouseup', () => { mouseDown = false; inputActive = false; });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); inputActive = true; const t = e.touches[0]; inputPressure = pressureFromPos(t.clientX, t.clientY); if (guide) guide.classList.add('hidden'); }, { passive: false });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); const t = e.touches[0]; inputPressure = pressureFromPos(t.clientX, t.clientY); if (guide) guide.classList.add('hidden'); }, { passive: false });
-canvas.addEventListener('touchend', e => { e.preventDefault(); inputActive = false; }, { passive: false });
+function beginInput(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  mouseDown = true;
+  inputActive = true;
+  inputPressure = pressureFromPos(e.clientX || window.innerWidth * 0.5, e.clientY || window.innerHeight * 0.5);
+  if (guide) guide.classList.add('hidden');
+}
+
+function moveInput(e) {
+  if (!mouseDown) return;
+  if (e && e.preventDefault) e.preventDefault();
+  inputPressure = pressureFromPos(e.clientX || window.innerWidth * 0.5, e.clientY || window.innerHeight * 0.5);
+}
+
+function endInput(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  mouseDown = false;
+  inputActive = false;
+}
+
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  beginInput(e);
+});
+canvas.addEventListener('pointermove', moveInput);
+canvas.addEventListener('pointerup', endInput);
+canvas.addEventListener('pointercancel', endInput);
+window.addEventListener('pointermove', moveInput);
+window.addEventListener('pointerup', endInput);
+window.addEventListener('pointercancel', endInput);
 
 /* Overlay click to init audio */
-overlay.addEventListener('click', () => {
+overlay.addEventListener('pointerdown', e => {
+  overlay.setPointerCapture(e.pointerId);
   overlay.classList.add('hidden');
   initAudio();
+  beginInput(e);
 });
 
 /* Layer toggle buttons */
