@@ -390,7 +390,7 @@ function initAudio(){
   lockLFO = new Tone.LFO(0.3, 68, 76).start();
   lockLFO.connect(lockDrone.frequency);
 
-  const filter = new Tone.Filter("lowpass", "allpole");
+  const filter = new Tone.Filter({ type: "lowpass", frequency: 200, rolloff: -12 });
   filter.frequency.value = 200;
   lockFilter = filter;
   // Re-route: we don't need filter on drone for now but keeping for polish
