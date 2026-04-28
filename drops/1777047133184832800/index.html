@@ -15,7 +15,7 @@
       <div id="cadence-display">Beat: <span id="beat-val">--</span>ms</div>
    </div>
    <script src="assets/textures.js"></script>
-   <script src="shaders/twilight.js"></script>
+   <script src="shaders/twilight.js?v=runtime-repair-20260428b"></script>
    <script>
    window.createRippleProgram = function(gl) {
       const vsSrc = `#version 300 es
@@ -56,7 +56,9 @@
    window.createCreatureProgram = function(gl) {
       const vsSrc = `#version 300 es
       precision highp float;
-      in vec2 a_position;
+      layout(location = 0) in vec3 a_position;
+      layout(location = 1) in vec2 a_uv;
+      layout(location = 2) in vec3 a_normal;
       uniform mat4 u_mvp;
       void main(){ gl_Position = u_mvp * vec4(a_position, 0.0, 1.0); }`;
       const fsSrc = `#version 300 es
@@ -73,10 +75,23 @@
       const prog = gl.createProgram();
       gl.attachShader(prog, sh(gl.VERTEX_SHADER, vsSrc));
       gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fsSrc));
-      gl.bindAttribLocation(prog, 0, 'a_position');
       gl.linkProgram(prog);
       const loc = {
+        uModel: null,
         uMvp: gl.getUniformLocation(prog, 'u_mvp'),
+        uNormalMat: null,
+        uActiveBaseColor: null,
+        uActiveEmissive: null,
+        uActiveLuminosity: null,
+        uActiveNormalTex: null,
+        uDriftBaseColor: null,
+        uDriftWarmTint: null,
+        uDriftSSSStrength: null,
+        uDriftGaussianSigma: null,
+        uDriftDiffuseTex: null,
+        uDriftFactor: null,
+        uLightDir: null,
+        uCameraPos: null,
         uTime: gl.getUniformLocation(prog, 'u_time')
       };
       return { program: prog, loc };
