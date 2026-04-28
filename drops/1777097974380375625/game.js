@@ -192,7 +192,7 @@ class AudioEngine {
 // --------------- State Machine ---------------
 class StateMachine {
   constructor() {
-    this currentState = STATE.AWAITING_INPUT;
+    this.currentState = STATE.AWAITING_INPUT;
     this.transitions = {};
     this.onEnter = {};
     this.onExit = {};
