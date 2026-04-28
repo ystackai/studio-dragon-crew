@@ -18,6 +18,36 @@
    <script src="shaders/twilight.js"></script>
    <script src="shaders/ripple.js"></script>
    <script src="shaders/creature.js?v=runtime-repair-20260428e"></script>
+   <script>
+   window.createCreatureProgram = function(gl) {
+      const vsSrc = `#version 300 es
+      precision highp float;
+      in vec2 a_position;
+      uniform mat4 u_mvp;
+      void main(){ gl_Position = u_mvp * vec4(a_position, 0.0, 1.0); }`;
+      const fsSrc = `#version 300 es
+      precision highp float;
+      out vec4 fragColor;
+      uniform float u_time;
+      void main(){ float p = 0.5 + 0.5 * sin(u_time * 2.5); fragColor = vec4(0.35 + p * 0.35, 0.45, 0.8, 1.0); }`;
+      function sh(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+      }
+      const prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, vsSrc));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fsSrc));
+      gl.bindAttribLocation(prog, 0, 'a_position');
+      gl.linkProgram(prog);
+      const loc = {
+        uMvp: gl.getUniformLocation(prog, 'u_mvp'),
+        uTime: gl.getUniformLocation(prog, 'u_time')
+      };
+      return { program: prog, loc };
+   };
+   </script>
    <script src="game.js?v=runtime-repair-20260428"></script>
 <div class="ystack-repair-hint">Click, tap, drag, or use the controls to interact.</div>
 </body>
