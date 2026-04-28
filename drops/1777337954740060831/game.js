@@ -69,6 +69,7 @@
     uniform vec2  u_resolution;
 
     varying vec2 v_uv;
+    const float BEAT = 1.0714285714;
 
     // ── Hash & Noise ──
     float hash(float n) { return fract(sin(n) * 43758.5453123); }
@@ -667,7 +668,7 @@
 
   // ─── START ─────────────────────────────────────────
   function start() {
-    if (!audioCtx) return;
+    if (!audioCtx) initAudio();
     if (audioCtx.state === "suspended") {
       audioCtx.resume();
     }
@@ -676,7 +677,6 @@
   // ─── INIT ───────────────────────────────────────────
   function init() {
     if (!initGl()) return;
-    initAudio();
     setupInput();
     requestAnimationFrame(mainLoop);
   }

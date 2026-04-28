@@ -36,23 +36,36 @@ canvas#gl {
   height: 100%;
   pointer-events: none;
   z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 18px 28px;
 }
 
-body::after {
-  content: '';
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(180, 195, 210, 0.25);
+.hint-card {
+  max-width: 520px;
+  padding: 12px 16px;
+  border: 1px solid rgba(198, 215, 230, 0.18);
+  border-radius: 999px;
+  background: rgba(4, 8, 10, 0.58);
+  color: rgba(211, 226, 236, 0.82);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-align: center;
   opacity: 0;
   animation: fadeIn 3s ease-in-out 1s forwards;
-  z-index: 2;
-  pointer-events: none;
+}
+
+.hint-card h1 {
+  margin: 0 0 3px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hint-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 @keyframes fadeIn {
@@ -61,8 +74,7 @@ body::after {
 }
 
 @media (max-width: 600px) {
-  body::after {
-    font-size: 9px;
-    bottom: 14px;
-  }
+  #overlay { padding-bottom: 16px; }
+  .hint-card { border-radius: 16px; }
+  .hint-card h1, .hint-card p { font-size: 11px; }
 }

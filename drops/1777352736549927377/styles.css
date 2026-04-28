@@ -21,3 +21,23 @@ html, body {
 #gl-canvas:active {
   cursor: grabbing;
 }
+
+#hint {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 2;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid rgba(205, 222, 235, 0.18);
+  border-radius: 999px;
+  background: rgba(5, 8, 12, 0.62);
+  color: rgba(222, 235, 242, 0.82);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 1.4s ease;
+}

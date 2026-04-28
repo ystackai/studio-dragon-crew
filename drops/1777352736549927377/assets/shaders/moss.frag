@@ -98,10 +98,10 @@ void main() {
   float pulse = tidalPulse(uTime);
 
   // Moss noise layers — crushed velvet from layered fbm
-  vec3 noiseCoord = vec2(pixel * 0.012, uTime * 0.02);
-  float moss1 = snoise(vec3(noiseCoord, 0.0)) * 0.5 + 0.5;
-  float moss2 = snoise(vec3(noiseCoord * 2.1 + 33.0, 1.0)) * 0.5 + 0.5;
-  float moss3 = snoise(vec3(noiseCoord * 4.3 + 67.0, 2.0)) * 0.5 + 0.5;
+  vec2 noiseCoord = pixel * 0.012;
+  float moss1 = snoise(vec3(noiseCoord, uTime * 0.02)) * 0.5 + 0.5;
+  float moss2 = snoise(vec3(noiseCoord * 2.1 + 33.0, uTime * 0.02 + 1.0)) * 0.5 + 0.5;
+  float moss3 = snoise(vec3(noiseCoord * 4.3 + 67.0, uTime * 0.02 + 2.0)) * 0.5 + 0.5;
 
   float moss = moss1 * 0.5 + moss2 * 0.3 + moss3 * 0.2;
 
