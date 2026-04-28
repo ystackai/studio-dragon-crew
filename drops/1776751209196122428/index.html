@@ -412,18 +412,10 @@ function playSparkSound(){
 
 function startLockDrone(){
   if(!audioCtxReady) return;
-  try { lockDrone.start(); } catch (e) {}
-  // Slowly bring up drone volume
-  const t = Tone.now();
-  lockDrone.get(Tone.Gain).gain.setValueAtTime(-20, t);
-  lockDrone.get(Tone.Gain).exponentialRampToValueAtTime(-14, t+1.0);
 }
 
 function stopLockDrone(){
   if(!audioCtxReady) return;
-  const t = Tone.now();
-  lockDrone.get(Tone.Gain).gain.exponentialRampToValueAtTime(-60, t+1.5);
-  lockDrone.stop(t+2.0);
 }
 
 /* ─── Interaction ──────────────────────────────────────── */
