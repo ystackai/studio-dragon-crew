@@ -346,6 +346,7 @@ function triggerParticleBurst(){
 /* ─── Procedural Audio (Tone.js) ───────────────────────── */
 let audioCtxReady = false;
 let sparkChime, swellOsc, lockDrone, lockFilter, lockLFO, lockGain, noiseSynth;
+let lastSparkTime = 0;
 
 function initAudio(){
   if(audioCtxReady) return;
@@ -401,9 +402,11 @@ function initAudio(){
 function playSparkSound(){
   if(!audioCtxReady) return;
   const t = Tone.now();
+  if (t - lastSparkTime < 0.08) return;
+  lastSparkTime = t;
 
   // Sharp chime attack
-  sparkChime.triggerAttackRelease("C8", "16n", t);
+  try { sparkChime.triggerAttackRelease("C8", "16n", t); } catch (e) {}
 
   // Rising swell – breath catching in throat
   swellOsc.frequency.setValueAtTime(180, t);

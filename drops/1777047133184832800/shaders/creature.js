@@ -22,36 +22,11 @@ void main() {
 
 const CreatureFragmentSrc = `#version 300 es
 precision highp float;
-in vec2 v_uv;
-in vec3 v_normal;
-in vec3 v_worldPos;
 out vec4 fragColor;
-
-// Active state
-uniform vec3  u_activeBaseColor;
-uniform vec3  u_activeEmissive;
-uniform float u_activeLuminosity;
-uniform sampler2D u_activeNormalTex;
-
-// Drift state
-uniform vec3  u_driftBaseColor;
-uniform vec3  u_driftWarmTint;
-uniform float u_driftSSSStrength;
-uniform float u_driftGaussianSigma;
-uniform sampler2D u_driftDiffuseTex;
-
-// State transition
-uniform float u_driftFactor;   // 0.0 = fully Active, 1.0 = fully Drift
-uniform vec3  u_lightDir;
-uniform vec3  u_cameraPos;
 uniform float u_time;
-
 void main() {
-    vec3 activeColor = u_activeBaseColor + u_activeEmissive * u_activeLuminosity;
-    vec3 driftColor = u_driftBaseColor + u_driftWarmTint * 0.25;
-    vec3 result = mix(activeColor, driftColor, u_driftFactor);
-    result += sin(u_time * 2.5) * 0.05 * u_activeEmissive;
-    fragColor = vec4(result, 1.0);
+    float pulse = 0.5 + 0.5 * sin(u_time * 2.5);
+    fragColor = vec4(0.35 + pulse * 0.35, 0.45, 0.72 + pulse * 0.18, 1.0);
 }`;
 
 function compileShader(gl, src, type) {
