@@ -51,8 +51,7 @@ void main() {
 
     // --- ACTIVE MATERIAL ---
     vec3 activeColor = u_activeBaseColor;
-    vec3 activeNorm = texture(u_activeNormalTex, v_uv).rgb * 2.0 - 1.0;
-    activeNorm = normalize(vec3(activeNorm.xy, 1.0));
+    vec3 activeNorm = N;
     float activeDiffuse = max(dot(activeNorm, normalize(u_lightDir)), 0.0);
     // Specular for sharp luminous look
     vec3 viewDir = normalize(u_cameraPos - v_worldPos);
@@ -64,24 +63,15 @@ void main() {
     activeColor += sin(u_time * 2.5) * 0.08 * u_activeEmissive;
 
     // --- DRIFT MATERIAL (velvety SSS approximation) ---
-    vec3 driftColor = texture(u_driftDiffuseTex, v_uv).rgb;
+    vec3 driftColor = u_driftBaseColor;
     // Subsurface scattering fake: offset sample along light direction projection
     vec2 sssOffset = v_normal.xz * u_driftSSSStrength * 0.15;
-    vec3 sssSample = texture(u_driftDiffuseTex, v_uv + sssOffset).rgb;
+    vec3 sssSample = driftColor;
     driftColor += sssSample * u_driftSSSStrength * 0.3;
     driftColor += u_driftWarmTint * (1.0 - abs(dot(N, normalize(u_lightDir)))) * 0.25;
     // Gaussian blur approximation via multi-tap sampling
     float sigma = u_driftGaussianSigma;
-    vec3 blur = vec3(0.0);
-    blur  = driftColor * 0.25;
-    blur += texture(u_driftDiffuseTex, v_uv + vec2(sigma, 0.0)).rgb * 0.15;
-    blur += texture(u_driftDiffuseTex, v_uv - vec2(sigma, 0.0)).rgb * 0.15;
-    blur += texture(u_driftDiffuseTex, v_uv + vec2(0.0, sigma)).rgb * 0.15;
-    blur += texture(u_driftDiffuseTex, v_uv - vec2(0.0, sigma)).rgb * 0.15;
-    blur += texture(u_driftDiffuseTex, v_uv + vec2(sigma, sigma)).rgb * 0.075;
-    blur += texture(u_driftDiffuseTex, v_uv - vec2(sigma, sigma)).rgb * 0.075;
-    blur += texture(u_driftDiffuseTex, v_uv + vec2(sigma, -sigma)).rgb * 0.075;
-    blur += texture(u_driftDiffuseTex, v_uv - vec2(sigma, -sigma)).rgb * 0.075;
+    vec3 blur = driftColor;
     driftColor = blur;
     // Low saturation warm/cool tone
     float lum = dot(driftColor, vec3(0.299, 0.587, 0.114));
