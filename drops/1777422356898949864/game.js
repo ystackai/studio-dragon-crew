@@ -51,7 +51,7 @@ var msgEl = document.getElementById('msg');
 var instrEl = document.getElementById('instructions');
 var resetBtn = document.getElementById('reset-btn');
 var iconSnd = muteBtn.querySelector('.icon-snd');
-var iconMut = muteBtn.querySelector('.icon-mute');
+var iconMut = muteBtn.querySelector('.icon-mut');
 
 /* ─── Helpers ─── */
 function lerp(a, b, t) { return a + (b - a) * t; }
@@ -209,11 +209,15 @@ function releaseEnergy() {
     var idx = nodeList.indexOf(closest);
     SA.playNodeEnergize(idx);
     updateScoreUI();
-    if (nodeList.every(function (n) { return n.energized; })) {
+  if (nodeList.every(function (n) { return n.energized; })) {
       allEnergized = true;
       showVictoryMsg();
       spawnCelebration();
-    }
+      SA.playVictory();
+      scoreRing.classList.add('complete');
+      instrEl.classList.add('hidden');
+      instrEl.style.opacity = '0';
+     }
   }
   charge = 0;
 }
@@ -652,14 +656,7 @@ function update(dt, t) {
     spawnTrail(dragon.x - Math.cos(dragon.angle) * 12, dragon.y - Math.sin(dragon.angle) * 12, speed);
   }
 
-   /* Check node proximity for proximity hints */
-  nodeList.forEach(function (n, idx) {
-    if (n.energized) return;
-    var nDist = dist(dragon.x, dragon.y, n.x, n.y);
-    if (nDist < 50 && charge > 0.7 && !inputActive) {
-      // Auto-release hint: node glows brighter
-    }
-  });
+
 
    /* Update particles */
   updateParticles(dt);
@@ -673,7 +670,10 @@ function update(dt, t) {
     chargeFill.classList.remove('maxed');
   }
 
-   /* Update audio */
+    /* Flight whoosh */
+  SA.playFlightWhoosh(speed);
+
+    /* Update audio */
   SA.updateAudio(inputActive, charge, nodeList.map(function(n){return n.energized;}));
 }
 
