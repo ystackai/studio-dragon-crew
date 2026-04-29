@@ -7,8 +7,11 @@
         IDLE: 'idle',
         CHARGING: 'charging',
         BREATHING: 'breathing',
+        WIFF: 'whiff',
         COOLDOWN: 'cooldown'
-    };
+     };
+
+    var MIN_CHARGE = 10;
 
     var currentState = STATE.IDLE;
     var chargeLevel = 0;
@@ -248,11 +251,15 @@
     var hoverPlayed = false;
 
     function stopGrowl() {
-        if (chargeOsc1) { try { chargeOsc1.stop(); } catch (_) {} chargeOsc1 = null; }
-        if (chargeOsc2) { try { chargeOsc2.stop(); } catch (_) {} chargeOsc2 = null; }
+        try { if (chargeOsc1) { chargeOsc1.stop(); chargeOsc1.disconnect(); } } catch (_) {}
+        try { if (chargeOsc2) { chargeOsc2.stop(); chargeOsc2.disconnect(); } } catch (_) {}
+        try { if (chargeGain1) { chargeGain1.disconnect(); } } catch (_) {}
+        try { if (chargeGain2) { chargeGain2.disconnect(); } } catch (_) {}
+        chargeOsc1 = null;
+        chargeOsc2 = null;
         chargeGain1 = null;
         chargeGain2 = null;
-    }
+      }
 
     /* Fire burst — noise-based */
     function playFireBreath(intensity) {
@@ -378,7 +385,47 @@
         o.stop(now + 0.12);
        }
 
-       /* Success chime — ascending triad */
+        /* Whiff / failure — short comical sneeze */
+    function playWhiff() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+
+        /* Nasal "sneeze" tone */
+        var o1 = audioCtx.createOscillator();
+        var g1 = audioCtx.createGain();
+        o1.type = 'triangle';
+        o1.frequency.setValueAtTime(350, now);
+        o1.frequency.linearRampToValueAtTime(200, now + 0.2);
+        g1.gain.setValueAtTime(0.1, now);
+        g1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        o1.connect(g1);
+        g1.connect(masterGain);
+        o1.start(now);
+        o1.stop(now + 0.25);
+
+        /* Weak puff: low-pass filtered noise */
+        var puffDur = 0.3;
+        var puffBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * puffDur, audioCtx.sampleRate);
+        var pData = puffBuf.getChannelData(0);
+        for (var i = 0; i < pData.length; i++) {
+            pData[i] = (Math.random() * 2 - 1);
+         }
+        var pSrc = audioCtx.createBufferSource();
+        pSrc.buffer = puffBuf;
+        var pLp = audioCtx.createBiquadFilter();
+        pLp.type = 'lowpass';
+        pLp.frequency.value = 200;
+        var pG = audioCtx.createGain();
+        pG.gain.setValueAtTime(0.08, now);
+        pG.gain.exponentialRampToValueAtTime(0.001, now + puffDur);
+        pSrc.connect(pLp);
+        pLp.connect(pG);
+        pG.connect(masterGain);
+        pSrc.start(now);
+        pSrc.stop(now + puffDur);
+       }
+
+        /* Success chime — ascending triad */
     function playSuccessChime() {
         if (!audioCtx) return;
         var now = audioCtx.currentTime;
@@ -535,8 +582,15 @@
             stopGrowl();
             fireBreath();
             break;
+        case STATE.WIFF:
+            dragonArea.classList.remove('charging');
+            dragonArea.classList.add('whiff');
+            statusText.textContent = 'Oops... not enough power!';
+            stopGrowl();
+            handleWhiff();
+            break;
         case STATE.COOLDOWN:
-            dragonArea.classList.remove('breathing');
+            dragonArea.classList.remove('breathing', 'whiff');
             dragonArea.classList.add('cooldown');
             statusText.classList.remove('glow');
             statusText.classList.add('cooldown-text');
@@ -568,39 +622,77 @@
         var playedFullChime = false;
 
     function fireBreath() {
-        var intensity = Math.max(0.2, chargeLevel / 100);
-        var particleCount = Math.floor(20 + intensity * 80);
+      /* Transition: play bundled whoosh + procedural fire roar in parallel */
+      playAudioBuffer('transition', noop);
+      var intensity = Math.max(0.2, chargeLevel / 100);
+      playFireBreath(intensity);
 
-        /* Transition sound: ethereal whoosh */
-        playAudioBuffer('transition', function () {
-            playFireBreath(intensity);
-         });
+      if (chargeLevel >= 100 && !playedFullChime) {
+          playedFullChime = true;
+          setTimeout(function () {
+              playAudioBuffer('success', function () {
+                  playSuccessChime();
+                });
+            }, 300);
+          }
 
-        if (chargeLevel >= 100 && !playedFullChime) {
-            playedFullChime = true;
-            setTimeout(function () {
-                playAudioBuffer('success', function () {
-                    playSuccessChime();
-                 });
-             }, 300);
+      var particleCount = Math.floor(20 + intensity * 80);
+      if (!reducedMotion) {
+          spawnBreathParticles(particleCount, intensity);
+       }
+
+       // Secondary burst for richness
+      setTimeout(function () {
+          if (currentState === STATE.BREATHING) {
+              spawnBreathParticles(Math.floor(particleCount * 0.4), intensity * 0.6, 0.3 + Math.random() * 0.1, 0.22 + Math.random() * 0.05);
            }
+       }, 80);
+
+      setTimeout(function () {
+          if (currentState !== STATE.COOLDOWN) {
+              setState(STATE.COOLDOWN);
+           }
+          chargeLevel = 0;
+          chargeFill.style.width = '0%';
+          dragonSvg.classList.remove('full-charge');
+
+          cooldownTimeout = setTimeout(function () {
+              setState(STATE.IDLE);
+              playAudioBuffer('reset', noop);
+             }, COOLDOWN_MS);
+       }, 600 + (1 - intensity) * 400);
+     }
+
+     function handleWhiff() {
+        playAudioBuffer('failure', function () {
+            playWhiff();
+          });
 
         if (!reducedMotion) {
-            spawnBreathParticles(particleCount, intensity);
-        }
+             /* Tiny puff of smoke particles */
+            for (var i = 0; i < 8; i++) {
+                var col = [120 + Math.random() * 30, 120 + Math.random() * 30, 140 + Math.random() * 30];
+                breathParticles.push({
+                    x: 0.28 * particleCanvas.offsetWidth,
+                    y: 0.23 * particleCanvas.offsetHeight,
+                    vx: -(1 + Math.random() * 2),
+                    vy: -(0.5 + Math.random() * 1.5),
+                    life: 1,
+                    decay: 0.02 + Math.random() * 0.02,
+                    size: 2 + Math.random() * 3,
+                    r: col[0], g: col[1], b: col[2]
+                 });
+             }
+            if (!animatingBreath) {
+                animatingBreath = true;
+                requestAnimationFrame(animateBreathParticles);
+             }
+          }
 
-        // Also spawn a secondary small burst after 80ms for richer effect
-        setTimeout(function () {
-            if (currentState === STATE.BREATHING) {
-                spawnBreathParticles(Math.floor(particleCount * 0.4), intensity * 0.6, 0.3 + Math.random() * 0.1, 0.22 + Math.random() * 0.05);
-            }
-        }, 80);
-
-        // Transition to cooldown
         setTimeout(function () {
             if (currentState !== STATE.COOLDOWN) {
                 setState(STATE.COOLDOWN);
-            }
+             }
             chargeLevel = 0;
             chargeFill.style.width = '0%';
             dragonSvg.classList.remove('full-charge');
@@ -608,26 +700,31 @@
             cooldownTimeout = setTimeout(function () {
                 setState(STATE.IDLE);
                 playAudioBuffer('reset', noop);
-              }, COOLDOWN_MS);
-        }, 600 + (1 - intensity) * 400);
-    }
+               }, COOLDOWN_MS * 0.6);
+         }, 400);
+     }
 
     function handleHoldStart() {
-        if (currentState === STATE.COOLDOWN || currentState === STATE.CHARGING || currentState === STATE.BREATHING) return;
+        if (currentState === STATE.COOLDOWN || currentState === STATE.CHARGING || currentState === STATE.BREATHING || currentState === STATE.WIFF) return;
+        if (cooldownTimeout) { clearTimeout(cooldownTimeout); cooldownTimeout = null; }
         ensureAudioCtx();
         if (!audioBuffersLoaded) {
             loadAudioBuffers();
-         }
+          }
         chargeLevel = 0;
         setState(STATE.CHARGING);
-       }
+        }
 
     function handleHoldEnd() {
         if (currentState !== STATE.CHARGING) return;
         clearInterval(chargeInterval);
         chargeInterval = null;
-        setState(STATE.BREATHING);
-    }
+        if (chargeLevel < MIN_CHARGE) {
+            setState(STATE.WIFF);
+          } else {
+            setState(STATE.BREATHING);
+          }
+       }
 
     /* ========== Input Wiring ========== */
     var holdActive = false;
