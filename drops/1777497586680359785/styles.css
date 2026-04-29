@@ -323,6 +323,37 @@ header p {
    opacity: 1;
 }
 
+/* ===== WIFF STATE ===== */
+.dragon-area.whiff .dragon-body,
+.dragon-area.whiff .dragon-head {
+   fill: #5a4a6a;
+   filter: none;
+   animation: dragonWhiff 0.35s ease-out;
+}
+
+@keyframes dragonWhiff {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08) translateY(-3px); }
+    100% { transform: scale(0.95) translateY(2px); }
+}
+
+.dragon-area.whiff .belly-glow {
+   opacity: 0.2;
+   fill: rgba(150, 150, 170, 0.3);
+}
+
+.dragon-area.whiff .wing-left,
+.dragon-area.whiff .wing-right {
+   animation: wingShrug 0.4s ease-out;
+}
+
+@keyframes wingShrug {
+    0% { transform: rotate(0deg); }
+    30% { transform: rotate(-20deg); }
+    60% { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
+}
+
 /* ===== COOLDOWN STATE ===== */
 .dragon-area.cooldown .dragon-body,
 .dragon-area.cooldown .dragon-head {
@@ -373,6 +404,7 @@ header p {
 }
 
 .dragon-area.charging ~ .charge-meter,
+.dragon-area.whiff ~ .charge-meter,
 .charge-meter.visible {
    opacity: 1;
 }
@@ -403,6 +435,11 @@ header p {
 
 .status-text.cooldown-text {
    color: var(--purple-light);
+}
+
+.dragon-area.whiff ~ .status-text {
+   color: var(--text-dim);
+   font-style: italic;
 }
 
 /* ===== FOOTER ===== */
