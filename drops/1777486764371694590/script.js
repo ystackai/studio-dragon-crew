@@ -127,8 +127,21 @@
     }
 
     /* ── SFX dictionary ───────────────────────────────── */
+    /* Track last hover state so we only fire once per hover-in. */
+    var hoverActive = false;
+
     var SFX = {
-        /* Quick click / tap on the circle. */
+         /* Soft chime on hover — fires once when cursor enters. */
+        hover: function () {
+            if (hoverActive) return;
+            hoverActive = true;
+            var ctx = getAudioCtx();
+            var t = ctx.currentTime;
+            playTone(880, 0.15, "sine", 0.03, t);
+            playTone(1108, 0.12, "triangle", 0.02, t + 0.04);
+        },
+
+         /* Quick click / tap on the circle. */
         click: function () {
             var ctx = getAudioCtx();
             var t = ctx.currentTime;
@@ -428,13 +441,20 @@
     }
 
     /* ── Events ─────────────────────────────────────────── */
+    summonCircle.addEventListener("mouseenter", function () {
+        hoverActive = false; /* allow re-triggering on next hover-in */
+        SFX.hover();
+    });
+    summonCircle.addEventListener("mouseleave", function () {
+        hoverActive = true;
+    });
     summonCircle.addEventListener("click", beginSummon);
     summonCircle.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             beginSummon();
-        }
-    });
+         }
+      });
 
     muteBtn.addEventListener("click", function () {
         setMute(!muted);
