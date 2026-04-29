@@ -17,7 +17,21 @@
     var audioCtx = null;
     var masterGain = null;
     var muted = false;
+    var audioEngineBroken = false;
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* Bundled audio buffers for crisp, low-latency playback */
+    var audioBuffers = {};
+    var audioBuffersLoaded = false;
+
+    /* Audio asset manifest: 5 interaction sounds */
+    var AUDIO_ASSETS = [
+        { key: 'input',    src: 'audio/spark.wav'  },
+        { key: 'transition', src: 'audio/whoosh.wav' },
+        { key: 'success',  src: 'audio/chime.wav'  },
+        { key: 'failure',  src: 'audio/thud.wav'   },
+        { key: 'reset',    src: 'audio/exhale.wav' }
+    ];
 
     var CHARGE_RATE = 0.45; // percent per tick
     var COOLDOWN_MS = 1500;
@@ -66,15 +80,126 @@
                 masterGain = audioCtx.createGain();
                 masterGain.gain.value = muted ? 0 : 0.6;
                 masterGain.connect(audioCtx.destination);
-            } catch (e) {
+              } catch (e) {
                 audioCtx = null;
                 return false;
-            }
-        }
+              }
+          }
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
-        }
+          }
         return true;
+      }
+
+      /* Load bundled WAV audio assets */
+         var audioLoadPromise = null;
+
+     /* No-op helper for fallback when no procedural audio needed */
+    function noop() {}
+
+    function loadAudioBuffers() {
+        if (audioLoadPromise) return audioLoadPromise;
+        audioLoadPromise = new Promise(function (resolve) {
+            if (!ensureAudioCtx()) {
+                audioBuffersLoaded = false;
+                resolve(false);
+                return;
+            }
+            var total = AUDIO_ASSETS.length;
+            var loaded = 0;
+            var failed = false;
+
+            AUDIO_ASSETS.forEach(function (asset) {
+                try {
+                    var req = new XMLHttpRequest();
+                    req.open('GET', asset.src, true);
+                    req.responseType = 'arraybuffer';
+                    req.onload = function () {
+                        if (req.status === 200) {
+                            try {
+                                audioCtx.decodeAudioData(req.response, function (buf) {
+                                    audioBuffers[asset.key] = buf;
+                                    loaded++;
+                                    if (loaded === total && !failed) {
+                                        audioBuffersLoaded = true;
+                                        resolve(true);
+                                    }
+                                }, function () {
+                                    failed = true;
+                                    loaded++;
+                                    if (loaded === total) {
+                                        audioBuffersLoaded = false;
+                                        resolve(false);
+                                    }
+                                });
+                            } catch (e) {
+                                failed = true;
+                                loaded++;
+                                if (loaded === total) {
+                                    audioBuffersLoaded = false;
+                                    resolve(false);
+                                }
+                            }
+                        } else {
+                            failed = true;
+                            loaded++;
+                            if (loaded === total) {
+                                audioBuffersLoaded = false;
+                                resolve(false);
+                            }
+                        }
+                    };
+                    req.onerror = function () {
+                        failed = true;
+                        loaded++;
+                        if (loaded === total) {
+                            audioBuffersLoaded = false;
+                            resolve(false);
+                        }
+                    };
+                    req.send();
+                } catch (e) {
+                    failed = true;
+                    loaded++;
+                    if (loaded === total) {
+                        audioBuffersLoaded = false;
+                        resolve(false);
+                    }
+                }
+            });
+
+             /* Timeout fallback: if loading > 3s, give up and use procedural audio */
+            setTimeout(function () {
+                if (!audioBuffersLoaded) {
+                    audioBuffersLoaded = false;
+                    audioLoadPromise = null; // allow retry
+                    resolve(false);
+                }
+            }, 3000);
+        });
+        return audioLoadPromise;
+    }
+
+     /* Play a bundled audio buffer by key, falls back to procedural */
+    function playAudioBuffer(key, fallbackFn) {
+        if (audioEngineBroken || muted) return;
+        var buf = audioBuffers[key];
+        if (!buf || !audioCtx) {
+            if (fallbackFn) fallbackFn();
+            return;
+        }
+        try {
+            var src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            var g = audioCtx.createGain();
+            g.gain.value = 0.5;
+            src.connect(g);
+            g.connect(masterGain);
+            src.start(0);
+        } catch (e) {
+            audioEngineBroken = true;
+            if (fallbackFn) fallbackFn();
+        }
     }
 
     /* Growl / hum during charge — uses two oscillators */
@@ -446,11 +571,19 @@
         var intensity = Math.max(0.2, chargeLevel / 100);
         var particleCount = Math.floor(20 + intensity * 80);
 
-        playFireBreath(intensity);
+        /* Transition sound: ethereal whoosh */
+        playAudioBuffer('transition', function () {
+            playFireBreath(intensity);
+         });
+
         if (chargeLevel >= 100 && !playedFullChime) {
             playedFullChime = true;
-            setTimeout(function () { playSuccessChime(); }, 300);
-          }
+            setTimeout(function () {
+                playAudioBuffer('success', function () {
+                    playSuccessChime();
+                 });
+             }, 300);
+           }
 
         if (!reducedMotion) {
             spawnBreathParticles(particleCount, intensity);
@@ -474,16 +607,20 @@
 
             cooldownTimeout = setTimeout(function () {
                 setState(STATE.IDLE);
-            }, COOLDOWN_MS);
+                playAudioBuffer('reset', noop);
+              }, COOLDOWN_MS);
         }, 600 + (1 - intensity) * 400);
     }
 
     function handleHoldStart() {
         if (currentState === STATE.COOLDOWN || currentState === STATE.CHARGING || currentState === STATE.BREATHING) return;
         ensureAudioCtx();
+        if (!audioBuffersLoaded) {
+            loadAudioBuffers();
+         }
         chargeLevel = 0;
         setState(STATE.CHARGING);
-    }
+       }
 
     function handleHoldEnd() {
         if (currentState !== STATE.CHARGING) return;
@@ -547,17 +684,21 @@
 
        /* Hover sound on mouse enter / focus */
     dragonArea.addEventListener('mouseenter', function () {
-         if (currentState === STATE.IDLE && !hoverPlayed) {
-             ensureAudioCtx();
-             playHover();
-             hoverPlayed = true;
+        if (currentState === STATE.IDLE && !hoverPlayed) {
+            ensureAudioCtx();
+            playAudioBuffer('input', function () {
+                playHover();
+              });
+            hoverPlayed = true;
           }
        });
     dragonArea.addEventListener('focus', function () {
-         if (currentState === STATE.IDLE && !hoverPlayed) {
-             ensureAudioCtx();
-             playHover();
-             hoverPlayed = true;
+        if (currentState === STATE.IDLE && !hoverPlayed) {
+            ensureAudioCtx();
+            playAudioBuffer('input', function () {
+                playHover();
+              });
+            hoverPlayed = true;
           }
        });
     dragonArea.addEventListener('blur', function () {
