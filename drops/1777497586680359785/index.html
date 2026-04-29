@@ -10,17 +10,18 @@
   <div id="app" role="application" aria-label="Dragon Crew Summoning Experience">
     <header class="stage-header">
       <h1 class="logo">Dragon Crew</h1>
-      <p class="tagline">We build Magical Experiences that make people dream of Magical Creatures</p>
+        <p class="tagline">Six ancient dragons, each born from a different element, have gathered in your world. Tap one to summon it and watch the magic unfold.</p>
       <div class="meta-controls">
         <button id="mute-btn" class="btn-icon" aria-label="Toggle sound" title="Toggle Sound">
           <span class="icon" aria-hidden="true">🔊</span>
         </button>
-        <button id="reset-btn" class="btn-text" aria-label="Reset all dragons">Reset</button>
+        <button id="reset-btn" class="btn-text" aria-label="Release all dragons">Release the Crew</button>
       </div>
     </header>
 
-    <main class="stage-main">
-      <div class="dragon-grid" role="list" aria-label="Dragons to summon">
+      <main class="stage-main">
+        <p class="stage-intro" aria-label="How to play">Each dragon carries a unique spark. Tap any dragon to bring it onto the stage. When all six have been summoned, the crew is complete.</p>
+        <div class="dragon-grid" role="list" aria-label="Choose your dragons to summon">
         <div class="dragon-card" role="listitem" data-dragon="fire" tabindex="0" aria-label="Summon Fire Dragon">
           <div class="card-inner">
             <div class="dragon-icon" aria-hidden="true">
@@ -133,7 +134,7 @@
       </div>
 
       <div id="status-bar" class="status-bar" aria-live="polite" aria-atomic="true">
-        <span id="status-text" class="status-text">Choose a dragon to summon</span>
+          <span id="status-text" class="status-text">Which dragon will you summon first?</span>
         <div id="summon-counter" class="summon-counter">
           <span class="counter-label">Summoned:</span>
           <span id="counter-value" class="counter-value">0</span><span class="counter-total">/6</span>
