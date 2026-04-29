@@ -166,18 +166,26 @@ body::before{
   box-shadow:0 0 10px var(--glow);
 }
 
-/* dragon figure (hidden until hatch) */
-.dragon{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;
-  transition:opacity .6s ease-in .1s;
-}
-.dragon.visible{opacity:1}
-.dragon svg{
-  width:clamp(100px,22vw,170px);
-  filter:drop-shadow(0 0 20px rgba(240,178,50,.5));
-}
+    /* dragon figure (hidden until hatch) */
+    .dragon{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;
+      transition:opacity .6s ease-in .1s;
+    }
+    .dragon.visible{opacity:1}
+    .dragon svg, .dragon .dragon-svg{
+      width:clamp(100px,22vw,170px);
+      filter:drop-shadow(0 0 20px rgba(240,178,50,.5));
+    }
+    .dragon.visible svg,
+    .dragon.visible .dragon-svg{
+      animation: dragonBreathe 3s ease-in-out infinite;
+    }
+    @keyframes dragonBreathe{
+      0%,100%{transform:scale(1) translateY(0)}
+      50%{transform:scale(1.025) translateY(-4px)}
+    }
 
 /* shell halves open animation */
 .shell-half{
@@ -268,9 +276,9 @@ body::before{
     <!-- Crack overlay -->
     <svg class="cracks" id="cracks" viewBox="0 0 220 280" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
 
-    <!-- Dragon figure (revealed on hatch) -->
-    <div class="dragon" id="dragon" aria-hidden="true">
-      <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dragon figure (revealed on hatch) -->
+      <div class="dragon" id="dragon" aria-hidden="true">
+        <svg class="dragon-svg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- body -->
         <ellipse cx="60" cy="95" rx="28" ry="35" fill="#d47b25"/>
         <!-- belly -->
