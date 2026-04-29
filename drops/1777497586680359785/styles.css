@@ -201,10 +201,12 @@ header p {
 }
 
 .belly-glow {
-   fill: var(--ember-glow);
-   opacity: 0;
-   transition: opacity 0.3s;
-   filter: blur(8px);
+    fill: var(--ember-glow);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    filter: blur(8px);
+    transform-origin: 200px 230px;
+    transform: scale(1);
 }
 
 /* ===== IDLE ANIMATION ===== */
@@ -265,8 +267,8 @@ header p {
 }
 
 @keyframes bellyPulse {
-   0% { opacity: 0.4; r: 22px; }
-   100% { opacity: 1; r: 32px; }
+    0% { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1.2); }
 }
 
 .dragon-area.charging .dragon-mouth {
