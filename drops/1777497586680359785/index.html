@@ -1,152 +1,740 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dragon Crew — Summon the Magic</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dragon Crew</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #0a0a1a;
+  --bg-mid: #12122a;
+  --gold: #f0c040;
+  --gold-dim: #a08020;
+  --ember: #ff6a30;
+  --ember-glow: rgba(255, 106, 48, 0.5);
+  --purple: #8050ff;
+  --purple-dim: #4030a0;
+  --cream: #f0e8d0;
+  --text: #e0d8c8;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--cream);
+  border-radius: 50%;
+  opacity: 0;
+  animation: twinkle 3s infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.7; }
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 1.5rem;
+  z-index: 10;
+}
+
+header h1 {
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--gold), var(--ember));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+header p {
+  font-size: 0.8rem;
+  opacity: 0.5;
+  margin-top: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.mute-btn {
+  position: fixed;
+  top: 1.2rem;
+  right: 1.2rem;
+  z-index: 20;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 1.2rem;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mute-btn:hover { background: rgba(255,255,255,0.14); }
+.mute-btn[aria-pressed="true"] { opacity: 0.4; }
+
+.stage {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.egg-container {
+  position: relative;
+  width: clamp(160px, 40vw, 240px);
+  height: clamp(200px, 50vw, 300px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.egg-glow {
+  position: absolute;
+  inset: -30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--ember-glow) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  animation: breathe 2.5s ease-in-out infinite;
+}
+
+.egg-container:active .egg-glow,
+.egg-container.hatching .egg-glow {
+  opacity: 1;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.egg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.egg-body {
+  position: absolute;
+  width: 70%;
+  height: 85%;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: linear-gradient(160deg, #2a2040 0%, #1a1430 50%, #15102a 100%);
+  box-shadow:
+    inset 0 -10px 20px rgba(0,0,0,0.4),
+    inset 0 4px 10px rgba(128,80,255,0.15),
+    0 0 40px rgba(128,80,255,0.2);
+  transition: box-shadow 0.3s, transform 0.15s;
+  overflow: hidden;
+}
+
+.egg-body::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  left: 20%;
+  width: 30%;
+  height: 20%;
+  background: radial-gradient(ellipse, rgba(200,180,255,0.12) 0%, transparent 100%);
+  border-radius: 50%;
+}
+
+.egg-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    75deg,
+    transparent,
+    transparent 12px,
+    rgba(128,80,255,0.06) 12px,
+    rgba(128,80,255,0.06) 13px
+  );
+}
+
+.crack-line {
+  position: absolute;
+  background: var(--gold);
+  opacity: 0;
+  z-index: 2;
+  box-shadow: 0 0 6px var(--gold-dim);
+  transition: opacity 0.2s;
+}
+
+.crack-1 {
+  width: 2px;
+  height: 35%;
+  top: 30%;
+  left: 52%;
+  transform: rotate(15deg);
+}
+
+.crack-2 {
+  width: 2px;
+  height: 25%;
+  top: 45%;
+  left: 40%;
+  transform: rotate(-25deg);
+}
+
+.crack-3 {
+  width: 2px;
+  height: 30%;
+  top: 20%;
+  left: 45%;
+  transform: rotate(40deg);
+}
+
+.crack-4 {
+  width: 30%;
+  height: 2px;
+  top: 55%;
+  left: 35%;
+  transform: rotate(-10deg);
+}
+
+.crack-5 {
+  width: 2px;
+  height: 20%;
+  top: 50%;
+  left: 58%;
+  transform: rotate(-35deg);
+}
+
+.click-1 .crack-1 { opacity: 0.6; }
+.click-2 .crack-1, .click-2 .crack-2 { opacity: 0.7; }
+.click-3 .crack-1, .click-3 .crack-2, .click-3 .crack-3 { opacity: 0.8; }
+.click-4 .crack-1, .click-4 .crack-2, .crack-3, .crack-4 { opacity: 0.9; }
+.click-5 .crack-line { opacity: 1; }
+
+.egg-container:active .egg-body {
+  transform: scale(0.97);
+}
+
+.egg-container:hover .egg-body {
+  box-shadow:
+    inset 0 -10px 20px rgba(0,0,0,0.4),
+    inset 0 4px 10px rgba(128,80,255,0.25),
+    0 0 60px rgba(255,106,48,0.3);
+}
+
+.egg-container.hatching .egg-body {
+  animation: eggShake 0.6s ease-in-out;
+  box-shadow:
+    inset 0 -10px 20px rgba(0,0,0,0.4),
+    0 0 80px rgba(255,106,48,0.6),
+    0 0 120px rgba(240,192,64,0.3);
+}
+
+@keyframes eggShake {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-4deg); }
+  30% { transform: rotate(4deg); }
+  45% { transform: rotate(-3deg); }
+  60% { transform: rotate(3deg); }
+  75% { transform: rotate(-1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.egg-container.hatched .egg-body {
+  animation: eggFade 0.8s forwards;
+}
+
+@keyframes eggFade {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+.dragon-silhouette {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.dragon-silhouette.visible {
+  opacity: 1;
+  animation: dragonAppear 1s ease-out;
+}
+
+@keyframes dragonAppear {
+  0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+  60% { transform: scale(1.1) translateY(-5px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.dragon-svg {
+  width: 80%;
+  height: 80%;
+  filter: drop-shadow(0 0 20px rgba(255,106,48,0.5)) drop-shadow(0 0 40px rgba(240,192,64,0.3));
+}
+
+.particles {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+}
+
+.particle.active {
+  animation: particleBurst 0.8s ease-out forwards;
+}
+
+@keyframes particleBurst {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+}
+
+.progress-ring {
+  position: absolute;
+  width: 110%;
+  height: 110%;
+  top: -5%;
+  left: -5%;
+  pointer-events: none;
+}
+
+.progress-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+  fill: none;
+  stroke-width: 2;
+}
+
+.progress-track { stroke: rgba(255,255,255,0.06); }
+
+.progress-fill {
+  stroke: var(--gold);
+  stroke-linecap: round;
+  stroke-dasharray: 0, 999;
+  transition: stroke-dasharray 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(240,192,64,0.4));
+}
+
+.status-text {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  text-align: center;
+  min-height: 1.5em;
+  letter-spacing: 0.03em;
+  transition: opacity 0.3s;
+}
+
+.status-text.glow {
+  color: var(--gold);
+  opacity: 1;
+}
+
+.reset-btn {
+  position: relative;
+  display: none;
+  margin-top: 1rem;
+  padding: 0.6rem 1.8rem;
+  background: linear-gradient(135deg, var(--purple-dim), var(--purple));
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.reset-btn.visible { display: block; }
+.reset-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(128,80,255,0.4); }
+.reset-btn:active { transform: translateY(0); }
+
+footer {
+  position: fixed;
+  bottom: 1rem;
+  font-size: 0.65rem;
+  opacity: 0.25;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 400px) {
+  header { padding: 1rem; }
+  .egg-container {
+    width: 140px !important;
+    height: 180px !important;
+  }
+}
+</style>
 </head>
 <body>
-  <div id="app" role="application" aria-label="Dragon Crew Summoning Experience">
-    <header class="stage-header">
-      <h1 class="logo">Dragon Crew</h1>
-        <p class="tagline">Six ancient dragons, each born from a different element, have gathered in your world. Tap one to summon it and watch the magic unfold.</p>
-      <div class="meta-controls">
-        <button id="mute-btn" class="btn-icon" aria-label="Toggle sound" title="Toggle Sound">
-          <span class="icon" aria-hidden="true">🔊</span>
-        </button>
-        <button id="reset-btn" class="btn-text" aria-label="Release all dragons">Release the Crew</button>
+
+<div class="stars" id="stars" aria-hidden="true"></div>
+
+<header>
+  <h1>The Dragon Crew</h1>
+  <p>Magical Experiences &amp; Magical Creatures</p>
+</header>
+
+<button class="mute-btn" id="muteBtn" aria-label="Toggle sound" aria-pressed="false" title="Toggle sound">
+  <span id="muteIcon">&#128266;</span>
+</button>
+
+<main class="stage" role="main">
+  <div class="egg-container" id="eggContainer" role="button" tabindex="0" aria-label="Tap the dragon egg">
+    <div class="progress-ring">
+      <svg viewBox="0 0 200 200">
+        <circle class="progress-track" cx="100" cy="100" r="94"/>
+        <circle class="progress-fill" id="progressFill" cx="100" cy="100" r="94"/>
+      </svg>
+    </div>
+    <div class="egg-glow"></div>
+    <div class="egg">
+      <div class="egg-body" id="eggBody">
+        <div class="crack-line crack-1"></div>
+        <div class="crack-line crack-2"></div>
+        <div class="crack-line crack-3"></div>
+        <div class="crack-line crack-4"></div>
+        <div class="crack-line crack-5"></div>
       </div>
-    </header>
-
-      <main class="stage-main">
-        <p class="stage-intro" aria-label="How to play">Each dragon carries a unique spark. Tap any dragon to bring it onto the stage. When all six have been summoned, the crew is complete.</p>
-        <div class="dragon-grid" role="list" aria-label="Choose your dragons to summon">
-        <div class="dragon-card" role="listitem" data-dragon="fire" tabindex="0" aria-label="Summon Fire Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 8C28 8 18 18 18 30c0 8 4 14 10 18 2 1 4 2 5 4 1 3 0 7-2 10-1 2 0 4 2 5h24c2-1 3-3 2-5-2-3-3-7-2-10 1-2 3-3 5-4 6-4 10-10 10-18 0-12-10-22-22-22z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="32" cy="28" r="3" fill="currentColor"/>
-                <circle cx="48" cy="28" r="3" fill="currentColor"/>
-                <path d="M34 40 Q40 46 46 40" stroke="currentColor" stroke-width="2" fill="none"/>
-                <path d="M10 20 L6 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                <path d="M70 20 L74 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Fire Dragon</span>
-            <span class="dragon-element">Element of Flame</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <div class="dragon-card" role="listitem" data-dragon="water" tabindex="0" aria-label="Summon Water Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 12C30 12 22 20 22 30c0 6 3 11 7 15 2 2 4 3 4 5 0 4-2 8-4 11-2 3 0 5 3 6h28c3-1 5-3 3-6-2-3-4-7-4-11 0-2 2-3 4-5 4-4 7-9 7-15 0-10-8-18-18-18z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="33" cy="27" r="3" fill="currentColor"/>
-                <circle cx="47" cy="27" r="3" fill="currentColor"/>
-                <path d="M35 39 Q40 44 45 39" stroke="currentColor" stroke-width="2" fill="none"/>
-                <path d="M14 18 Q20 14 26 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                <path d="M54 18 Q60 14 66 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Water Dragon</span>
-            <span class="dragon-element">Element of Flow</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <div class="dragon-card" role="listitem" data-dragon="ice" tabindex="0" aria-label="Summon Ice Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 10C30 10 22 18 22 28c0 6 3 11 8 15 2 2 4 3 4 5 0 4-2 8-4 11-1 3 0 5 3 5h24c3 0 4-2 3-5-2-3-4-7-4-11 0-2 2-3 4-5 5-4 8-9 8-15 0-10-8-18-18-18z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="33" cy="26" r="3" fill="currentColor"/>
-                <circle cx="47" cy="26" r="3" fill="currentColor"/>
-                <path d="M35 38 Q40 43 45 38" stroke="currentColor" stroke-width="2" fill="none"/>
-                <line x1="40" y1="10" x2="40" y2="3" stroke="currentColor" stroke-width="2"/>
-                <line x1="25" y1="14" x2="20" y2="7" stroke="currentColor" stroke-width="2"/>
-                <line x1="55" y1="14" x2="60" y2="7" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Ice Dragon</span>
-            <span class="dragon-element">Element of Frost</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <div class="dragon-card" role="listitem" data-dragon="snow" tabindex="0" aria-label="Summon Snow Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 14C32 14 26 20 26 28c0 5 3 10 6 13 2 2 4 3 4 5 0 3-2 7-3 10-1 3 0 5 2 5h20c2 0 3-2 2-5-1-3-3-7-3-10 0-2 2-3 4-5 3-3 6-8 6-13 0-8-6-14-14-14z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="34" cy="26" r="2.5" fill="currentColor"/>
-                <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
-                <path d="M36 37 Q40 42 44 37" stroke="currentColor" stroke-width="2" fill="none"/>
-                <circle cx="20" cy="10" r="2" fill="currentColor"/>
-                <circle cx="60" cy="10" r="2" fill="currentColor"/>
-                <circle cx="40" cy="5" r="2" fill="currentColor"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Snow Dragon</span>
-            <span class="dragon-element">Element of Drift</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <div class="dragon-card" role="listitem" data-dragon="sea" tabindex="0" aria-label="Summon Sea Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 12C30 12 22 20 22 30c0 6 3 11 8 14 2 1 4 3 5 5 1 3 0 7-2 10-1 3 0 5 3 5h20c3 0 4-2 3-5-2-3-3-7-2-10 1-2 3-4 5-5 5-3 8-8 8-14 0-10-8-18-18-18z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="33" cy="27" r="3" fill="currentColor"/>
-                <circle cx="47" cy="27" r="3" fill="currentColor"/>
-                <path d="M35 39 Q40 44 45 39" stroke="currentColor" stroke-width="2" fill="none"/>
-                <path d="M28 12 Q32 6 38 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M42 10 Q48 6 52 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Sea Dragon</span>
-            <span class="dragon-element">Element of Depths</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <div class="dragon-card" role="listitem" data-dragon="lava" tabindex="0" aria-label="Summon Lava Dragon">
-          <div class="card-inner">
-            <div class="dragon-icon" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 10C28 10 18 20 18 32c0 6 3 12 8 15 2 2 4 3 5 5 1 3 0 7-3 10-1 2 0 4 3 4h26c3 0 4-2 3-4-3-3-4-7-3-10 1-2 3-3 5-5 5-3 8-9 8-15 0-12-10-22-22-22z" stroke="currentColor" stroke-width="2"/>
-                <circle cx="32" cy="27" r="3" fill="currentColor"/>
-                <circle cx="48" cy="27" r="3" fill="currentColor"/>
-                <path d="M34 40 Q40 45 46 40" stroke="currentColor" stroke-width="2" fill="none"/>
-                <path d="M18 32 Q14 38 18 44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                <path d="M62 32 Q66 38 62 44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="dragon-name">Lava Dragon</span>
-            <span class="dragon-element">Element of Magma</span>
-            <div class="summon-ring" aria-hidden="true"></div>
-          </div>
-        </div>
+      <div class="particles" id="particles" aria-hidden="true"></div>
+      <div class="dragon-silhouette" id="dragonSilhouette">
+        <svg class="dragon-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#ff6a30" opacity="0.9">
+            <path d="M100,40 Q130,20 145,35 Q150,25 155,30 Q150,40 145,50 Q155,55 150,65 Q145,60 140,65 Q130,75 100,90"/>
+            <path d="M100,90 Q70,80 55,100 Q45,95 40,105 Q50,120 65,125 Q70,135 60,145 Q80,140 95,130 Q105,140 115,130 Q130,140 150,145 Q140,135 135,125 Q150,120 160,105 Q155,95 145,100 Q130,80 100,90 Z"/>
+            <circle cx="112" cy="55" r="3" fill="#f0c040"/>
+            <path d="M70,130 Q65,150 75,165 Q80,155 80,145" />
+            <path d="M130,130 Q135,150 125,165 Q120,155 120,145" />
+            <path d="M100,130 Q95,155 100,175 Q105,155 100,130" />
+            <ellipse cx="100" cy="115" rx="15" ry="8" fill="none" stroke="#f0c040" stroke-width="1" opacity="0.5"/>
+          </g>
+        </svg>
       </div>
-
-      <div id="status-bar" class="status-bar" aria-live="polite" aria-atomic="true">
-          <span id="status-text" class="status-text">Which dragon will you summon first?</span>
-        <div id="summon-counter" class="summon-counter">
-          <span class="counter-label">Summoned:</span>
-          <span id="counter-value" class="counter-value">0</span><span class="counter-total">/6</span>
-        </div>
-      </div>
-    </main>
-
-    <canvas id="particle-canvas" aria-hidden="true"></canvas>
+    </div>
   </div>
 
-  <div id="toast" class="toast" role="alert" aria-live="assertive" hidden></div>
+  <p class="status-text" id="statusText">Tap the egg...</p>
+  <button class="reset-btn" id="resetBtn">Hatch Another</button>
+</main>
 
-  <script src="app.js"></script>
+<footer>&copy; The Dragon Crew</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const TAPS_TO_HATCH = 5;
+  const CIRCUMFERENCE = 2 * Math.PI * 94;
+
+  let tapCount = 0;
+  let audioCtx = null;
+  let muted = false;
+  let hatched = false;
+
+  const eggContainer = document.getElementById('eggContainer');
+  const statusText = document.getElementById('statusText');
+  const resetBtn = document.getElementById('resetBtn');
+  const progressFill = document.getElementById('progressFill');
+  const dragonSilhouette = document.getElementById('dragonSilhouette');
+  const muteBtn = document.getElementById('muteBtn');
+  const muteIcon = document.getElementById('muteIcon');
+  const particlesContainer = document.getElementById('particles');
+
+  // Stars background
+  (function createStars() {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.top = Math.random() * 100 + '%';
+      s.style.animationDelay = (Math.random() * 3) + 's';
+      s.style.animationDuration = (2 + Math.random() * 3) + 's';
+      const size = 1 + Math.random() * 2;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      container.appendChild(s);
+    }
+  })();
+
+  // Create particle elements
+  const PARTICLE_COUNT = 20;
+  const particles = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (i / PARTICLE_COUNT) * Math.PI * 2;
+    const dist = 60 + Math.random() * 60;
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.background = ['#f0c040', '#ff6a30', '#8050ff'][Math.floor(Math.random() * 3)];
+    particlesContainer.appendChild(p);
+    particles.push(p);
+  }
+
+  function burstParticles() {
+    particles.forEach((p, i) => {
+      p.classList.remove('active');
+      void p.offsetWidth;
+      setTimeout(() => p.classList.add('active'), i * 20);
+    });
+  }
+
+  // Audio
+  function ensureAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playTap() {
+    if (muted) return;
+    ensureAudioCtx();
+    const now = audioCtx.currentTime;
+
+    const freqs = [523, 587, 659, 784, 880];
+    const freq = freqs[Math.min(tapCount, freqs.length - 1)];
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.1);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(freq * 2, now);
+    gain2.gain.setValueAtTime(0.08, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc.connect(gain).connect(audioCtx.destination);
+    osc2.connect(gain2).connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.4);
+    osc2.start(now);
+    osc2.stop(now + 0.2);
+  }
+
+  function playHatchChord() {
+    if (muted) return;
+    ensureAudioCtx();
+    const now = audioCtx.currentTime;
+
+    const chord = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+
+    chord.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.05);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + i * 0.05 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 1.5);
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(freq * 1.5, now + i * 0.05);
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.05, now + i * 0.05 + 0.05);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 1);
+
+      osc.connect(gain).connect(audioCtx.destination);
+      osc2.connect(gain2).connect(audioCtx.destination);
+      osc.start(now + i * 0.05);
+      osc.stop(now + i * 0.05 + 1.5);
+      osc2.start(now + i * 0.05);
+      osc2.stop(now + i * 0.05 + 1);
+    });
+
+    // Sparkle noise
+    const bufLen = audioCtx.sampleRate * 0.3;
+    const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buf;
+    const noiseGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 4000;
+    filter.Q.value = 2;
+    noiseGain.gain.setValueAtTime(0.06, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    noise.connect(filter).connect(noiseGain).connect(audioCtx.destination);
+    noise.start(now);
+    noise.stop(now + 0.6);
+  }
+
+  function playResetChime() {
+    if (muted) return;
+    ensureAudioCtx();
+    const now = audioCtx.currentTime;
+
+    [440, 554.37, 659.25].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.5);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.5);
+    });
+  }
+
+  // Update progress ring
+  function updateProgress() {
+    const progress = Math.min(tapCount / TAPS_TO_HATCH, 1);
+    const dashLen = progress * CIRCUMFERENCE;
+    progressFill.setAttribute('stroke-dasharray', `${dashLen}, ${CIRCUMFERENCE}`);
+  }
+
+  // Status messages
+  const messages = [
+    'Tap the egg...',
+    'A gentle warmth...',
+    'Something stirs inside...',
+    'The shell cracks!',
+    'Light begins to glow...',
+    'A NEW DRAGON AWAKES!',
+  ];
+
+  function updateStatus() {
+    const next = tapCount + 1;
+    statusText.className = 'status-text';
+    if (next === 5) {
+      statusText.classList.add('glow');
+    }
+    statusText.textContent = messages[Math.min(next, messages.length - 1)];
+  }
+
+  // Interaction
+  function handleTap() {
+    if (hatched) return;
+
+    tapCount++;
+    updateProgress();
+    updateStatus();
+    playTap();
+
+    eggContainer.className = 'egg-container click-' + tapCount;
+
+    if (tapCount >= TAPS_TO_HATCH) {
+      setTimeout(hatch, 300);
+    }
+  }
+
+  function hatch() {
+    hatched = true;
+    eggContainer.classList.add('hatching');
+    playHatchChord();
+    burstParticles();
+
+    setTimeout(() => {
+      eggContainer.classList.remove('hatching');
+      eggContainer.classList.add('hatched');
+      dragonSilhouette.classList.add('visible');
+      resetBtn.classList.add('visible');
+      statusText.classList.add('glow');
+      statusText.textContent = 'A NEW DRAGON AWAKES!';
+    }, 700);
+  }
+
+  function reset() {
+    tapCount = 0;
+    hatched = false;
+    eggContainer.className = 'egg-container';
+    dragonSilhouette.classList.remove('visible');
+    resetBtn.classList.remove('visible');
+    progressFill.setAttribute('stroke-dasharray', `0, ${CIRCUMFERENCE}`);
+    statusText.className = 'status-text';
+    statusText.textContent = 'Tap the egg...';
+    playResetChime();
+  }
+
+  eggContainer.addEventListener('click', handleTap);
+  eggContainer.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleTap();
+    }
+  });
+  resetBtn.addEventListener('click', reset);
+
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    muteBtn.setAttribute('aria-pressed', String(muted));
+    muteIcon.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
+    if (!muted) ensureAudioCtx();
+  });
+})();
+</script>
 </body>
 </html>
