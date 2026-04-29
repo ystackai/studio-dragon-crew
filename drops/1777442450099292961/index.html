@@ -72,6 +72,16 @@ header p {
   box-shadow: 0 0 60px rgba(100, 80, 180, 0.12);
 }
 
+#stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
 #stage canvas {
   position: absolute;
   inset: 0;
@@ -86,7 +96,13 @@ header p {
   font-weight: 600;
   color: var(--muted);
   pointer-events: none;
-  transition: color 0.2s;
+  transition: color 0.3s, text-shadow 0.3s;
+  text-shadow: 0 0 8px rgba(0,0,0,0.6);
+}
+
+#stage-label.lit {
+  color: var(--text);
+  text-shadow: 0 0 20px rgba(129,140,248,0.4);
 }
 
 .dragons {
@@ -151,6 +167,10 @@ header p {
   box-shadow: 0 0 30px color-mix(in srgb, var(--btn-color) 30%, transparent);
 }
 
+.dragon-btn.awakened {
+  border-color: color-mix(in srgb, var(--btn-color) 40%, rgba(255,255,255,0.15));
+}
+
 #ice-btn { --btn-color: var(--ice); }
 #lava-btn { --btn-color: var(--lava); }
 #water-btn { --btn-color: var(--water); }
@@ -190,11 +210,29 @@ header p {
   font-size: 0.85rem;
   color: var(--muted);
   height: 1.2em;
-  transition: color 0.2s;
+  transition: color 0.3s;
 }
 
 #combo-display.lit {
   color: var(--text);
+}
+
+#progress-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  margin-top: 0.8rem;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--ice), var(--sea), var(--lava), var(--fire));
+  transition: width 0.4s ease;
 }
 
 @media (max-width: 500px) {
@@ -210,7 +248,7 @@ header p {
 <body>
 
 <header>
-  <h1>Dragon Crew</h1>
+  <h1>The Dragon Crew</h1>
   <p>Trigger the crew — each dragon has a voice</p>
 </header>
 
@@ -255,11 +293,12 @@ header p {
 <div id="controls">
   <button class="ctrl-btn" id="mute-btn" aria-label="Toggle sound">🔊 Sound</button>
   <button class="ctrl-btn" id="harmony-btn">🎵 Harmony</button>
+  <button class="ctrl-btn" id="reset-btn" style="display:none;">↻ Reset</button>
 </div>
 
 <div id="combo-display" aria-live="polite"></div>
+<div id="progress-bar"><div id="progress-fill"></div></div>
 
-<!-- Audio and app logic -->
 <script>
 // ─── Audio Engine ─────────────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -286,35 +325,34 @@ function toggleMute() {
   btn.classList.toggle('muted', isMuted);
 }
 
-// Scale definitions per dragon (pentatonic-ish scales for pleasant harmonics)
 const DRAGON_SCALES = {
-  ice:   { freqs: [1046.5, 1174.7, 1318.5, 1568.0, 1760.0], color: '#7dd3fc' },
-  lava:  { freqs: [130.8, 155.6, 174.6, 196.0, 233.1],       color: '#f97316' },
-  water: { freqs: [523.3, 587.3, 659.3, 784.0, 880.0],          color: '#38bdf8' },
-  sea:   { freqs: [261.6, 293.7, 329.6, 392.0, 440.0],          color: '#818cf8' },
-  fire:  { freqs: [698.5, 784.0, 880.0, 1046.5, 1174.7],        color: '#ef4444' },
-  snow:  { freqs: [1568.0, 1760.0, 1975.5, 2349.0, 2637.0],     color: '#e0e7ff' },
+  ice:    { freqs: [1046.5, 1174.7, 1318.5, 1568.0, 1760.0], color: '#7dd3fc' },
+  lava:   { freqs: [130.8, 155.6, 174.6, 196.0, 233.1],       color: '#f97316' },
+  water:  { freqs: [523.3, 587.3, 659.3, 784.0, 880.0],          color: '#38bdf8' },
+  sea:    { freqs: [261.6, 293.7, 329.6, 392.0, 440.0],          color: '#818cf8' },
+  fire:   { freqs: [698.5, 784.0, 880.0, 1046.5, 1174.7],        color: '#ef4444' },
+  snow:   { freqs: [1568.0, 1760.0, 1975.5, 2349.0, 2637.0],     color: '#e0e7ff' },
 };
 
-// Harmonic progressions for harmony mode (chord-like stacks)
 const HARMONY_PROGRESSION = [0, 2, 4, 1, 3, 2];
 
-function playSine(freq, duration, startTime, gainVal = 0.3, target = masterGain) {
+function playSine(freq, duration, startTime, gainVal = 0.3, target = null) {
   const osc = audioCtx.createOscillator();
   const env = audioCtx.createGain();
+  const dst = target || masterGain;
   osc.type = 'sine';
   osc.frequency.value = freq;
   env.gain.setValueAtTime(0.001, startTime);
   env.gain.linearRampToValueAtTime(gainVal, startTime + 0.04);
   env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
   osc.connect(env);
-  env.connect(target);
+  env.connect(dst);
   osc.start(startTime);
   osc.stop(startTime + duration);
   return { osc, env };
 }
 
-function playNoise(duration, startTime, gainVal = 0.15) {
+function playNoise(duration, startTime, gainVal = 0.15, filterType = 'bandpass') {
   const sr = audioCtx.sampleRate;
   const buf = audioCtx.createBuffer(1, sr * duration, sr);
   const data = buf.getChannelData(0);
@@ -323,8 +361,9 @@ function playNoise(duration, startTime, gainVal = 0.15) {
   src.buffer = buf;
   const env = audioCtx.createGain();
   const filt = audioCtx.createBiquadFilter();
-  filt.type = 'bandpass';
+  filt.type = filterType;
   filt.Q.value = 1.2;
+  filt.frequency.value = 800;
   env.gain.setValueAtTime(0.001, startTime);
   env.gain.linearRampToValueAtTime(gainVal, startTime + 0.02);
   env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
@@ -336,44 +375,34 @@ function playNoise(duration, startTime, gainVal = 0.15) {
   return { src, env, filt };
 }
 
-// Per-dragon sound palettes
 function playDragonSound(dragon) {
   ensureAudioContext();
   const t = audioCtx.currentTime;
   const scale = DRAGON_SCALES[dragon];
   if (!scale) return;
 
-  // Base note from scale
   const idx = Math.floor(Math.random() * scale.freqs.length);
   const baseFreq = scale.freqs[idx];
 
   switch (dragon) {
     case 'ice': {
-      // Glass-like tones with fast attack, shimmering
       playSine(baseFreq * 4, 0.8, t, 0.15);
       playSine(baseFreq * 6, 0.6, t + 0.05, 0.08);
       playSine(baseFreq * 3, 0.5, t + 0.1, 0.1);
-      // High sparkle
       const sparkleIdx = (idx + 2) % scale.freqs.length;
       playSine(scale.freqs[sparkleIdx] * 4, 0.3, t + 0.15, 0.06);
       break;
     }
     case 'lava': {
-      // Low rumbling with sub-bass
       playSine(baseFreq, 1.2, t, 0.35);
-      // Sub layer
       playSine(baseFreq * 0.5, 1.5, t, 0.2);
-      // Crackling noise
-      playNoise(0.6, t + 0.1, 0.1);
-      // Warm overtone
+      playNoise(0.6, t + 0.1, 0.1, 'bandpass');
       playSine(baseFreq * 1.5, 0.8, t + 0.15, 0.12);
       break;
     }
     case 'water': {
-      // Flowing: medium sine with vibrato simulation
       playSine(baseFreq, 0.7, t, 0.2);
       playSine(baseFreq * 1.5, 0.5, t + 0.1, 0.15);
-      // Sweep effect (rising frequency)
       const sweep = audioCtx.createOscillator();
       const sweepEnv = audioCtx.createGain();
       sweep.type = 'sine';
@@ -389,11 +418,9 @@ function playDragonSound(dragon) {
       break;
     }
     case 'sea': {
-      // Deep pearl harmonics
       playSine(baseFreq, 1.0, t, 0.25);
       playSine(baseFreq * 2, 0.8, t + 0.1, 0.15);
       playSine(baseFreq * 3, 0.6, t + 0.2, 0.08);
-      // Tidal noise
       const tidalFilt = audioCtx.createBiquadFilter();
       tidalFilt.type = 'lowpass';
       tidalFilt.frequency.value = 400;
@@ -416,11 +443,9 @@ function playDragonSound(dragon) {
       break;
     }
     case 'fire': {
-      // Crackling, bright attack
       playSine(baseFreq * 2, 0.4, t, 0.2);
       playSine(baseFreq * 3, 0.3, t + 0.05, 0.12);
-      playNoise(0.3, t, 0.18);
-      // Whoosh tail
+      playNoise(0.3, t, 0.18, 'bandpass');
       const whoosh = audioCtx.createOscillator();
       const whooshEnv = audioCtx.createGain();
       whoosh.type = 'sawtooth';
@@ -439,11 +464,9 @@ function playDragonSound(dragon) {
       break;
     }
     case 'snow': {
-      // Airy, shimmering, high-frequency soft tones
       playSine(baseFreq, 1.5, t, 0.08);
       playSine(baseFreq * 1.5, 1.2, t + 0.05, 0.06);
       playSine(baseFreq * 2, 1.0, t + 0.15, 0.05);
-      // Wide stereo sparkle via detuned pair
       const a = audioCtx.createOscillator();
       const b = audioCtx.createOscillator();
       a.type = 'sine'; b.type = 'sine';
@@ -464,9 +487,8 @@ function playDragonSound(dragon) {
     }
   }
 
-  // Harmony mode: add chord progression
   if (harmonyMode) {
-    const progIdx = HARMONY_PROGRESSION[lastDragon || 0 % 6];
+    const progIdx = HARMONY_PROGRESSION[(lastDragon || 0) % 6];
     const chordFreqs = scale.freqs.slice(0, 3);
     chordFreqs.forEach((f, i) => {
       playSine(f * (i === 0 ? 1 : (i === 1 ? 1.5 : 2)), 0.9, t + i * 0.08, 0.06);
@@ -474,31 +496,34 @@ function playDragonSound(dragon) {
   }
 }
 
-// Completion chord when all 6 are activated
 function playCompletionChord() {
   ensureAudioContext();
   const t = audioCtx.currentTime;
-  // Maj7 chord: C, E, G, B
   const notes = [261.6, 329.6, 392.0, 493.9];
-  notes.forEach((f, i) => playSine(f, 2.0, t + i * 0.06, 0.12));
-  notes.forEach((f, i) => playSine(f * 2, 1.5, t + i * 0.06 + 0.1, 0.06));
-  // Shimmer
-  playNoise(1.8, t, 0.04);
+  notes.forEach((f, i) => playSine(f, 2.5, t + i * 0.06, 0.14));
+  notes.forEach((f, i) => playSine(f * 2, 2.0, t + i * 0.06 + 0.1, 0.07));
+  notes.forEach((f, i) => playSine(f * 0.5, 2.8, t + i * 0.06, 0.1));
+  playNoise(2.0, t, 0.03, 'lowpass');
+  // Arpeggio tail
+  [523.3, 659.3, 784.0, 1046.5].forEach((f, i) => {
+    playSine(f, 1.2, t + 0.5 + i * 0.12, 0.08);
+  });
 }
 
-// Reset sound
 function playResetSound() {
   ensureAudioContext();
   const t = audioCtx.currentTime;
-  playSine(440, 0.15, t, 0.1);
-  playSine(330, 0.15, t + 0.05, 0.1);
-  playSine(220, 0.2, t + 0.1, 0.08);
+  playSine(440, 0.12, t, 0.1);
+  playSine(330, 0.12, t + 0.04, 0.1);
+  playSine(220, 0.18, t + 0.08, 0.08);
 }
 
 // ─── Visuals ────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
+let ambientOrbs = [];
+let celebrationBursts = [];
 let rafId = null;
 
 function resizeCanvas() {
@@ -509,31 +534,155 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
   canvas.style.width = rect.width + 'px';
   canvas.style.height = rect.height + 'px';
+  // Re-init ambient orbs
+  initAmbientOrbs();
 }
 window.addEventListener('resize', resizeCanvas);
+
+function initAmbientOrbs() {
+  ambientOrbs = [];
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const count = 24;
+  for (let i = 0; i < count; i++) {
+    ambientOrbs.push({
+      x: Math.random() * rect.width,
+      y: Math.random() * rect.height,
+      r: 1 + Math.random() * 2.5,
+      vx: (Math.random() - 0.5) * 12,
+      vy: (Math.random() - 0.5) * 8,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.7,
+      color: Object.values(DRAGON_SCALES)[Math.floor(Math.random() * 6)].color,
+    });
+  }
+}
+
 resizeCanvas();
 
+// Particle types with dragon-specific behavior
 class Particle {
-  constructor(x, y, color, vx, vy, life, size) {
+  constructor(x, y, color, vx, vy, life, size, type = 'circle') {
     this.x = x; this.y = y;
     this.color = color;
     this.vx = vx; this.vy = vy;
     this.life = life; this.maxLife = life;
     this.size = size;
+    this.type = type; // circle, diamond, drop, star
+    this.rotation = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 4;
   }
   update(dt) {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    this.vy += 30 * dt; // slight gravity
+    // Different gravity per type
+    if (this.type === 'drop') this.vy += 50 * dt; // water drops fall faster
+    else if (this.type === 'diamond') this.vy += 8 * dt; // ice floats
+    else if (this.type === 'star') this.vy -= 15 * dt; // snow rises
+    else this.vy += 30 * dt; // standard
+    this.rotation += this.rotSpeed * dt;
     this.life -= dt;
   }
   draw(ctx) {
     const alpha = Math.max(0, this.life / this.maxLife);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
-    ctx.fill();
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+
+    if (this.type === 'diamond') {
+      // Ice: sharp diamond shapes
+      const s = this.size * alpha;
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.6, 0);
+      ctx.lineTo(0, s);
+      ctx.lineTo(-s * 0.6, 0);
+      ctx.closePath();
+      ctx.fill();
+    } else if (this.type === 'drop') {
+      // Water: teardrop shapes
+      const s = this.size * alpha;
+      ctx.beginPath();
+      ctx.arc(0, s * 0.3, s * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (this.type === 'star') {
+      // Snow: 4-pointed star sparkle
+      const s = this.size * alpha;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const r = i % 2 === 0 ? s : s * 0.4;
+        const a = (Math.PI * 2 * i) / 8;
+        i === 0 ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+    } else if (this.type === 'ember') {
+      // Fire/lava: glowing circles with radial glow
+      const s = this.size * alpha;
+      const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 2);
+      grd.addColorStop(0, this.color);
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (this.type === 'pearl') {
+      // Sea: soft circular glow
+      const s = this.size * alpha;
+      const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 1.8);
+      grd.addColorStop(0, this.color);
+      grd.addColorStop(0.6, this.color + '80');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Default circle
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+class CelebrationBurst {
+  constructor(x, y, color) {
+    this.x = x; this.y = y; this.color = color;
+    this.life = 2.5; this.maxLife = this.life;
+    this.count = 60;
+  }
+  draw(ctx, time) {
+    const alpha = Math.max(0, this.life / this.maxLife);
+    const progress = 1 - alpha;
+    for (let i = 0; i < this.count; i++) {
+      const angle = (Math.PI * 2 * i) / this.count;
+      const dist = progress * 180 + i * 2;
+      const px = this.x + Math.cos(angle + time * 0.5) * dist;
+      const py = this.y + Math.sin(angle + time * 0.5) * dist + progress * 60;
+      ctx.globalAlpha = alpha * (1 - progress * 0.5);
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(px, py, 2 * alpha, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    this.life -= 1/60;
+  }
+}
+
+function getParticleType(dragon) {
+  switch(dragon) {
+    case 'ice': return 'diamond';
+    case 'lava': return 'ember';
+    case 'water': return 'drop';
+    case 'sea': return 'pearl';
+    case 'fire': return 'ember';
+    case 'snow': return 'star';
+    default: return 'circle';
   }
 }
 
@@ -544,24 +693,110 @@ function spawnBurst(dragon) {
   const cx = rect.width / 2;
   const cy = rect.height / 2;
   const count = 40;
+  const type = getParticleType(dragon);
+
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
-    const speed = 60 + Math.random() * 140;
-    const vx = Math.cos(angle) * speed;
-    const vy = Math.sin(angle) * speed - 40;
+    let speed = 60 + Math.random() * 140;
+    let vx = Math.cos(angle) * speed;
+    let vy = Math.sin(angle) * speed - 40;
+
+    // Dragon-specific motion tweaks
+    if (dragon === 'lava' || dragon === 'fire') {
+      // Rise upward more
+      vy -= 40;
+      speed *= 0.8 + Math.random() * 0.4;
+    } else if (dragon === 'water') {
+      // Flow side-to-side more
+      vx *= 1.3;
+    } else if (dragon === 'snow') {
+      // Float upward with gentle drift
+      vy = -40 - Math.random() * 30;
+      vx *= 0.6;
+    }
+
     const life = 1.0 + Math.random() * 1.2;
     const size = 2 + Math.random() * 4;
-    particles.push(new Particle(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40, scale.color, vx, vy, life, size));
+    particles.push(new Particle(
+      cx + (Math.random()-0.5)*40,
+      cy + (Math.random()-0.5)*40,
+      scale.color, vx, vy, life, size, type
+    ));
   }
 }
 
+function spawnCelebration() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  dragonNames.forEach((d, i) => {
+    const ox = (i - 2.5) * 70;
+    const oy = (Math.random() - 0.5) * 60;
+    celebrationBursts.push(new CelebrationBurst(cx + ox, cy + oy, DRAGON_SCALES[d].color));
+  });
+}
+
+let globalTime = 0;
 let lastTime = 0;
 function renderLoop(ts) {
   const dt = lastTime ? Math.min((ts - lastTime) / 1000, 0.05) : 0;
   lastTime = ts;
+  globalTime += dt;
 
   const rect = canvas.parentElement.getBoundingClientRect();
-  ctx.clearRect(0, 0, rect.width, rect.height);
+  const w = rect.width;
+  const h = rect.height;
+
+  // Fade trail
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(26, 22, 48, 0.15)';
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw ambient orbs
+  ambientOrbs.forEach(orb => {
+    orb.x += orb.vx * dt;
+    orb.y += orb.vy * dt;
+    orb.phase += orb.speed * dt;
+    // Wrap around
+    if (orb.x < -10) orb.x = w + 10;
+    if (orb.x > w + 10) orb.x = -10;
+    if (orb.y < -10) orb.y = h + 10;
+    if (orb.y > h + 10) orb.y = -10;
+
+    const pulse = 0.15 + 0.1 * Math.sin(orb.phase);
+    const grd = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r * orb.r * 6);
+    grd.addColorStop(0, orb.color + Math.round(pulse * 255).toString(16).padStart(2, '0'));
+    grd.addColorStop(1, 'transparent');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(orb.x, orb.y, orb.r * orb.r * 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core dot
+    ctx.globalAlpha = pulse * 2;
+    ctx.fillStyle = orb.color;
+    ctx.beginPath();
+    ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Glow layer for active particles
+  ctx.globalCompositeOperation = 'screen';
+  particles.forEach(p => {
+    const alpha = Math.max(0, p.life / p.maxLife) * 0.15;
+    ctx.globalAlpha = alpha;
+    const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 6);
+    grd.addColorStop(0, p.color);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * 6, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'source-over';
 
   // Update and draw particles
   particles = particles.filter(p => p.life > 0);
@@ -569,6 +804,10 @@ function renderLoop(ts) {
     p.update(dt);
     p.draw(ctx);
   });
+
+  // Draw celebration bursts
+  celebrationBursts = celebrationBursts.filter(b => b.life > 0);
+  celebrationBursts.forEach(b => b.draw(ctx, globalTime));
 
   ctx.globalAlpha = 1;
   rafId = requestAnimationFrame(renderLoop);
@@ -580,68 +819,93 @@ const dragonNames = ['ice', 'lava', 'water', 'sea', 'fire', 'snow'];
 const activated = new Set();
 let lastDragon = 0;
 let comboCount = 0;
+let isComplete = false;
 
 const stageLabel = document.getElementById('stage-label');
 const comboDisplay = document.getElementById('combo-display');
+const progressFill = document.getElementById('progress-fill');
+const resetBtn = document.getElementById('reset-btn');
 
 function updateComboDisplay() {
-  if (activated.size === 0) {
+  const count = activated.size;
+  if (count === 0) {
     comboDisplay.textContent = '';
     comboDisplay.classList.remove('lit');
     stageLabel.textContent = 'Tap a dragon to begin';
-  } else if (activated.size < 6) {
-    comboDisplay.textContent = `${activated.size} / 6 dragons awakened`;
-    comboDisplay.classList.add('lit');
-    stageLabel.textContent = `${Array.from(activated).map(d => DRAGON_SCALES[d].color).join('')} — keep triggering!`;
-    // Actually just update text
+    stageLabel.classList.remove('lit');
+  } else if (count < 6) {
     const names = Array.from(activated).map(d => d.charAt(0).toUpperCase() + d.slice(1));
     stageLabel.textContent = names.join(' • ');
+    stageLabel.classList.add('lit');
+    comboDisplay.textContent = `${count} / 6 dragons awakened`;
+    comboDisplay.classList.add('lit');
   } else {
     comboDisplay.textContent = '✦ ALL DRAGONS AWAKENED ✦';
     comboDisplay.classList.add('lit');
     stageLabel.textContent = 'The crew is complete';
+    stageLabel.classList.add('lit');
   }
+  progressFill.style.width = `${(count / 6) * 100}%`;
 }
 
 function activateDragon(dragon) {
+  if (isComplete) return;
   lastDragon = dragonNames.indexOf(dragon);
-  
+
   // Audio
   playDragonSound(dragon);
 
   // Visual
   spawnBurst(dragon);
 
-  // Button flash
+  // Button feedback
   const btn = document.querySelector(`[data-dragon="${dragon}"]`);
   btn.classList.add('active');
   setTimeout(() => btn.classList.remove('active'), 400);
 
   // Track activation
-  activated.add(dragon);
-  comboCount++;
+  if (!activated.has(dragon)) {
+    activated.add(dragon);
+    btn.classList.add('awakened');
+    comboCount++;
+  }
+
   updateComboDisplay();
 
   // Check completion
   if (activated.size === 6) {
+    isComplete = true;
+    resetBtn.style.display = 'inline-block';
     setTimeout(() => {
       playCompletionChord();
-      // Grand visual burst: all colors
-      dragonNames.forEach(d => spawnBurst(d));
-    }, 200);
+      spawnCelebration();
+    }, 250);
   }
+}
+
+function resetGame() {
+  playResetSound();
+  activated.clear();
+  comboCount = 0;
+  isComplete = false;
+  particles = [];
+  celebrationBursts = [];
+  resetBtn.style.display = 'none';
+  document.querySelectorAll('.dragon-btn').forEach(b => b.classList.remove('awakened', 'active'));
+  updateComboDisplay();
 }
 
 // Button click handlers
 document.querySelectorAll('.dragon-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    ensureAudioContext();
     activateDragon(btn.dataset.dragon);
   });
 
-  // Keyboard accessibility
   btn.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      ensureAudioContext();
       activateDragon(btn.dataset.dragon);
     }
   });
@@ -661,7 +925,16 @@ document.getElementById('harmony-btn').addEventListener('click', () => {
   btn.style.borderColor = harmonyMode ? 'rgba(129,140,248,0.5)' : '';
 });
 
-// Keyboard shortcuts: keys 1-6 trigger each dragon
+// Reset button
+resetBtn.addEventListener('click', resetGame);
+resetBtn.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    resetGame();
+  }
+});
+
+// Keyboard shortcuts: keys 1-6 trigger each dragon, R resets
 document.addEventListener('keydown', (e) => {
   const num = parseInt(e.key);
   if (num >= 1 && num <= 6) {
@@ -679,9 +952,12 @@ document.addEventListener('keydown', (e) => {
     btn.textContent = harmonyMode ? '🎵 Harmony ON' : '🎵 Harmony';
     btn.style.borderColor = harmonyMode ? 'rgba(129,140,248,0.5)' : '';
   }
+  if (e.key.toLowerCase() === 'r') {
+    resetGame();
+  }
 });
 
-// Init combo display
+// Init
 updateComboDisplay();
 </script>
 </body>
