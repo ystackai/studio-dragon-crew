@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dragon Crew</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ice: #7dd3fc;
+  --lava: #f97316;
+  --water: #38bdf8;
+  --sea: #818cf8;
+  --fire: #ef4444;
+  --snow: #e0e7ff;
+  --bg: #0c0a1a;
+  --surface: #1a1630;
+  --text: #f1f0f5;
+  --muted: #7a7598;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--ice), var(--sea), var(--lava), var(--fire));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-top: 0.4rem;
+}
+
+#stage {
+  width: 100%;
+  max-width: 700px;
+  aspect-ratio: 16/9;
+  border-radius: 16px;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 60px rgba(100, 80, 180, 0.12);
+}
+
+#stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#stage-label {
+  position: relative;
+  z-index: 2;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.dragons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  max-width: 700px;
+  width: 100%;
+}
+
+.dragon-btn {
+  flex: 1 1 calc(33% - 1rem);
+  min-width: 140px;
+  max-width: 220px;
+  padding: 1rem 1.2rem;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dragon-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.dragon-btn:active {
+  transform: translateY(0);
+  transition-duration: 0.06s;
+}
+
+.dragon-btn .emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.dragon-btn .name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+.dragon-btn .tag {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dragon-btn.active {
+  border-color: var(--btn-color);
+  background: color-mix(in srgb, var(--btn-color) 15%, var(--surface));
+  box-shadow: 0 0 30px color-mix(in srgb, var(--btn-color) 30%, transparent);
+}
+
+#ice-btn { --btn-color: var(--ice); }
+#lava-btn { --btn-color: var(--lava); }
+#water-btn { --btn-color: var(--water); }
+#sea-btn { --btn-color: var(--sea); }
+#fire-btn { --btn-color: var(--fire); }
+#snow-btn { --btn-color: var(--snow); }
+
+#controls {
+  margin-top: 1.8rem;
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.ctrl-btn {
+  padding: 0.6rem 1.4rem;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  border-color: rgba(255,255,255,0.25);
+}
+
+.ctrl-btn.muted {
+  opacity: 0.5;
+}
+
+#combo-display {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  height: 1.2em;
+  transition: color 0.2s;
+}
+
+#combo-display.lit {
+  color: var(--text);
+}
+
+@media (max-width: 500px) {
+  .dragon-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 110px;
+    padding: 0.8rem;
+  }
+  .dragon-btn .emoji { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Dragon Crew</h1>
+  <p>Trigger the crew — each dragon has a voice</p>
+</header>
+
+<div id="stage">
+  <canvas id="canvas"></canvas>
+  <span id="stage-label">Tap a dragon to begin</span>
+</div>
+
+<div class="dragons" role="group" aria-label="Dragons">
+  <button class="dragon-btn" id="ice-btn" data-dragon="ice" aria-label="Ice Dragon">
+    <span class="emoji">🧊</span>
+    <span class="name">Ice Dragon</span>
+    <span class="tag">Crystal</span>
+  </button>
+  <button class="dragon-btn" id="lava-btn" data-dragon="lava" aria-label="Lava Dragon">
+    <span class="emoji">🔥</span>
+    <span class="name">Lava Dragon</span>
+    <span class="tag">Ember</span>
+  </button>
+  <button class="dragon-btn" id="water-btn" data-dragon="water" aria-label="Water Dragon">
+    <span class="emoji">🌊</span>
+    <span class="name">Water Dragon</span>
+    <span class="tag">Flow</span>
+  </button>
+  <button class="dragon-btn" id="sea-btn" data-dragon="sea" aria-label="Sea Dragon">
+    <span class="emoji">🌊</span>
+    <span class="name">Sea Dragon</span>
+    <span class="tag">Pearl</span>
+  </button>
+  <button class="dragon-btn" id="fire-btn" data-dragon="fire" aria-label="Fire Dragon">
+    <span class="emoji">🔥</span>
+    <span class="name">Fire Dragon</span>
+    <span class="tag">Blaze</span>
+  </button>
+  <button class="dragon-btn" id="snow-btn" data-dragon="snow" aria-label="Snow Dragon">
+    <span class="emoji">❄️</span>
+    <span class="name">Snow Dragon</span>
+    <span class="tag">Shimmer</span>
+  </button>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="mute-btn" aria-label="Toggle sound">🔊 Sound</button>
+  <button class="ctrl-btn" id="harmony-btn">🎵 Harmony</button>
+</div>
+
+<div id="combo-display" aria-live="polite"></div>
+
+<!-- Audio and app logic -->
+<script>
+// ─── Audio Engine ─────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let masterGain = null;
+let isMuted = false;
+let harmonyMode = false;
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new AudioCtx();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = isMuted ? 0 : 0.7;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  if (masterGain) masterGain.gain.value = isMuted ? 0 : 0.7;
+  const btn = document.getElementById('mute-btn');
+  btn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+  btn.classList.toggle('muted', isMuted);
+}
+
+// Scale definitions per dragon (pentatonic-ish scales for pleasant harmonics)
+const DRAGON_SCALES = {
+  ice:   { freqs: [1046.5, 1174.7, 1318.5, 1568.0, 1760.0], color: '#7dd3fc' },
+  lava:  { freqs: [130.8, 155.6, 174.6, 196.0, 233.1],       color: '#f97316' },
+  water: { freqs: [523.3, 587.3, 659.3, 784.0, 880.0],          color: '#38bdf8' },
+  sea:   { freqs: [261.6, 293.7, 329.6, 392.0, 440.0],          color: '#818cf8' },
+  fire:  { freqs: [698.5, 784.0, 880.0, 1046.5, 1174.7],        color: '#ef4444' },
+  snow:  { freqs: [1568.0, 1760.0, 1975.5, 2349.0, 2637.0],     color: '#e0e7ff' },
+};
+
+// Harmonic progressions for harmony mode (chord-like stacks)
+const HARMONY_PROGRESSION = [0, 2, 4, 1, 3, 2];
+
+function playSine(freq, duration, startTime, gainVal = 0.3, target = masterGain) {
+  const osc = audioCtx.createOscillator();
+  const env = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  env.gain.setValueAtTime(0.001, startTime);
+  env.gain.linearRampToValueAtTime(gainVal, startTime + 0.04);
+  env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(env);
+  env.connect(target);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+  return { osc, env };
+}
+
+function playNoise(duration, startTime, gainVal = 0.15) {
+  const sr = audioCtx.sampleRate;
+  const buf = audioCtx.createBuffer(1, sr * duration, sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const env = audioCtx.createGain();
+  const filt = audioCtx.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.Q.value = 1.2;
+  env.gain.setValueAtTime(0.001, startTime);
+  env.gain.linearRampToValueAtTime(gainVal, startTime + 0.02);
+  env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  src.connect(filt);
+  filt.connect(env);
+  env.connect(masterGain);
+  src.start(startTime);
+  src.stop(startTime + duration);
+  return { src, env, filt };
+}
+
+// Per-dragon sound palettes
+function playDragonSound(dragon) {
+  ensureAudioContext();
+  const t = audioCtx.currentTime;
+  const scale = DRAGON_SCALES[dragon];
+  if (!scale) return;
+
+  // Base note from scale
+  const idx = Math.floor(Math.random() * scale.freqs.length);
+  const baseFreq = scale.freqs[idx];
+
+  switch (dragon) {
+    case 'ice': {
+      // Glass-like tones with fast attack, shimmering
+      playSine(baseFreq * 4, 0.8, t, 0.15);
+      playSine(baseFreq * 6, 0.6, t + 0.05, 0.08);
+      playSine(baseFreq * 3, 0.5, t + 0.1, 0.1);
+      // High sparkle
+      const sparkleIdx = (idx + 2) % scale.freqs.length;
+      playSine(scale.freqs[sparkleIdx] * 4, 0.3, t + 0.15, 0.06);
+      break;
+    }
+    case 'lava': {
+      // Low rumbling with sub-bass
+      playSine(baseFreq, 1.2, t, 0.35);
+      // Sub layer
+      playSine(baseFreq * 0.5, 1.5, t, 0.2);
+      // Crackling noise
+      playNoise(0.6, t + 0.1, 0.1);
+      // Warm overtone
+      playSine(baseFreq * 1.5, 0.8, t + 0.15, 0.12);
+      break;
+    }
+    case 'water': {
+      // Flowing: medium sine with vibrato simulation
+      playSine(baseFreq, 0.7, t, 0.2);
+      playSine(baseFreq * 1.5, 0.5, t + 0.1, 0.15);
+      // Sweep effect (rising frequency)
+      const sweep = audioCtx.createOscillator();
+      const sweepEnv = audioCtx.createGain();
+      sweep.type = 'sine';
+      sweep.frequency.setValueAtTime(baseFreq, t);
+      sweep.frequency.exponentialRampToValueAtTime(baseFreq * 2, t + 0.5);
+      sweepEnv.gain.setValueAtTime(0.001, t);
+      sweepEnv.gain.linearRampToValueAtTime(0.12, t + 0.05);
+      sweepEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      sweep.connect(sweepEnv);
+      sweepEnv.connect(masterGain);
+      sweep.start(t);
+      sweep.stop(t + 0.7);
+      break;
+    }
+    case 'sea': {
+      // Deep pearl harmonics
+      playSine(baseFreq, 1.0, t, 0.25);
+      playSine(baseFreq * 2, 0.8, t + 0.1, 0.15);
+      playSine(baseFreq * 3, 0.6, t + 0.2, 0.08);
+      // Tidal noise
+      const tidalFilt = audioCtx.createBiquadFilter();
+      tidalFilt.type = 'lowpass';
+      tidalFilt.frequency.value = 400;
+      const tidalSrc = audioCtx.createBufferSource();
+      const tidalDur = 1.0;
+      const tidalBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * tidalDur, audioCtx.sampleRate);
+      const tidalData = tidalBuf.getChannelData(0);
+      for (let i = 0; i < tidalData.length; i++) tidalData[i] = Math.random() * 2 - 1;
+      tidalSrc.buffer = tidalBuf;
+      const tidalEnv = audioCtx.createGain();
+      tidalEnv.gain.setValueAtTime(0.001, t);
+      tidalEnv.gain.linearRampToValueAtTime(0.08, t + 0.15);
+      tidalEnv.gain.setValueAtTime(0.08, t + 0.5);
+      tidalEnv.gain.exponentialRampToValueAtTime(0.001, t + tidalDur);
+      tidalSrc.connect(tidalFilt);
+      tidalFilt.connect(tidalEnv);
+      tidalEnv.connect(masterGain);
+      tidalSrc.start(t);
+      tidalSrc.stop(t + tidalDur);
+      break;
+    }
+    case 'fire': {
+      // Crackling, bright attack
+      playSine(baseFreq * 2, 0.4, t, 0.2);
+      playSine(baseFreq * 3, 0.3, t + 0.05, 0.12);
+      playNoise(0.3, t, 0.18);
+      // Whoosh tail
+      const whoosh = audioCtx.createOscillator();
+      const whooshEnv = audioCtx.createGain();
+      whoosh.type = 'sawtooth';
+      whoosh.frequency.setValueAtTime(baseFreq * 4, t + 0.15);
+      whoosh.frequency.exponentialRampToValueAtTime(baseFreq, t + 0.6);
+      whooshEnv.gain.setValueAtTime(0.08, t + 0.15);
+      whooshEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      const whooshFilt = audioCtx.createBiquadFilter();
+      whooshFilt.type = 'lowpass';
+      whooshFilt.frequency.value = 1200;
+      whoosh.connect(whooshFilt);
+      whooshFilt.connect(whooshEnv);
+      whooshEnv.connect(masterGain);
+      whoosh.start(t + 0.15);
+      whoosh.stop(t + 0.6);
+      break;
+    }
+    case 'snow': {
+      // Airy, shimmering, high-frequency soft tones
+      playSine(baseFreq, 1.5, t, 0.08);
+      playSine(baseFreq * 1.5, 1.2, t + 0.05, 0.06);
+      playSine(baseFreq * 2, 1.0, t + 0.15, 0.05);
+      // Wide stereo sparkle via detuned pair
+      const a = audioCtx.createOscillator();
+      const b = audioCtx.createOscillator();
+      a.type = 'sine'; b.type = 'sine';
+      a.frequency.value = baseFreq * 3;
+      b.frequency.value = baseFreq * 3 * 1.008;
+      const aEnv = audioCtx.createGain();
+      const bEnv = audioCtx.createGain();
+      [aEnv, bEnv].forEach(e => {
+        e.gain.setValueAtTime(0.001, t);
+        e.gain.linearRampToValueAtTime(0.04, t + 0.1);
+        e.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+      });
+      a.connect(aEnv); b.connect(bEnv);
+      aEnv.connect(masterGain); bEnv.connect(masterGain);
+      a.start(t); b.start(t);
+      a.stop(t + 1.2); b.stop(t + 1.2);
+      break;
+    }
+  }
+
+  // Harmony mode: add chord progression
+  if (harmonyMode) {
+    const progIdx = HARMONY_PROGRESSION[lastDragon || 0 % 6];
+    const chordFreqs = scale.freqs.slice(0, 3);
+    chordFreqs.forEach((f, i) => {
+      playSine(f * (i === 0 ? 1 : (i === 1 ? 1.5 : 2)), 0.9, t + i * 0.08, 0.06);
+    });
+  }
+}
+
+// Completion chord when all 6 are activated
+function playCompletionChord() {
+  ensureAudioContext();
+  const t = audioCtx.currentTime;
+  // Maj7 chord: C, E, G, B
+  const notes = [261.6, 329.6, 392.0, 493.9];
+  notes.forEach((f, i) => playSine(f, 2.0, t + i * 0.06, 0.12));
+  notes.forEach((f, i) => playSine(f * 2, 1.5, t + i * 0.06 + 0.1, 0.06));
+  // Shimmer
+  playNoise(1.8, t, 0.04);
+}
+
+// Reset sound
+function playResetSound() {
+  ensureAudioContext();
+  const t = audioCtx.currentTime;
+  playSine(440, 0.15, t, 0.1);
+  playSine(330, 0.15, t + 0.05, 0.1);
+  playSine(220, 0.2, t + 0.1, 0.08);
+}
+
+// ─── Visuals ────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let rafId = null;
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor(x, y, color, vx, vy, life, size) {
+    this.x = x; this.y = y;
+    this.color = color;
+    this.vx = vx; this.vy = vy;
+    this.life = life; this.maxLife = life;
+    this.size = size;
+  }
+  update(dt) {
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.vy += 30 * dt; // slight gravity
+    this.life -= dt;
+  }
+  draw(ctx) {
+    const alpha = Math.max(0, this.life / this.maxLife);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function spawnBurst(dragon) {
+  const scale = DRAGON_SCALES[dragon];
+  if (!scale) return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const count = 40;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+    const speed = 60 + Math.random() * 140;
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed - 40;
+    const life = 1.0 + Math.random() * 1.2;
+    const size = 2 + Math.random() * 4;
+    particles.push(new Particle(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40, scale.color, vx, vy, life, size));
+  }
+}
+
+let lastTime = 0;
+function renderLoop(ts) {
+  const dt = lastTime ? Math.min((ts - lastTime) / 1000, 0.05) : 0;
+  lastTime = ts;
+
+  const rect = canvas.parentElement.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  // Update and draw particles
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.update(dt);
+    p.draw(ctx);
+  });
+
+  ctx.globalAlpha = 1;
+  rafId = requestAnimationFrame(renderLoop);
+}
+rafId = requestAnimationFrame(renderLoop);
+
+// ─── Interaction Logic ──────────────────────────────────
+const dragonNames = ['ice', 'lava', 'water', 'sea', 'fire', 'snow'];
+const activated = new Set();
+let lastDragon = 0;
+let comboCount = 0;
+
+const stageLabel = document.getElementById('stage-label');
+const comboDisplay = document.getElementById('combo-display');
+
+function updateComboDisplay() {
+  if (activated.size === 0) {
+    comboDisplay.textContent = '';
+    comboDisplay.classList.remove('lit');
+    stageLabel.textContent = 'Tap a dragon to begin';
+  } else if (activated.size < 6) {
+    comboDisplay.textContent = `${activated.size} / 6 dragons awakened`;
+    comboDisplay.classList.add('lit');
+    stageLabel.textContent = `${Array.from(activated).map(d => DRAGON_SCALES[d].color).join('')} — keep triggering!`;
+    // Actually just update text
+    const names = Array.from(activated).map(d => d.charAt(0).toUpperCase() + d.slice(1));
+    stageLabel.textContent = names.join(' • ');
+  } else {
+    comboDisplay.textContent = '✦ ALL DRAGONS AWAKENED ✦';
+    comboDisplay.classList.add('lit');
+    stageLabel.textContent = 'The crew is complete';
+  }
+}
+
+function activateDragon(dragon) {
+  lastDragon = dragonNames.indexOf(dragon);
+  
+  // Audio
+  playDragonSound(dragon);
+
+  // Visual
+  spawnBurst(dragon);
+
+  // Button flash
+  const btn = document.querySelector(`[data-dragon="${dragon}"]`);
+  btn.classList.add('active');
+  setTimeout(() => btn.classList.remove('active'), 400);
+
+  // Track activation
+  activated.add(dragon);
+  comboCount++;
+  updateComboDisplay();
+
+  // Check completion
+  if (activated.size === 6) {
+    setTimeout(() => {
+      playCompletionChord();
+      // Grand visual burst: all colors
+      dragonNames.forEach(d => spawnBurst(d));
+    }, 200);
+  }
+}
+
+// Button click handlers
+document.querySelectorAll('.dragon-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activateDragon(btn.dataset.dragon);
+  });
+
+  // Keyboard accessibility
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      activateDragon(btn.dataset.dragon);
+    }
+  });
+});
+
+// Mute toggle
+document.getElementById('mute-btn').addEventListener('click', () => {
+  ensureAudioContext();
+  toggleMute();
+});
+
+// Harmony mode toggle
+document.getElementById('harmony-btn').addEventListener('click', () => {
+  harmonyMode = !harmonyMode;
+  const btn = document.getElementById('harmony-btn');
+  btn.textContent = harmonyMode ? '🎵 Harmony ON' : '🎵 Harmony';
+  btn.style.borderColor = harmonyMode ? 'rgba(129,140,248,0.5)' : '';
+});
+
+// Keyboard shortcuts: keys 1-6 trigger each dragon
+document.addEventListener('keydown', (e) => {
+  const num = parseInt(e.key);
+  if (num >= 1 && num <= 6) {
+    ensureAudioContext();
+    const dragon = dragonNames[num - 1];
+    activateDragon(dragon);
+  }
+  if (e.key.toLowerCase() === 'm') {
+    ensureAudioContext();
+    toggleMute();
+  }
+  if (e.key.toLowerCase() === 'h') {
+    harmonyMode = !harmonyMode;
+    const btn = document.getElementById('harmony-btn');
+    btn.textContent = harmonyMode ? '🎵 Harmony ON' : '🎵 Harmony';
+    btn.style.borderColor = harmonyMode ? 'rgba(129,140,248,0.5)' : '';
+  }
+});
+
+// Init combo display
+updateComboDisplay();
+</script>
+</body>
+</html>
