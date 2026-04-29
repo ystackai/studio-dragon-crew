@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Dragon Crew — Summon a Dragon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app" role="main" aria-label="Dragon Summon Experience">
+    <header class="header">
+      <h1 class="title" aria-label="The Dragon Crew">
+        <span class="title-icon" aria-hidden="true">🐉</span>
+        The Dragon Crew
+      </h1>
+      <p class="subtitle">We build Magical Experiences that make people dream of Magical Creatures</p>
+    </header>
+
+    <div class="summon-area" aria-label="Summon a Dragon">
+      <div id="summon-circle"
+           class="summon-circle"
+           role="button"
+           tabindex="0"
+           aria-label="Click or press Enter to summon a dragon"
+           aria-pressed="false">
+        <span class="summon-glyph" aria-hidden="true">✦</span>
+      </div>
+
+      <div id="particle-canvas" class="particle-canvas" aria-hidden="true"></div>
+    </div>
+
+    <div id="dragon-display" class="dragon-display" aria-live="polite">
+      <div id="dragon-card" class="dragon-card hidden">
+        <div class="dragon-element" id="dragon-element-icon" aria-hidden="true"></div>
+        <h2 class="dragon-name" id="dragon-name"></h2>
+        <p class="dragon-desc" id="dragon-desc"></p>
+      </div>
+    </div>
+
+    <div class="controls" role="toolbar" aria-label="Audio controls">
+      <button id="mute-btn" class="mute-btn" aria-label="Toggle mute" aria-pressed="false">
+        <span class="mute-icon" aria-hidden="true">🔊</span>
+      </button>
+      <button id="reset-btn" class="reset-btn hidden" aria-label="Reset to summon another dragon">
+        <span aria-hidden="true">↺</span> Reset
+      </button>
+    </div>
+
+    <footer class="footer">
+      <p>Dragons summoned: <span id="summon-count" aria-live="off">0</span></p>
+      <p class="credit">Made by The Dragon Crew</p>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
