@@ -38,6 +38,7 @@
     var resetBtn = document.getElementById("reset-btn");
     var countSpan = document.getElementById("summon-count");
     var appBg = document.querySelector(".app-bg");
+    var summonHint = document.getElementById("summon-hint");
 
     /* ── State ─────────────────────────────────────────── */
     var audioCtx = null;
@@ -46,8 +47,8 @@
     var summonCount = 0;
     var summoning = false;
     var lastDragonIdx = -1;
-    var fizzleChance = 0;          /* increases with rapid clicks, resets on success */
-    var ambientRAF = null;
+    var fizzleChance = 0;           /* increases with rapid clicks, resets on success */
+    var hasSummoned = false;
 
     /* ── Audio Engine ──────────────────────────────────── */
     function getAudioCtx() {
@@ -409,9 +410,14 @@
         /* Burst of element-colored particles at summon circle. */
         spawnParticles(22, dragon.element, true);
 
-        summonCount++;
+         summonCount++;
         countSpan.textContent = summonCount;
         fizzleChance = 0;
+
+        if (!hasSummoned) {
+            hasSummoned = true;
+            summonHint.classList.add("hidden");
+        }
 
         resetBtn.classList.remove("hidden");
     }
