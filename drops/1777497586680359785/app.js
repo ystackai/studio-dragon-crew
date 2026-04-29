@@ -1,425 +1,501 @@
-(() => {
-  "use strict";
+/* ===== Dragon's Breath — Core Loop ===== */
+(function () {
+    'use strict';
 
-  /* ========== Audio Engine ========== */
-  let audioCtx = null;
-  let masterGain = null;
-  let isMuted = false;
-  let audioAvailable = false;
-
-  function ensureAudioContext() {
-    if (!audioCtx) {
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.5;
-        masterGain.connect(audioCtx.destination);
-        audioAvailable = true;
-      } catch (_) {
-        audioAvailable = false;
-      }
-    }
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-  }
-
-  function playTone(freq, type, duration, startTime, gain) {
-    if (!audioAvailable || isMuted) return;
-    const t = startTime || audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = type || "sine";
-    osc.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(gain || 0.3, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + duration);
-    osc.connect(g);
-    g.connect(masterGain);
-    osc.start(t);
-    osc.stop(t + duration);
-  }
-
-  function playNoise(duration, startTime, gain, filterFreq) {
-    if (!audioAvailable || isMuted) return;
-    const t = startTime || audioCtx.currentTime;
-    const bufferSize = audioCtx.sampleRate * duration;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1);
-    }
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(gain || 0.15, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + duration);
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = filterFreq || 800;
-    filter.Q.value = 2;
-    source.connect(filter);
-    filter.connect(g);
-    g.connect(masterGain);
-    source.start(t);
-    source.stop(t + duration);
-  }
-
-  /* Dragon-specific sound palettes */
-  const dragonSounds = {
-    fire: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(220, "sawtooth", 0.12, t, 0.2);
-        playTone(330, "sine", 0.15, t + 0.02, 0.15);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(180, "sawtooth", 0.5, t, 0.25);
-        playTone(277, "sawtooth", 0.5, t + 0.05, 0.2);
-        playTone(360, "sawtooth", 0.6, t + 0.1, 0.15);
-        playTone(480, "sawtooth", 0.3, t + 0.15, 0.2);
-        playTone(660, "sine", 0.5, t + 0.2, 0.15);
-        playNoise(0.35, t, 0.08, 600);
-        playNoise(0.2, t + 0.1, 0.06, 1200);
-        playTone(880, "triangle", 0.4, t + 0.25, 0.12);
-      },
-      color: "#ff6b35",
-    },
-    water: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(440, "sine", 0.15, t, 0.2);
-        playTone(554, "sine", 0.12, t + 0.03, 0.15);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(392, "sine", 0.6, t, 0.2);
-        playTone(440, "sine", 0.5, t + 0.08, 0.18);
-        playTone(523, "sine", 0.5, t + 0.15, 0.15);
-        playTone(659, "sine", 0.4, t + 0.2, 0.12);
-        playNoise(0.4, t, 0.06, 2000);
-        playNoise(0.25, t + 0.15, 0.05, 3000);
-        playTone(784, "triangle", 0.35, t + 0.25, 0.1);
-      },
-      color: "#4fc3f7",
-    },
-    ice: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(600, "sine", 0.08, t, 0.15);
-        playTone(900, "sine", 0.06, t + 0.02, 0.1);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(784, "sine", 0.5, t, 0.15);
-        playTone(988, "sine", 0.4, t + 0.06, 0.12);
-        playTone(1175, "sine", 0.4, t + 0.12, 0.1);
-        playTone(1318, "sine", 0.35, t + 0.18, 0.12);
-        playNoise(0.2, t, 0.05, 4000);
-        playNoise(0.15, t + 0.1, 0.04, 5000);
-        playTone(1568, "triangle", 0.3, t + 0.25, 0.08);
-      },
-      color: "#80deea",
-    },
-    snow: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(500, "sine", 0.1, t, 0.15);
-        playTone(660, "sine", 0.08, t + 0.02, 0.1);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(523, "sine", 0.5, t, 0.18);
-        playTone(587, "sine", 0.45, t + 0.07, 0.15);
-        playTone(659, "sine", 0.4, t + 0.14, 0.12);
-        playTone(784, "sine", 0.35, t + 0.2, 0.1);
-        playNoise(0.3, t, 0.04, 3500);
-        playNoise(0.2, t + 0.1, 0.03, 4500);
-        playTone(880, "triangle", 0.25, t + 0.25, 0.08);
-      },
-      color: "#e0e8ff",
-    },
-    sea: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(330, "sine", 0.12, t, 0.18);
-        playTone(415, "sine", 0.1, t + 0.02, 0.12);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(262, "sine", 0.6, t, 0.2);
-        playTone(294, "sine", 0.5, t + 0.08, 0.18);
-        playTone(330, "sine", 0.5, t + 0.16, 0.15);
-        playTone(392, "sine", 0.4, t + 0.22, 0.12);
-        playNoise(0.45, t, 0.06, 400);
-        playNoise(0.3, t + 0.15, 0.05, 800);
-        playTone(523, "triangle", 0.35, t + 0.28, 0.1);
-      },
-      color: "#00897b",
-    },
-    lava: {
-      click: () => {
-        const t = audioCtx.currentTime;
-        playTone(150, "sawtooth", 0.15, t, 0.2);
-        playTone(200, "sawtooth", 0.12, t + 0.04, 0.15);
-      },
-      summon: () => {
-        const t = audioCtx.currentTime;
-        playTone(130, "sawtooth", 0.55, t, 0.25);
-        playTone(165, "sawtooth", 0.5, t + 0.06, 0.2);
-        playTone(196, "sawtooth", 0.45, t + 0.12, 0.15);
-        playTone(262, "sawtooth", 0.4, t + 0.18, 0.18);
-        playNoise(0.5, t, 0.1, 300);
-        playNoise(0.3, t + 0.1, 0.08, 600);
-        playTone(392, "triangle", 0.3, t + 0.25, 0.1);
-      },
-      color: "#ef5350",
-    },
-  };
-
-  function playClickSound(dragon) {
-    ensureAudioContext();
-    const s = dragonSounds[dragon];
-    if (s && s.click) s.click();
-  }
-
-  function playSummonSound(dragon) {
-    ensureAudioContext();
-    const s = dragonSounds[dragon];
-    if (s && s.summon) s.summon();
-  }
-
-  function playAllSummonedSound() {
-    ensureAudioContext();
-    const t = audioCtx.currentTime;
-    [262, 330, 392, 523, 659, 784].forEach((f, i) => {
-      playTone(f, i % 2 === 0 ? "sine" : "triangle", 0.6, t + i * 0.1, 0.12);
-    });
-    playNoise(0.5, t + 0.3, 0.06, 2000);
-  }
-
-  function playAlreadySummoned() {
-    ensureAudioContext();
-    const t = audioCtx.currentTime;
-    playTone(200, "square", 0.15, t, 0.1);
-    playTone(180, "square", 0.12, t + 0.08, 0.08);
-  }
-
-  function playResetSound() {
-    ensureAudioContext();
-    const t = audioCtx.currentTime;
-    [784, 659, 523, 392].forEach((f, i) => {
-      playTone(f, "sine", 0.3, t + i * 0.08, 0.12);
-    });
-  }
-
-  function toggleMute() {
-    isMuted = !isMuted;
-    if (masterGain) {
-      masterGain.gain.value = isMuted ? 0 : 0.5;
-    }
-    return isMuted;
-  }
-
-  /* ========== Particles ========== */
-  const canvas = document.getElementById("particle-canvas");
-  const ctx = canvas.getContext("2d");
-  let particles = [];
-  let animatingParticles = false;
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  function spawnParticles(element, color) {
-    const rect = element.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    for (let i = 0; i < 30; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * 4;
-      particles.push({
-        x: cx,
-        y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1,
-        decay: 0.012 + Math.random() * 0.018,
-        size: 2 + Math.random() * 4,
-        color: color || "#b388ff",
-      });
-    }
-    if (!animatingParticles) {
-      animatingParticles = true;
-      animateParticles();
-    }
-  }
-
-  function animateParticles() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles = particles.filter(p => p.life > 0);
-    if (particles.length === 0) {
-      animatingParticles = false;
-      return;
-    }
-    for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.05;
-      p.life -= p.decay;
-      ctx.globalAlpha = Math.max(0, p.life);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(animateParticles);
-  }
-
-  /* ========== DOM & State ========== */
-  const dragonCards = document.querySelectorAll(".dragon-card");
-  const statusBar = document.getElementById("status-text");
-  const counterValue = document.getElementById("counter-value");
-  const toastEl = document.getElementById("toast");
-  const muteBtn = document.getElementById("mute-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  let summoned = new Set();
-  const totalDragons = dragonCards.length;
-  let toastTimer = null;
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  function showToast(msg, duration) {
-    toastEl.textContent = msg;
-    toastEl.hidden = false;
-    toastEl.classList.add("visible");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toastEl.classList.remove("visible");
-      setTimeout(() => { toastEl.hidden = true; }, 300);
-    }, duration || 2000);
-  }
-
-  function updateCounter() {
-    counterValue.textContent = summoned.size;
-  }
-
-  function updateStatus(dragonName, action) {
-    const summonMsgs = {
-      "Fire Dragon": "The Fire Dragon answers your call! Warm amber light fills the air.",
-      "Water Dragon": "The Water Dragon flows from the currents! Silver ripples cascade across the stage.",
-      "Ice Dragon": "The Ice Dragon crystallizes into being! Frost sparkles in every direction.",
-      "Snow Dragon": "The Snow Dragon drifts down gently! Soft flakes swirl in a luminous glow.",
-      "Sea Dragon": "The Sea Dragon rises from the deep! A deep resonance fills the space.",
-      "Lava Dragon": "The Lava Dragon emerges from molten earth! Warm light pulses with ancient power.",
+    /* ---------- State ---------- */
+    var STATE = {
+        IDLE: 'idle',
+        CHARGING: 'charging',
+        BREATHING: 'breathing',
+        COOLDOWN: 'cooldown'
     };
-    const msgs = {
-      summon: summonMsgs[dragonName] || `${dragonName} has joined the crew!`,
-      duplicate: `${dragonName} has already been summoned! Wait for the full crew to assemble.`,
-      complete: "All six dragons are present. The crew is complete!",
-      reset: "The dragons return to their elemental realms. Choose again to summon a new crew.",
-    };
-    statusBar.textContent = msgs[action] || "";
-  }
 
-  function summonDragon(card, dragonKey) {
-    if (summoned.has(dragonKey)) {
-      playAlreadySummoned();
-      updateStatus(card.querySelector(".dragon-name").textContent, "duplicate");
-      card.classList.add("shake");
-      setTimeout(() => card.classList.remove("shake"), 400);
-      return;
-    }
+    var currentState = STATE.IDLE;
+    var chargeLevel = 0;
+    var chargeInterval = null;
+    var cooldownTimeout = null;
+    var audioCtx = null;
+    var masterGain = null;
+    var muted = false;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    ensureAudioContext();
-    const ring = card.querySelector(".summon-ring");
-    const dragonName = card.querySelector(".dragon-name").textContent;
-    const color = dragonSounds[dragonKey]?.color || "#b388ff";
+    var CHARGE_RATE = 0.45; // percent per tick
+    var COOLDOWN_MS = 1500;
+    var CHARGE_TICK_MS = 8;
 
-    playClickSound(dragonKey);
+    /* ---------- DOM refs ---------- */
+    var dragonArea = document.getElementById('dragonArea');
+    var statusText = document.getElementById('statusText');
+    var chargeFill = document.getElementById('chargeFill');
+    var particleCanvas = document.getElementById('particleCanvas');
+    var muteBtn = document.getElementById('muteBtn');
+    var muteIcon = document.getElementById('muteIcon');
+    var dragonSvg = document.getElementById('dragonSvg');
 
-    ring.classList.remove("active");
-    void ring.offsetWidth;
-    ring.classList.add("active");
-
-    if (!reducedMotion) {
-      spawnParticles(card, color);
-    }
-
-    playSummonSound(dragonKey);
-
-    card.classList.add("summoned");
-    card.setAttribute("aria-label", `Summoned ${(card.getAttribute("aria-label") || "").replace("Summon ", "").trim()}`);
-    summoned.add(dragonKey);
-    updateCounter();
-    updateStatus(dragonName, "summon");
-
-    if (summoned.size === totalDragons) {
-      setTimeout(() => {
-        playAllSummonedSound();
-        updateStatus("", "complete");
-         showToast("The Dragon Crew has gathered. Feel the magic pulse through every element!", 3500);
-        if (!reducedMotion) {
-          document.querySelector(".dragon-grid").classList.add("all-summoned");
-          setTimeout(() => {
-            document.querySelector(".dragon-grid").classList.remove("all-summoned");
-          }, 1000);
+    /* ---------- Stars ---------- */
+    (function createStars() {
+        if (reducedMotion) return;
+        var container = document.getElementById('stars');
+        for (var i = 0; i < 80; i++) {
+            var s = document.createElement('div');
+            s.className = 'star';
+            s.style.left = (Math.random() * 100) + '%';
+            s.style.top = (Math.random() * 100) + '%';
+            var size = 1 + Math.random() * 2;
+            s.style.width = size + 'px';
+            s.style.height = size + 'px';
+            s.style.setProperty('--delay', (Math.random() * 4) + 's');
+            s.style.setProperty('--dur', (2 + Math.random() * 3) + 's');
+            container.appendChild(s);
         }
-      }, 400);
-    }
-  }
+    })();
 
-  function resetAll() {
-    if (summoned.size === 0) return;
-    summoned.clear();
-    dragonCards.forEach(c => {
-      c.classList.remove("summoned");
-      const dragon = c.getAttribute("data-dragon");
-      const ariaBase = {
-        fire: "Summon Fire Dragon",
-        water: "Summon Water Dragon",
-        ice: "Summon Ice Dragon",
-        snow: "Summon Snow Dragon",
-        sea: "Summon Sea Dragon",
-        lava: "Summon Lava Dragon",
-      };
-      c.setAttribute("aria-label", ariaBase[dragon] || `Summon ${dragon} Dragon`);
-    });
-    updateCounter();
-    updateStatus("", "reset");
-    playResetSound();
-    showToast("The crew has dispersed. The magic lingers — tap a dragon to begin again.", 1500);
-  }
+    /* ========== Audio Engine ========== */
+    var chargeOsc1 = null;
+    var chargeOsc2 = null;
+    var chargeGain1 = null;
+    var chargeGain2 = null;
 
-  /* ========== Event Wiring ========== */
-  dragonCards.forEach(card => {
-    const dragonKey = card.getAttribute("data-dragon");
 
-    function handleSummon(e) {
-      e.preventDefault();
-      summonDragon(card, dragonKey);
+    function ensureAudioCtx() {
+        if (!audioCtx) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = muted ? 0 : 0.6;
+                masterGain.connect(audioCtx.destination);
+            } catch (e) {
+                audioCtx = null;
+                return false;
+            }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return true;
     }
 
-    card.addEventListener("click", handleSummon);
-    card.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") {
-        handleSummon(e);
-      }
+    /* Growl / hum during charge — uses two oscillators */
+    function startGrowl() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+
+        stopGrowl();
+
+        chargeGain1 = audioCtx.createGain();
+        chargeGain2 = audioCtx.createGain();
+
+        chargeOsc1 = audioCtx.createOscillator();
+        chargeOsc2 = audioCtx.createOscillator();
+
+        chargeOsc1.type = 'sawtooth';
+        chargeOsc1.frequency.setValueAtTime(55, now);
+
+        chargeOsc2.type = 'sine';
+        chargeOsc2.frequency.setValueAtTime(110, now);
+
+        chargeGain1.gain.setValueAtTime(0.08, now);
+        chargeGain2.gain.setValueAtTime(0.12, now);
+
+        chargeOsc1.connect(chargeGain1);
+        chargeOsc2.connect(chargeGain2);
+        chargeGain1.connect(masterGain);
+        chargeGain2.connect(masterGain);
+
+        chargeOsc1.start(now);
+        chargeOsc2.start(now);
+    }
+
+    function updateGrowl(level) {
+        if (!audioCtx || !chargeOsc1 || !chargeOsc2) return;
+        var now = audioCtx.currentTime;
+        var pitch = 55 + level * 85;
+        chargeOsc1.frequency.linearRampToValueAtTime(pitch, now);
+        chargeOsc2.frequency.linearRampToValueAtTime(pitch * 2, now + 0.1);
+        if (chargeGain1) {
+            chargeGain1.gain.linearRampToValueAtTime(0.06 + level * 0.1, now + 0.1);
+        }
+    }
+
+    function stopGrowl() {
+        if (chargeOsc1) { try { chargeOsc1.stop(); } catch (_) {} chargeOsc1 = null; }
+        if (chargeOsc2) { try { chargeOsc2.stop(); } catch (_) {} chargeOsc2 = null; }
+        chargeGain1 = null;
+        chargeGain2 = null;
+    }
+
+    /* Fire burst — noise-based */
+    function playFireBreath(intensity) {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+        var duration = 0.4 + intensity * 0.8;
+
+        /* Deep roar: noise through low-pass */
+        var bufSz = audioCtx.sampleRate * duration;
+        var buf = audioCtx.createBuffer(1, bufSz, audioCtx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < bufSz; i++) {
+            data[i] = (Math.random() * 2 - 1);
+        }
+        var src = audioCtx.createBufferSource();
+        src.buffer = buf;
+
+        var lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(300 + intensity * 600, now);
+        lp.frequency.exponentialRampToValueAtTime(80, now + duration);
+        lp.Q.value = 1.5;
+
+        var noiseG = audioCtx.createGain();
+        noiseG.gain.setValueAtTime(0.2 * intensity + 0.05, now);
+        noiseG.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        src.connect(lp);
+        lp.connect(noiseG);
+        noiseG.connect(masterGain);
+        src.start(now);
+        src.stop(now + duration);
+
+        /* Whoosh: higher frequency noise */
+        var whooshDur = duration * 0.6;
+        var whooshBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * whooshDur, audioCtx.sampleRate);
+        var whooshData = whooshBuf.getChannelData(0);
+        for (var j = 0; j < whooshData.length; j++) {
+            whooshData[j] = (Math.random() * 2 - 1);
+        }
+        var wSrc = audioCtx.createBufferSource();
+        wSrc.buffer = whooshBuf;
+        var bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(1200, now);
+        bp.frequency.exponentialRampToValueAtTime(400, now + whooshDur);
+        bp.Q.value = 3;
+        var wG = audioCtx.createGain();
+        wG.gain.setValueAtTime(0.08 * intensity + 0.03, now + 0.02);
+        wG.gain.exponentialRampToValueAtTime(0.001, now + whooshDur);
+        wSrc.connect(bp);
+        bp.connect(wG);
+        wG.connect(masterGain);
+        wSrc.start(now + 0.02);
+        wSrc.stop(now + whooshDur + 0.02);
+
+        /* Crackle: short percussive hits */
+        for (var k = 0; k < Math.floor(3 + intensity * 5); k++) {
+            var crackDur = 0.03;
+            var crackBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * crackDur, audioCtx.sampleRate);
+            var cData = crackBuf.getChannelData(0);
+            for (var c = 0; c < cData.length; c++) {
+                cData[c] = (Math.random() * 2 - 1) * (1 - c / cData.length);
+            }
+            var cSrc = audioCtx.createBufferSource();
+            cSrc.buffer = crackBuf;
+            var cG = audioCtx.createGain();
+            cG.gain.setValueAtTime(0.06 * intensity, now + k * (duration * 0.15));
+            cG.gain.exponentialRampToValueAtTime(0.001, now + k * (duration * 0.15) + crackDur);
+            var hp = audioCtx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.value = 2500;
+            cSrc.connect(hp);
+            hp.connect(cG);
+            cG.connect(masterGain);
+            cSrc.start(now + k * (duration * 0.15));
+        }
+
+        /* Rising sine for impact */
+        var impactOsc = audioCtx.createOscillator();
+        var impactG = audioCtx.createGain();
+        impactOsc.type = 'sine';
+        impactOsc.frequency.setValueAtTime(80, now);
+        impactOsc.frequency.exponentialRampToValueAtTime(200, now + duration * 0.3);
+        impactG.gain.setValueAtTime(0.12 * intensity, now);
+        impactG.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        impactOsc.connect(impactG);
+        impactG.connect(masterGain);
+        impactOsc.start(now);
+        impactOsc.stop(now + duration);
+    }
+
+    function playCooldownTick() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 220;
+        g.gain.setValueAtTime(0.06, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        o.connect(g);
+        g.connect(masterGain);
+        o.start(now);
+        o.stop(now + 0.2);
+    }
+
+    /* ========== Particles (canvas) ========== */
+    var pCtx = null;
+    if (particleCanvas) {
+        pCtx = particleCanvas.getContext('2d');
+     }
+    var breathParticles = [];
+    var animatingBreath = false;
+
+    function resizeParticleCanvas() {
+        if (!particleCanvas) return;
+        particleCanvas.width = particleCanvas.offsetWidth * window.devicePixelRatio || 400;
+        particleCanvas.height = particleCanvas.offsetHeight * window.devicePixelRatio || 400;
+    }
+    resizeParticleCanvas();
+    window.addEventListener('resize', resizeParticleCanvas);
+
+    /* Particle color palette: deep purples to magma oranges to golds */
+    var PALETTE = [
+        [255, 80, 20],    // deep orange
+        [255, 120, 50],   // magma
+        [255, 170, 80],   // warm orange
+        [240, 192, 64],   // gold
+        [200, 140, 255],  // purple highlight
+        [255, 60, 30],    // red-orange
+    ];
+
+    function spawnBreathParticles(count, intensity, originX, originY) {
+        var ox = (originX !== undefined) ? originX : 0.28;
+        var oy = (originY !== undefined) ? originY : 0.23;
+
+        for (var i = 0; i < count; i++) {
+            var spread = 0.3 + Math.random() * 0.4;
+            var angle = -0.5 + Math.random() * 1.0; // fire goes left-ish upward
+            var speed = (2 + Math.random() * 5) * (0.5 + intensity);
+            var colIdx = Math.floor(Math.random() * PALETTE.length);
+            var col = PALETTE[colIdx];
+
+            breathParticles.push({
+                x: ox * particleCanvas.offsetWidth,
+                y: oy * particleCanvas.offsetHeight,
+                vx: -Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - (1 + Math.random() * 2),
+                life: 1,
+                decay: 0.01 + Math.random() * 0.025,
+                size: (2 + Math.random() * 4) * (0.5 + intensity),
+                r: col[0],
+                g: col[1],
+                b: col[2],
+            });
+        }
+        if (reducedMotion) {
+            // still spawn a minimal set for visual feedback
+        }
+        if (!animatingBreath) {
+            animatingBreath = true;
+            requestAnimationFrame(animateBreathParticles);
+        }
+    }
+
+    function animateBreathParticles() {
+        if (!pCtx || !particleCanvas) return;
+        var w = particleCanvas.width;
+        var h = particleCanvas.height;
+        pCtx.clearRect(0, 0, w, h);
+
+        breathParticles = breathParticles.filter(function (p) { return p.life > 0; });
+        if (breathParticles.length === 0) {
+            animatingBreath = false;
+            return;
+        }
+
+        var dpr = window.devicePixelRatio || 1;
+
+        for (var i = 0; i < breathParticles.length; i++) {
+            var p = breathParticles[i];
+            p.x += p.vx * dpr;
+            p.y += p.vy * dpr;
+            p.vy += 0.03 * dpr; // slight gravity
+            p.vx *= 0.99;
+            p.life -= p.decay;
+
+            var alpha = Math.max(0, p.life);
+            var sz = p.size * p.life * dpr;
+
+            pCtx.globalAlpha = alpha;
+            pCtx.fillStyle = 'rgb(' + p.r + ',' + p.g + ',' + p.b + ')';
+            pCtx.shadowColor = 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + alpha + ')';
+            pCtx.shadowBlur = sz * 2;
+
+            pCtx.beginPath();
+            pCtx.arc(p.x, p.y, Math.max(sz, 0.5), 0, Math.PI * 2);
+            pCtx.fill();
+        }
+
+        pCtx.globalAlpha = 1;
+        pCtx.shadowBlur = 0;
+
+        requestAnimationFrame(animateBreathParticles);
+    }
+
+    /* ========== Core Loop State Machine ========== */
+    function setState(next) {
+        currentState = next;
+
+        dragonArea.classList.remove('charging', 'breathing', 'cooldown');
+        statusText.classList.remove('glow', 'cooldown-text');
+
+        switch (next) {
+        case STATE.IDLE:
+            statusText.textContent = 'Hold the dragon to charge';
+            break;
+        case STATE.CHARGING:
+            statusText.textContent = 'Charging...';
+            dragonArea.classList.add('charging');
+            chargeFill.parentElement.classList.add('visible');
+            startGrowl();
+            startChargeTimer();
+            break;
+        case STATE.BREATHING:
+            dragonArea.classList.remove('charging');
+            dragonArea.classList.add('breathing');
+            statusText.classList.add('glow');
+            statusText.textContent = (chargeLevel > 70) ? 'MAXIMUM BREATH!' : 'Dragon breathes fire!';
+            stopGrowl();
+            fireBreath();
+            break;
+        case STATE.COOLDOWN:
+            dragonArea.classList.remove('breathing');
+            dragonArea.classList.add('cooldown');
+            statusText.classList.remove('glow');
+            statusText.classList.add('cooldown-text');
+            statusText.textContent = 'Recovering...';
+            playCooldownTick();
+            break;
+        }
+    }
+
+    function startChargeTimer() {
+        if (chargeInterval) clearInterval(chargeInterval);
+        chargeInterval = setInterval(function () {
+            if (currentState !== STATE.CHARGING) {
+                clearInterval(chargeInterval);
+                chargeInterval = null;
+                return;
+            }
+            chargeLevel = Math.min(100, chargeLevel + CHARGE_RATE);
+            chargeFill.style.width = chargeLevel + '%';
+
+            if (chargeLevel >= 100) {
+                dragonSvg.classList.add('full-charge');
+            }
+
+            updateGrowl(chargeLevel / 100);
+        }, CHARGE_TICK_MS);
+    }
+
+    function fireBreath() {
+        var intensity = Math.max(0.2, chargeLevel / 100);
+        var particleCount = Math.floor(20 + intensity * 80);
+
+        playFireBreath(intensity);
+
+        if (!reducedMotion) {
+            spawnBreathParticles(particleCount, intensity);
+        }
+
+        // Also spawn a secondary small burst after 80ms for richer effect
+        setTimeout(function () {
+            if (currentState === STATE.BREATHING) {
+                spawnBreathParticles(Math.floor(particleCount * 0.4), intensity * 0.6, 0.3 + Math.random() * 0.1, 0.22 + Math.random() * 0.05);
+            }
+        }, 80);
+
+        // Transition to cooldown
+        setTimeout(function () {
+            if (currentState !== STATE.COOLDOWN) {
+                setState(STATE.COOLDOWN);
+            }
+            chargeLevel = 0;
+            chargeFill.style.width = '0%';
+            dragonSvg.classList.remove('full-charge');
+
+            cooldownTimeout = setTimeout(function () {
+                setState(STATE.IDLE);
+            }, COOLDOWN_MS);
+        }, 600 + (1 - intensity) * 400);
+    }
+
+    function handleHoldStart() {
+        if (currentState === STATE.COOLDOWN || currentState === STATE.CHARGING || currentState === STATE.BREATHING) return;
+        ensureAudioCtx();
+        chargeLevel = 0;
+        setState(STATE.CHARGING);
+    }
+
+    function handleHoldEnd() {
+        if (currentState !== STATE.CHARGING) return;
+        clearInterval(chargeInterval);
+        chargeInterval = null;
+        setState(STATE.BREATHING);
+    }
+
+    /* ========== Input Wiring ========== */
+    var holdActive = false;
+
+    function onDown(e) {
+        if (e) e.preventDefault();
+        if (holdActive) return;
+        holdActive = true;
+        handleHoldStart();
+    }
+
+    function onUp(e) {
+        if (e) e.preventDefault();
+        if (!holdActive) return;
+        holdActive = false;
+        handleHoldEnd();
+    }
+
+    dragonArea.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+
+    dragonArea.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
+
+    /* Keyboard */
+    dragonArea.addEventListener('keydown', function (e) {
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            if (!holdActive) {
+                holdActive = true;
+                handleHoldStart();
+            }
+        }
     });
-  });
+    dragonArea.addEventListener('keyup', function (e) {
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            if (holdActive) {
+                holdActive = false;
+                handleHoldEnd();
+            }
+        }
+    });
 
-  muteBtn.addEventListener("click", () => {
-    const newMuted = toggleMute();
-    muteBtn.querySelector(".icon").textContent = newMuted ? "🔇" : "🔊";
-    muteBtn.classList.toggle("muted", newMuted);
-    muteBtn.setAttribute("aria-label", newMuted ? "Unmute sound" : "Mute sound");
-   });
+    /* Mouse leave during hold -> release */
+    dragonArea.addEventListener('mouseleave', function () {
+        if (holdActive && currentState === STATE.CHARGING) {
+            holdActive = false;
+            handleHoldEnd();
+        }
+    });
 
-  resetBtn.addEventListener("click", resetAll);
+    /* ========== Mute Toggle ========== */
+    muteBtn.addEventListener('click', function () {
+        muted = !muted;
+        muteBtn.setAttribute('aria-pressed', String(muted));
+        muteIcon.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
+        if (masterGain) {
+            masterGain.gain.value = muted ? 0 : 0.6;
+        }
+        if (!muted) ensureAudioCtx();
+    });
 
-  /* ========== Init ========== */
-  updateCounter();
+    /* ========== Init ========== */
+    setState(STATE.IDLE);
+
 })();
