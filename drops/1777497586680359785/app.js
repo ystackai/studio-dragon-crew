@@ -204,6 +204,7 @@
             hp.connect(cG);
             cG.connect(masterGain);
             cSrc.start(now + k * (duration * 0.15));
+            cSrc.stop(now + k * (duration * 0.15) + crackDur);
         }
 
         /* Rising sine for impact */
