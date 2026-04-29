@@ -308,11 +308,19 @@
   }
 
   function updateStatus(dragonName, action) {
+    const summonMsgs = {
+      "Fire Dragon": "The Fire Dragon answers your call! Warm amber light fills the air.",
+      "Water Dragon": "The Water Dragon flows from the currents! Silver ripples cascade across the stage.",
+      "Ice Dragon": "The Ice Dragon crystallizes into being! Frost sparkles in every direction.",
+      "Snow Dragon": "The Snow Dragon drifts down gently! Soft flakes swirl in a luminous glow.",
+      "Sea Dragon": "The Sea Dragon rises from the deep! A deep resonance fills the space.",
+      "Lava Dragon": "The Lava Dragon emerges from molten earth! Warm light pulses with ancient power.",
+    };
     const msgs = {
-      summon: `${dragonName} summoned!`,
-      duplicate: `${dragonName} already summoned`,
-      complete: "All dragons summoned! The magic is complete.",
-      reset: "All dragons released back to the void.",
+      summon: summonMsgs[dragonName] || `${dragonName} has joined the crew!`,
+      duplicate: `${dragonName} has already been summoned! Wait for the full crew to assemble.`,
+      complete: "All six dragons are present. The crew is complete!",
+      reset: "The dragons return to their elemental realms. Choose again to summon a new crew.",
     };
     statusBar.textContent = msgs[action] || "";
   }
@@ -353,7 +361,7 @@
       setTimeout(() => {
         playAllSummonedSound();
         updateStatus("", "complete");
-        showToast("All 6 dragons summoned! The crew is complete!", 3500);
+         showToast("The Dragon Crew has gathered. Feel the magic pulse through every element!", 3500);
         if (!reducedMotion) {
           document.querySelector(".dragon-grid").classList.add("all-summoned");
           setTimeout(() => {
@@ -383,7 +391,7 @@
     updateCounter();
     updateStatus("", "reset");
     playResetSound();
-    showToast("All dragons released.", 1500);
+    showToast("The crew has dispersed. The magic lingers — tap a dragon to begin again.", 1500);
   }
 
   /* ========== Event Wiring ========== */
