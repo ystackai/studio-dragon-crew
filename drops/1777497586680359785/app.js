@@ -50,11 +50,13 @@
         }
     })();
 
-    /* ========== Audio Engine ========== */
+      /* ========== Audio Engine ========== */
     var chargeOsc1 = null;
     var chargeOsc2 = null;
     var chargeGain1 = null;
     var chargeGain2 = null;
+    var hoverOsc = null;
+    var hoverGain = null;
 
 
     function ensureAudioCtx() {
@@ -114,8 +116,11 @@
         chargeOsc2.frequency.linearRampToValueAtTime(pitch * 2, now + 0.1);
         if (chargeGain1) {
             chargeGain1.gain.linearRampToValueAtTime(0.06 + level * 0.1, now + 0.1);
+         }
         }
-    }
+
+        // Track if hover sound already played this hover session
+    var hoverPlayed = false;
 
     function stopGrowl() {
         if (chargeOsc1) { try { chargeOsc1.stop(); } catch (_) {} chargeOsc1 = null; }
@@ -228,22 +233,69 @@
         g.connect(masterGain);
         o.start(now);
         o.stop(now + 0.2);
-    }
+       }
 
-    /* ========== Particles (canvas) ========== */
+       /* Hover chirp — short ascending chirp */
+    function playHover() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(500, now);
+        o.frequency.linearRampToValueAtTime(700, now + 0.08);
+        g.gain.setValueAtTime(0.04, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        o.connect(g);
+        g.connect(masterGain);
+        o.start(now);
+        o.stop(now + 0.12);
+       }
+
+       /* Success chime — ascending triad */
+    function playSuccessChime() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+        var notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+        notes.forEach(function (freq, idx) {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq;
+            var t = now + idx * 0.08;
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.08, t + 0.03);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+            o.connect(g);
+            g.connect(masterGain);
+            o.start(t);
+            o.stop(t + 0.45);
+        });
+       }
+
+      /* ========== Particles (canvas) ========== */
     var pCtx = null;
     if (particleCanvas) {
         pCtx = particleCanvas.getContext('2d');
-     }
+      }
     var breathParticles = [];
     var animatingBreath = false;
 
     function resizeParticleCanvas() {
         if (!particleCanvas) return;
-        particleCanvas.width = particleCanvas.offsetWidth * window.devicePixelRatio || 400;
-        particleCanvas.height = particleCanvas.offsetHeight * window.devicePixelRatio || 400;
-    }
-    resizeParticleCanvas();
+        var w = particleCanvas.offsetWidth;
+        var h = particleCanvas.offsetHeight;
+        if (w === 0 || h === 0) return; // can't size until visible
+        var dpr = window.devicePixelRatio || 1;
+        particleCanvas.width = w * dpr;
+        particleCanvas.height = h * dpr;
+      }
+    // Defer first resize so the layout has been computed
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(resizeParticleCanvas);
+      } else {
+        setTimeout(resizeParticleCanvas, 50);
+      }
     window.addEventListener('resize', resizeParticleCanvas);
 
     /* Particle color palette: deep purples to magma oranges to golds */
@@ -340,6 +392,7 @@
         switch (next) {
         case STATE.IDLE:
             statusText.textContent = 'Hold the dragon to charge';
+            playedFullChime = false;
             break;
         case STATE.CHARGING:
             statusText.textContent = 'Charging...';
@@ -374,23 +427,29 @@
                 clearInterval(chargeInterval);
                 chargeInterval = null;
                 return;
-            }
+             }
             chargeLevel = Math.min(100, chargeLevel + CHARGE_RATE);
             chargeFill.style.width = chargeLevel + '%';
 
             if (chargeLevel >= 100) {
                 dragonSvg.classList.add('full-charge');
-            }
+             }
 
             updateGrowl(chargeLevel / 100);
-        }, CHARGE_TICK_MS);
-    }
+         }, CHARGE_TICK_MS);
+        }
+
+        var playedFullChime = false;
 
     function fireBreath() {
         var intensity = Math.max(0.2, chargeLevel / 100);
         var particleCount = Math.floor(20 + intensity * 80);
 
         playFireBreath(intensity);
+        if (chargeLevel >= 100 && !playedFullChime) {
+            playedFullChime = true;
+            setTimeout(function () { playSuccessChime(); }, 300);
+          }
 
         if (!reducedMotion) {
             spawnBreathParticles(particleCount, intensity);
@@ -476,13 +535,33 @@
         }
     });
 
-    /* Mouse leave during hold -> release */
+      /* Mouse leave during hold -> release */
     dragonArea.addEventListener('mouseleave', function () {
-        if (holdActive && currentState === STATE.CHARGING) {
-            holdActive = false;
-            handleHoldEnd();
-        }
-    });
+         if (holdActive && currentState === STATE.CHARGING) {
+             holdActive = false;
+             handleHoldEnd();
+          }
+         hoverPlayed = false;
+       });
+
+       /* Hover sound on mouse enter / focus */
+    dragonArea.addEventListener('mouseenter', function () {
+         if (currentState === STATE.IDLE && !hoverPlayed) {
+             ensureAudioCtx();
+             playHover();
+             hoverPlayed = true;
+          }
+       });
+    dragonArea.addEventListener('focus', function () {
+         if (currentState === STATE.IDLE && !hoverPlayed) {
+             ensureAudioCtx();
+             playHover();
+             hoverPlayed = true;
+          }
+       });
+    dragonArea.addEventListener('blur', function () {
+         hoverPlayed = false;
+       });
 
     /* ========== Mute Toggle ========== */
     muteBtn.addEventListener('click', function () {
