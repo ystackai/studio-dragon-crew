@@ -1,0 +1,473 @@
+:root {
+     /* Color palette - Icy theme */
+     --color-bg-primary: #0a0e17;
+     --color-bg-secondary: #1a2332;
+     --color-text-primary: #e6f2ff;
+     --color-text-secondary: #8ab4f8;
+     --color-accent-primary: #4fc3f7;
+     --color-accent-secondary: #1976d2;
+     --color-exhale: #b3e5fc;
+     --color-border: #2a3a4f;
+     
+     /* Typography */
+     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+     --font-size-xs: 0.75rem;
+     --font-size-sm: 0.875rem;
+     --font-size-base: 1rem;
+     --font-size-lg: 1.25rem;
+     --font-size-xl: 1.5rem;
+     --font-size-2xl: 2rem;
+     
+     /* Spacing */
+     --spacing-xs: 0.25rem;
+     --spacing-sm: 0.5rem;
+     --spacing-md: 1rem;
+     --spacing-lg: 1.5rem;
+     --spacing-xl: 2rem;
+     --spacing-2xl: 3rem;
+}
+
+/* Reset and base styles */
+* {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+}
+
+html, body {
+     height: 100%;
+     overflow: hidden;
+}
+
+body {
+     font-family: var(--font-family);
+     background: linear-gradient(135deg, var(--color-bg-primary) 0%, #1e2a3a 50%, #2d3748 100%);
+     color: var(--color-text-primary);
+     line-height: 1.5;
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container and layout */
+.container {
+     min-height: 100vh;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: space-between;
+     padding: var(--spacing-lg);
+     max-width: 1200px;
+     margin: 0 auto;
+}
+
+/* Header */
+.header {
+     text-align: center;
+     margin-bottom: var(--spacing-md);
+}
+
+.header h1 {
+     font-size: var(--font-size-2xl);
+     font-weight: 700;
+     margin-bottom: var(--spacing-xs);
+     background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
+     -webkit-background-clip: text;
+     -webkit-text-fill-color: transparent;
+     background-clip: text;
+     letter-spacing: 0.05em;
+}
+
+.subtitle {
+     font-size: var(--font-size-sm);
+     color: var(--color-text-secondary);
+     opacity: 0.8;
+     letter-spacing: 0.1em;
+     text-transform: uppercase;
+}
+
+/* Dragon stage */
+.dragon-stage {
+     flex: 1;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     width: 100%;
+     max-width: 800px;
+     position: relative;
+}
+
+.dragon-visual {
+     position: relative;
+     width: 100%;
+     height: 0;
+     padding-bottom: 75%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     cursor: pointer;
+     transition: transform 0.2s ease-out;
+}
+
+.dragon-visual:active {
+     transform: scale(0.98);
+}
+
+/* Dragon body construction */
+.dragon-body {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     width: 280px;
+     height: 280px;
+}
+
+.dragon-head {
+     position: absolute;
+     top: 20%;
+     left: 50%;
+     transform: translateX(-50%);
+     width: 180px;
+     height: 140px;
+     background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+     border-radius: 50% 50% 40% 40%;
+     box-shadow: 
+         0 0 30px rgba(33, 150, 243, 0.4),
+         inset -10px -10px 20px rgba(0, 0, 0, 0.3),
+         inset 10px 10px 20px rgba(255, 255, 255, 0.1);
+     z-index: 3;
+     transition: all 0.3s ease;
+}
+
+/* Dragon eyes */
+.dragon-eye {
+     position: absolute;
+     top: 35%;
+     width: 24px;
+     height: 32px;
+     background: radial-gradient(circle, #ffffff 0%, #e0f7fa 70%);
+     border-radius: 50%;
+     box-shadow: 
+         0 0 15px rgba(255, 255, 255, 0.6),
+         inset -3px -3px 6px rgba(0, 0, 0, 0.2);
+     transition: all 0.2s ease;
+}
+
+#dragon-eye-left {
+     left: 25%;
+     transform: translateX(-50%);
+}
+
+#dragon-eye-right {
+     right: 25%;
+     transform: translateX(50%);
+}
+
+/* Dragon mouth */
+.dragon-mouth {
+     position: absolute;
+     bottom: 15%;
+     left: 50%;
+     transform: translateX(-50%);
+     width: 80px;
+     height: 12px;
+     background: #0a1929;
+     border-radius: 0 0 40px 40px;
+     overflow: hidden;
+     transition: all 0.3s ease;
+}
+
+.dragon-mouth::before {
+     content: '';
+     position: absolute;
+     top: 0;
+     left: 50%;
+     transform: translateX(-50%);
+     width: 60px;
+     height: 6px;
+     background: linear-gradient(90deg, #4fc3f7, #81d4fa, #b3e5fc);
+     border-radius: 3px;
+}
+
+/* Dragon wings */
+.dragon-wing {
+     position: absolute;
+     top: 45%;
+     width: 160px;
+     height: 120px;
+     background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+     opacity: 0.8;
+     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dragon-wing.left {
+     left: -100px;
+     transform: rotate(-15deg) skew(10deg);
+     border-radius: 80% 20% 40% 60%;
+     box-shadow: -5px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dragon-wing.right {
+     right: -100px;
+     transform: rotate(15deg) skew(-10deg);
+     border-radius: 20% 80% 60% 40%;
+     box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Exhale effect */
+.exhale-effect {
+     position: absolute;
+     bottom: 15%;
+     left: 50%;
+     transform: translateX(-50%);
+     width: 200px;
+     height: 200px;
+     background: radial-gradient(circle, rgba(149, 209, 255, 0.8) 0%, rgba(81, 160, 241, 0.4) 50%, transparent 100%);
+     border-radius: 50%;
+     opacity: 0;
+     pointer-events: none;
+     transition: opacity 0.4s ease-out;
+     filter: blur(20px);
+}
+
+/* Inhale state */
+.dragon-stage.exhaling .dragon-head {
+     transform: translateX(-50%) translateY(-5px) scale(1.05);
+}
+
+.dragon-stage.exhaling .dragon-mouth {
+     height: 18px;
+     width: 100px;
+}
+
+.dragon-stage.exhaling .dragon-eye {
+     transform: scale(0.9);
+     opacity: 0.8;
+}
+
+.dragon-stage.exhaling .dragon-wing.left {
+     transform: rotate(-25deg) skew(15deg) scale(1.1);
+}
+
+.dragon-stage.exhaling .dragon-wing.right {
+     transform: rotate(25deg) skew(-15deg) scale(1.1);
+}
+
+.dragon-stage.exhaling .exhale-effect {
+     opacity: 1;
+     transform: translateX(-50%) scale(1.2);
+     animation: breathe 1.5s ease-out;
+}
+
+/* Instructions */
+.instructions {
+     position: absolute;
+     bottom: -60px;
+     left: 50%;
+     transform: translateX(-50%);
+     text-align: center;
+     color: var(--color-text-secondary);
+     font-size: var(--font-size-sm);
+     opacity: 0.7;
+     transition: opacity 0.3s ease;
+}
+
+.dragon-stage.exhaling + .instructions {
+     opacity: 0;
+}
+
+kbd {
+     display: inline-block;
+     padding: var(--spacing-xs) var(--spacing-sm);
+     margin: var(--spacing-xs) var(--spacing-xs);
+     background: var(--color-bg-secondary);
+     border: 1px solid var(--color-border);
+     border-radius: 4px;
+     font-family: inherit;
+     font-size: 0.9em;
+     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Controls footer */
+.controls {
+     display: flex;
+     justify-content: center;
+     gap: var(--spacing-md);
+     padding: var(--spacing-md) 0;
+}
+
+/* Buttons */
+.btn {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     min-width: 48px;
+     height: 48px;
+     padding: var(--spacing-md);
+     background: var(--color-bg-secondary);
+     border: 1px solid var(--color-border);
+     border-radius: 8px;
+     color: var(--color-text-primary);
+     font-family: inherit;
+     font-size: var(--font-size-sm);
+     cursor: pointer;
+     transition: all 0.2s ease;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+     background: var(--color-accent-secondary);
+     transform: translateY(-1px);
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:focus {
+     outline: 2px solid var(--color-accent-primary);
+     outline-offset: 2px;
+}
+
+.btn:active {
+     transform: translateY(0);
+     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-label {
+     margin-left: var(--spacing-sm);
+     font-weight: 500;
+     letter-spacing: 0.05em;
+}
+
+/* Volume icons */
+.icon {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+}
+
+.visible {
+     display: inline-block;
+}
+
+.hidden {
+     display: none;
+}
+
+/* Animations */
+@keyframes breathe {
+     0% {
+         transform: translateX(-50%) scale(0.8);
+     }
+     50% {
+         transform: translateX(-50%) scale(1.3);
+     }
+     100% {
+         transform: translateX(-50%) scale(1.1);
+     }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+     .header h1 {
+         font-size: var(--font-size-xl);
+     }
+     
+     .dragon-body {
+         width: 200px;
+         height: 200px;
+     }
+     
+     .dragon-head {
+         width: 130px;
+         height: 100px;
+     }
+     
+     .dragon-wing {
+         width: 100px;
+         height: 80px;
+     }
+     
+     .dragon-eye {
+         width: 18px;
+         height: 24px;
+     }
+     
+     .instructions {
+         max-width: 90%;
+     }
+}
+
+@media (max-width: 480px) {
+     :root {
+         --spacing-lg: 1rem;
+         --spacing-xl: 1.5rem;
+     }
+     
+     .header h1 {
+         font-size: var(--font-size-lg);
+     }
+     
+     .subtitle {
+         font-size: var(--font-size-xs);
+     }
+     
+     .dragon-body {
+         width: 160px;
+         height: 160px;
+     }
+     
+     .dragon-head {
+         width: 100px;
+         height: 80px;
+     }
+     
+     .dragon-wing {
+         width: 80px;
+         height: 60px;
+     }
+     
+     .dragon-eye {
+         width: 14px;
+         height: 18px;
+     }
+     
+     .btn {
+         min-width: 40px;
+         height: 40px;
+         padding: var(--spacing-sm);
+     }
+     
+     .btn-label {
+         font-size: 0.8em;
+     }
+}
+
+/* Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+     .exhale-effect {
+         animation: none;
+         opacity: 0.8;
+     }
+     
+     .dragon-visual {
+         transition: none;
+     }
+     
+     .dragon-mouth, .dragon-eye, .dragon-wing {
+         transition: none;
+     }
+     
+     .btn {
+         transition: none;
+     }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+     :root {
+         --color-bg-primary: #000000;
+         --color-text-primary: #ffffff;
+         --color-text-secondary: #cccccc;
+         --color-border: #666666;
+     }
+}
