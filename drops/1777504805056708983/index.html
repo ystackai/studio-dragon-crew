@@ -252,7 +252,9 @@ body::before{
 </head>
 <body>
 
-<button id="audio-toggle" aria-label="Toggle sound on or off" class="muted">🔇 Sound Off</button>
+<div id="particles" aria-hidden="true"></div>
+
+<button id="audio-toggle" aria-label="Toggle sound on or off" class="muted">Sound Off</button>
 
 <div class="stage">
   <h1 class="title" id="title">Hatch the Dragon</h1>
@@ -712,7 +714,7 @@ body::before{
   /* ─── Audio toggle ─── */
   function toggleAudio(){
     audioEnabled = !audioEnabled;
-    audioToggle.textContent = audioEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+    audioToggle.textContent = audioEnabled ? 'Sound On' : 'Sound Off';
     audioToggle.className = audioEnabled ? '' : 'muted';
     if(audioEnabled){
       ensureAudioCtx();
