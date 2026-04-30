@@ -1,0 +1,11 @@
+{
+  "name": "dragon-flight-vertical-slice",
+  "version": "1.0.0",
+  "description": "Dragon flight vertical slice - volcanic canyon sequence",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "build": "echo 'Build complete - standalone HTML5 app'"
+  },
+  "dependencies": {}
+}
