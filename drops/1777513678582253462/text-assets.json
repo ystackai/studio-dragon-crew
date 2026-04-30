@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "name": "Skywake: First Flight of the Dragon",
+    "version": "1.0.0",
+    "author": "Lava Dragon (Writer)",
+    "tone": "evocative, dreamlike, elemental — lava warmth, ice clarity, water flow, sea/pearl harmonics"
+  },
+
+  "launch_screen": {
+    "title": "SKY WAKE",
+    "subtitle": "First Flight of the Dragon",
+    "tagline": "Ride the thermals. Circle the rings. Land before the ember fades.",
+    "controls": [
+      { "key": "W / SPACE", "action": "Flap & Climb", "note": "uses stamina" },
+      { "key": "S", "action": "Glide & Dive", "note": "recovers stamina" },
+      { "key": "A/D  or  ←/→", "action": "Steer", "note": "left / right" },
+      { "key": "Q/E  or  [/]", "action": "Roll", "note": "left / right" },
+      { "key": "F", "action": "Elemental breath burst", "note": "once per flight" }
+    ],
+    "cta": "Press ENTER or TAP to launch"
+  },
+
+  "hud_labels": {
+    "speed": "SPD",
+    "stamina": "STM",
+    "altitude_prefix": "ALT",
+    "ring_prefix": "RING",
+    "breath_prefix": "B",
+    "breath_ready_default": "BREATHE",
+    "breath_used": "USED",
+    "breath_key_hint": "[F]",
+    "mobile": {
+      "steer": "STEER",
+      "glide": "GLIDE",
+      "flap": "FLAP",
+      "breath": "BREATH"
+    }
+  },
+
+  "state_prompts": {
+    "in_thermal": "↑ THERMAL",
+    "stamina_low": "DIVE TO RECOVER",
+    "stamina_critical": "EMBER DYING — DIVE NOW",
+    "breath_activated_fire": "LAVA BREATH — SPEED SURGE",
+    "breath_activated_ice": "FROST BREATH — STEADY TURN",
+    "breath_activated_water": "TIDE BREATH — GLIDE EXTENDED",
+    "breath_activated_pearl": "PEARL BREATH — LIFT TRAIL",
+    "approaching_perch": "PERCH AHEAD — SLOW AND DESCEND",
+    "ring_cleared": "RING CLEARED"
+  },
+
+  "routes": [
+    {
+      "id": "ember-arc",
+      "name": "Ember Arc",
+      "element": "lava",
+      "description": "A warm, twisting route through volcanic thermals, lit by distant magma glow.",
+      "rings": [
+        { "index": 1, "name": "Cinder Skiff", "chime_note": "warm low" },
+        { "index": 2, "name": "Magma Spiral", "chime_note": "rising mid" },
+        { "index": 3, "name": "Obsidian Loop", "chime_note": "bright high" },
+        { "index": 4, "name": "Ash Drift", "chime_note": "soft fall" },
+        { "index": 5, "name": "Flare Bend", "chime_note": "sharp peak" },
+        { "index": 6, "name": "Basalt Gate", "chime_note": "deep close" }
+      ],
+      "thermals": [
+        { "index": 1, "name": "Volcanic Updraft" },
+        { "index": 2, "name": "Smoldering Rise" },
+        { "index": 3, "name": "Magma Vent" }
+      ],
+      "perch": { "name": "Sundrop Isle", "landing_prompt": "The warm rock awaits — descend gently." }
+    },
+    {
+      "id": "frost-current",
+      "name": "Frost Current",
+      "element": "ice",
+      "description": "A crystalline path through cold, stable thermals shimmering with glassy light.",
+      "rings": [
+        { "index": 1, "name": "Glaze Hoop", "chime_note": "glassy ping" },
+        { "index": 2, "name": "Rime Coil", "chime_note": "crisp tone" },
+        { "index": 3, "name": "Hail Whorl", "chime_note": "bright ring" },
+        { "index": 4, "name": "Frost Bend", "chime_note": "clear chime" },
+        { "index": 5, "name": "Rime Arch", "chime_note": "shimmer high" },
+        { "index": 6, "name": "Glacier Gate", "chime_note": "frozen close" }
+      ],
+      "thermals": [
+        { "index": 1, "name": "Frozen Updraft" },
+        { "index": 2, "name": "Ice-Wind Lift" },
+        { "index": 3, "name": "Crystal Column" }
+      ],
+      "perch": { "name": "Shimmer Spire", "landing_prompt": "The frost-lit perch gleams below — steady your wings." }
+    },
+    {
+      "id": "tidal-glide",
+      "name": "Tidal Glide",
+      "element": "water",
+      "description": "A fluid route that flows with the sea, its thermals rolling like swells.",
+      "rings": [
+        { "index": 1, "name": "Ripple Hoop", "chime_note": "soft wave" },
+        { "index": 2, "name": "Swell Coil", "chime_note": "flowing mid" },
+        { "index": 3, "name": "Tide Spiral", "chime_note": "rolling high" },
+        { "index": 4, "name": "Current Bend", "chime_note": "fluid chime" },
+        { "index": 5, "name": "Tide Arch", "chime_note": "crescendo" },
+        { "index": 6, "name": "Reef Gate", "chime_note": "resonant close" }
+      ],
+      "thermals": [
+        { "index": 1, "name": "Ocean Swell" },
+        { "index": 2, "name": "Current Rise" },
+        { "index": 3, "name": "Wave Lift" }
+      ],
+      "perch": { "name": "Pearl Atoll", "landing_prompt": "The pearl ring glows beneath the tides — ease into it." }
+    },
+    {
+      "id": "pearl-harmony",
+      "name": "Pearl Harmony",
+      "element": "sea",
+      "description": "A luminous celestial route threaded through pearl-lit thermals and resonant rings.",
+      "rings": [
+        { "index": 1, "name": "Lumin Hoop", "chime_note": "sea chime low" },
+        { "index": 2, "name": "Reson Coil", "chime_note": "pearl harmonic" },
+        { "index": 3, "name": "Aurora Loop", "chime_note": "ocean ring" },
+        { "index": 4, "name": "Coral Bend", "chime_note": "deep tone" },
+        { "index": 5, "name": "Radiant Arch", "chime_note": "bright peak" },
+        { "index": 6, "name": "Abysm Gate", "chime_note": "final resonance" }
+      ],
+      "thermals": [
+        { "index": 1, "name": "Pearl Updraft" },
+        { "index": 2, "name": "Harmonic Lift" },
+        { "index": 3, "name": "Sea-Resonance" }
+      ],
+      "perch": { "name": "Lumin Spire", "landing_prompt": "The sea-born light pulses below — trust the harmony." }
+    }
+  ],
+
+  "breath_modes": {
+    "fire": {
+      "label": "Lava",
+      "effect": "Speed surge for 4 seconds",
+      "activation_text": "LAVA BREATH — SPEED SURGE"
+    },
+    "ice": {
+      "label": "Frost",
+      "effect": "Stabilized turn for 5 seconds",
+      "activation_text": "FROST BREATH — STEADY TURN"
+    },
+    "water": {
+      "label": "Tide",
+      "effect": "Extended glide for 4 seconds",
+      "activation_text": "TIDE BREATH — GLIDE EXTENDED"
+    },
+    "pearl": {
+      "label": "Pearl",
+      "effect": "Short lift trail for 3 seconds",
+      "activation_text": "PEARL BREATH — LIFT TRAIL"
+    }
+  },
+
+  "results_screen": {
+    "success_title": "PERCH REACHED",
+    "failure_title": "FLIGHT ENDED",
+    "landed_success": "You settled onto the perch as the horizon exhaled.",
+    "landed_graceful": "Wings folded. The perch held you like a promise.",
+    "not_landed_stamina": "Your ember faded before the perch could reach you.",
+    "not_landed_stray": "The route pulled away. The sky will call again.",
+    "grade_label": "Grade",
+    "rings_label": "Rings cleared",
+    "distance_label": "Distance",
+    "distance_suffix": "m",
+    "time_label": "Time",
+    "time_suffix": "s",
+    "landed_label": "Landed",
+    "yes": "Yes",
+    "no": "No",
+    "grade_flavor": {
+      "S": "The sky sang your name. A flawless run.",
+      "A": "Graceful flight. The thermals trusted you.",
+      "B": "A steady ride. The rings remember your wings.",
+      "C": "Rough edges, but the dragon kept climbing.",
+      "D": "The wind was not kind. Try again, skyward."
+    },
+    "restart_cta": "Press ENTER or TAP to fly again"
+  }
+}
