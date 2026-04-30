@@ -14,6 +14,7 @@ let crashTimer = 0;
 let smoothnessScore = 0;
 let smoothnessCount = 0;
 let restartFlash = 0;
+let ringParticles = [];
 
 // Route elements
 let skyRings = [];
@@ -146,58 +147,107 @@ function initBackground() {
    }
 }
 
+// Route generation config: adjustable to fit 60-120 second flights
+const routeConfig = {
+  targetDuration: 90,         // target flight time in seconds
+  averageSpeed: 6.5,          // expected average forward speed
+  numRings: 8,                // number of sky rings
+  numThermals: 6,             // number of thermal columns
+  ringSpacingZ: 0,            // computed below
+  lateralAmplitude: 250,      // max left/right excursion
+  verticalAmplitude: 200,      // vertical variation around base altitude
+  baseAltitude: 350,          // starting ring altitude
+  thermalRadius: 80,
+  landingMarginZ: 500,        // distance from last ring to perch
+};
+
+// Seeded PRNG for reproducible but varied routes
+let _routeSeed = 0;
+function _seededRandom() {
+  _routeSeed = (_routeSeed * 16807 + 0) % 2147483647;
+  return (_routeSeed - 1) / 2147483646;
+}
+
+function generateRouteSeed() {
+  // New seed each run for variety
+  _routeSeed = (Date.now() * 7 + Math.floor(Math.random() * 100000)) % 2147483647;
+  if (_routeSeed < 0) _routeSeed += 2147483647;
+}
+
 function initRoute() {
   skyRings = [];
   thermalColumns = [];
+  ringParticles = [];
 
-   // Route: rings along a winding path forward
-  const path = [
-    { dx: 0, dy: 350, dz: 300 },
-    { dx: -150, dy: 400, dz: 700 },
-    { dx: 200, dy: 300, dz: 1200 },
-    { dx: 100, dy: 500, dz: 1700 },
-    { dx: -200, dy: 350, dz: 2300 },
-    { dx: 50, dy: 450, dz: 2900 },
-   ];
+  generateRouteSeed();
 
-  path.forEach((p) => {
+  // Compute total Z distance from target duration and speed
+  const totalZ = routeConfig.targetDuration * routeConfig.averageSpeed;
+  const routeZSpan = totalZ - routeConfig.landingMarginZ;
+  routeConfig.ringSpacingZ = routeZSpan / (routeConfig.numRings - 1);
+
+  // Generate rings along a smooth sinusoidal path
+  let prevX = 0, prevY = routeConfig.baseAltitude;
+  for (let i = 0; i < routeConfig.numRings; i++) {
+    const t = i / (routeConfig.numRings - 1); // 0..1 progress
+    const z = t * routeZSpan;
+
+    // Sinusoidal lateral movement with random phase
+    const phase = _seededRandom() * Math.PI * 2;
+    const x = Math.sin(t * Math.PI * 2.5 + phase) * routeConfig.lateralAmplitude * (0.5 + _seededRandom() * 0.5);
+    const y = routeConfig.baseAltitude +
+              Math.sin(t * Math.PI * 3 + phase * 0.7) * routeConfig.verticalAmplitude * (0.4 + _seededRandom() * 0.6);
+
+    // Clamp to valid altitude range
+    const clampedY = Math.max(100, Math.min(650, y));
+
     skyRings.push({
-      x: p.dx,
-      y: p.dy,
-      z: p.dz,
-      radius: 40,
+      x: x,
+      y: clampedY,
+      z: z,
+      radius: 38 + _seededRandom() * 8,
       cleared: false,
-      glowPhase: Math.random() * Math.PI * 2,
-     });
-   });
+      glowPhase: _seededRandom() * Math.PI * 2,
+      highlightTimer: 0,  // for collection flash feedback
+    });
 
-   // Thermals along the route
-  const thermalSpots = [
-    { x: -50, z: 500 },
-    { x: 120, z: 950 },
-    { x: -100, z: 1500 },
-    { x: 80, z: 2000 },
-    { x: -30, z: 2600 },
-   ];
+    prevX = x;
+    prevY = clampedY;
+  }
 
-  thermalSpots.forEach((s) => {
+  // Generate thermals spaced between rings
+  for (let i = 0; i < routeConfig.numThermals; i++) {
+    const t = (i + 0.5) / routeConfig.numThermals;
+    const z = t * (routeZSpan + routeConfig.landingMarginZ * 0.5);
+
+    // Place thermal near the ring path with some random offset
+    const nearestRingIdx = Math.min(
+      Math.floor(t * (routeConfig.numRings - 1)),
+      routeConfig.numRings - 1
+    );
+    const ring = skyRings[nearestRingIdx];
+    const x = ring ? ring.x + (_seededRandom() - 0.5) * 200 : _seededRandom() * 200 - 100;
+
     thermalColumns.push({
-      x: s.x,
-      z: s.z,
-      radius: 80,
-      lift: 4,
-      shimmerPhase: Math.random() * Math.PI * 2,
-     });
-   });
+      x: x,
+      z: z,
+      radius: routeConfig.thermalRadius,
+      lift: 3 + _seededRandom() * 3,
+      shimmerPhase: _seededRandom() * Math.PI * 2,
+      active: true,
+    });
+  }
 
-   // Landing perch at the end
+  // Landing perch beyond the last ring
+  const lastRing = skyRings[skyRings.length - 1];
   landingPerch = {
-    x: 50,
-    y: 200,
-    z: 3400,
+    x: lastRing.x + (_seededRandom() - 0.5) * 100,
+    y: 200 + _seededRandom() * 50,
+    z: totalZ,
     radius: 50,
     glowPhase: 0,
-   };
+    approachLit: false,
+  };
 }
 
 function resetGame() {
@@ -213,7 +263,11 @@ function resetGame() {
   smoothnessScore = 0;
   smoothnessCount = 0;
   restartFlash = 0;
+  ringParticles = [];
+  breathMode = null;
+  inThermal = false;
   dragon.reset();
+  dragon._landingTime = 0;
   initRoute();
 }
 
@@ -385,37 +439,65 @@ function drawThermalColumns(camX, camY, camZ, camYaw) {
 
 function drawSkyRings(camX, camY, camZ, camYaw) {
   for (const ring of skyRings) {
-    if (ring.cleared) continue;
-
     const p = project(ring.x, ring.y, ring.z, camX, camY, camZ, camYaw);
     if (!p || p.scale < 0.01 || p.depth > 3500) continue;
+
+     // Decay highlight timer
+    if (ring.highlightTimer > 0) {
+      ring.highlightTimer -= 0.03;
+      if (ring.highlightTimer < 0) ring.highlightTimer = 0;
+      }
 
     ring.glowPhase += 0.03;
     const pulse = 0.5 + Math.sin(ring.glowPhase) * 0.3;
     const r = ring.radius * p.scale * 100;
 
-     // Outer ring
+     if (ring.cleared) {
+        // Dimmed cleared ring
+      const dimAlpha = Math.max(0.05, ring.highlightTimer * 0.4);
+      const highlightBoost = ring.highlightTimer;
+      ctx.strokeStyle = `rgba(200, 255, 220, ${dimAlpha + highlightBoost * 0.5})`;
+      ctx.lineWidth = Math.max(1, (3 + highlightBoost * 8) * p.scale * 100);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + highlightBoost * 15, 0, Math.PI * 2);
+      ctx.stroke();
+
+        // Flash ring on collection
+      if (highlightBoost > 0.1) {
+        const flashGrad = ctx.createRadialGradient(p.x, p.y, r * 0.3, p.x, p.y, r * (1.5 + highlightBoost));
+        flashGrad.addColorStop(0, `rgba(255, 240, 255, ${highlightBoost * 0.6})`);
+        flashGrad.addColorStop(0.5, `rgba(200, 255, 220, ${highlightBoost * 0.2})`);
+        flashGrad.addColorStop(1, `rgba(200, 255, 220, 0)`);
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * (1.5 + highlightBoost), 0, Math.PI * 2);
+        ctx.fill();
+       }
+      continue;
+     }
+
+      // Outer ring
     ctx.strokeStyle = `rgba(200, 170, 255, ${pulse})`;
     ctx.lineWidth = Math.max(1, 3 * p.scale * 100);
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.stroke();
 
-     // Pearl highlight
+      // Pearl highlight
     const glowGrad = ctx.createRadialGradient(p.x, p.y, r * 0.5, p.x, p.y, r);
-    glowGrad.addColorStop(0, `rgba(220, 210, 255, ${pulse * 0.2})`);
+    glowGrad.addColorStop(0, `rgba(${220 + Math.floor(pulse * 20)}, ${210 + Math.floor(pulse * 20)}, 255, ${pulse * 0.2})`);
     glowGrad.addColorStop(1, `rgba(200, 170, 255, 0)`);
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fill();
 
-     // Inner pearl dot
+      // Inner pearl dot
     ctx.fillStyle = `rgba(255, 240, 255, ${pulse * 0.8})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, Math.max(1, 4 * p.scale * 100), 0, Math.PI * 2);
     ctx.fill();
-   }
+     }
 }
 
 function drawLandingPerch(camX, camY, camZ, camYaw) {
@@ -647,22 +729,57 @@ function drawHUD() {
      }
    }
 
-   // Mobile touch zone indicators
-  if ('ontouchstart' in window && gamePhase === 'flying') {
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+       // Landing proximity indicator
+   if (gamePhase === 'flying' && landingPerch) {
+     const ddx = dragon.x - landingPerch.x;
+     const ddy = dragon.y - landingPerch.y;
+     const ddz = landingPerch.z - dragon.z;
+     const distToPerch = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz);
+
+     if (ddz > 0 && ddz < 800) {
+         const progress = 1 - ddz / 800;
+         const indicatorAlpha = Math.min(0.6, progress);
+         ctx.fillStyle = `rgba(255, 200, 120, ${indicatorAlpha})`;
+         ctx.font = 'bold 12px monospace';
+         ctx.textAlign = 'center';
+         ctx.fillText(`PERCH ${Math.round(ddz)}m`, W / 2, H - 16);
+         ctx.textAlign = 'left';
+       }
+     }
+
+     // Mobile touch zone indicators
+  if ('ontouchstart' in window && (gamePhase === 'flying' || gamePhase === 'landing')) {
+    const zoneAlpha = input.activeTouch > 0 ? 0.25 : 0.12;
+    ctx.fillStyle = `rgba(255,255,255,${zoneAlpha})`;
     ctx.font = '14px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('STEER', W * 0.25, H * 0.75);
-    ctx.fillText('GLIDE', W * 0.15, H * 0.92);
-    ctx.fillText('FLAP', W * 0.8, H * 0.92);
 
-     // Breath button
+     // Draw touch zone rectangles for better visibility
+    ctx.strokeStyle = `rgba(255,255,255,${zoneAlpha * 0.5})`;
+    ctx.lineWidth = 1;
+
+     // Left steering zone
+    const steerH = H * 0.65;
+    ctx.strokeRect(0, 0, W * 0.45, steerH);
+    ctx.fillText('STEER', W * 0.225, steerH * 0.5);
+
+     // Glide zone (bottom-left)
+    const glideH = H * 0.35;
+    ctx.strokeRect(0, steerH, W * 0.35, glideH);
+    ctx.fillText('GLIDE', W * 0.175, steerH + glideH * 0.55);
+
+     // Flap zone (bottom-right)
+    ctx.strokeRect(W * 0.65, steerH, W * 0.35, glideH);
+    ctx.fillText('FLAP', W * 0.825, steerH + glideH * 0.55);
+
+      // Breath button (top-right)
     if (!breathUsed) {
-      ctx.fillStyle = 'rgba(255, 170, 60, 0.15)';
-      ctx.fillText('BREATH', W * 0.8, H * 0.75);
-     }
+      ctx.fillStyle = 'rgba(255, 170, 60, 0.18)';
+      ctx.fillText('BREATH', W * 0.825, H * 0.25);
+      ctx.fillStyle = `rgba(255,255,255,${zoneAlpha})`;
+      }
     ctx.textAlign = 'left';
-   }
+    }
 }
 
 function drawLaunchScreen(W, H) {
@@ -778,6 +895,50 @@ function drawSpeedStreaks() {
 
 // --- Game logic ---
 
+function spawnRingParticles(x, y, z, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+    const speed = 1.5 + Math.random() * 3;
+    ringParticles.push({
+      x, y, z,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      vz: (Math.random() - 0.5) * speed,
+      life: 1.0,
+      decay: 0.6 + Math.random() * 0.5,
+      size: 2 + Math.random() * 4,
+      hue: 260 + Math.random() * 40, // purple-pearl range
+    });
+  }
+}
+
+function updateRingParticles(dt) {
+  for (let i = ringParticles.length - 1; i >= 0; i--) {
+    const p = ringParticles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.z += p.vz * dt;
+    p.life -= p.decay * dt;
+    if (p.life <= 0) {
+      ringParticles.splice(i, 1);
+    }
+  }
+}
+
+function drawRingParticles(camX, camY, camZ, camYaw) {
+  for (const p of ringParticles) {
+    const proj = project(p.x, p.y, p.z, camX, camY, camZ, camYaw);
+    if (!proj || proj.depth < 10 || proj.depth > 3500) continue;
+
+    const r = p.size * proj.scale * 100 * p.life;
+    const alpha = p.life * 0.8;
+    ctx.fillStyle = `hsla(${p.hue}, 60%, 80%, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(proj.x, proj.y, Math.max(0.5, r), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function checkRingCollisions() {
   for (const ring of skyRings) {
     if (ring.cleared) continue;
@@ -788,9 +949,11 @@ function checkRingCollisions() {
     if (dist < ring.radius) {
       ring.cleared = true;
       ringsCleared++;
+      ring.highlightTimer = 1.0;
+      spawnRingParticles(ring.x, ring.y, ring.z, 24);
       playRingChime();
-     }
-   }
+      }
+    }
 }
 
 function checkThermalBoost(dt) {
@@ -857,33 +1020,24 @@ function activateBreath() {
    }
 }
 
-// Breathing input
+// Breathing input (keyboard only - touch handled via inputState.breath in game loop)
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyF') {
     activateBreath();
-   }
+    }
   if ((e.code === 'Enter' || e.code === 'Space') && gamePhase === 'ended') {
     resetGame();
-   }
+    }
 });
 
 canvas.addEventListener('touchstart', (e) => {
   initAudio();
   if (gamePhase === 'ended' && restartFlash > 1) {
     resetGame();
-   }
+    }
   if (gamePhase === 'prelaunch') {
     input._launch = true;
-   }
-   // Mobile breath: tap top-right zone
-  if (gamePhase === 'flying' && !breathUsed) {
-    for (let i = 0; i < e.touches.length; i++) {
-      const t = e.touches[i];
-      if (t.clientX > canvas.width * 0.7 && t.clientY < canvas.height * 0.5) {
-        activateBreath();
-       }
-     }
-   }
+    }
 }, { passive: true });
 
 // --- Main game loop ---
@@ -915,69 +1069,79 @@ function gameLoop(timestamp) {
    }
 
   if (gamePhase === 'flying') {
-     // Update physics
+       // Update physics
     dragon.update(dt, inputState);
 
-     // Check collisions
+       // Mobile breath activation from touch zones
+    if (inputState.breath) {
+      activateBreath();
+       }
+
+       // Check collisions
     checkRingCollisions();
     inThermal = checkThermalBoost(dt);
     checkLanding();
 
-     // Breath timer
+      // Update ring particles
+    updateRingParticles(dt);
+
+      // Breath timer
     if (breathTimer > 0) {
       breathTimer -= dt;
      }
 
-     // Smoothness scoring: not falling fast, not rolling too much
+      // Smoothness scoring: not falling fast, not rolling too much
     const smooth = Math.abs(dragon.vy) < 3 && Math.abs(dragon.roll) < 0.3;
     smoothnessCount++;
     if (smoothnessCount % 30 === 0) {
       smoothnessScore += smooth ? 1 : 0;
-     }
+      }
 
-     // Crash / end conditions
-    if (dragon.y < 5 && dragon.vy < -2) {
-       // Hit the water
-      gamePhase = 'ended';
-      playCrash();
-      restartFlash = 0;
-     } else if (dragon.stamina <= 0 && dragon.vy < -5 && dragon.y < 50) {
-       // Ran out of stamina and falling below safe altitude
-      gamePhase = 'ended';
-      playCrash();
-      restartFlash = 0;
-     } else if (gameTime > 180) {
-       // Time limit
-      gamePhase = 'ended';
-      restartFlash = 0;
-     } else if (landed) {
-      gamePhase = 'ended';
-      restartFlash = 0;
-     }
+      // Crash / end conditions
+    const tooLow = dragon.y < 5 && dragon.vy < -2;
+    const staminaOut = dragon.stamina <= 0 && dragon.vy < -5 && dragon.y < 50;
+    const timeLimit = gameTime > 180;
+    const allRingsPast = skyRings.length > 0 &&
+      skyRings.every(r => r.cleared || dragon.z > r.z + 200);
 
-     // Wing whoosh sound
+    if (tooLow || staminaOut || timeLimit || (allRingsPast && dragon.z > (landingPerch ? landingPerch.z + 300 : 9999))) {
+        // Hit the water or ran out
+      gamePhase = 'ended';
+      if (!landed) playCrash();
+      restartFlash = 0;
+      } else if (landed) {
+      gamePhase = 'ended';
+      restartFlash = 0;
+      }
+
+      // Wing whoosh sound
     wingWhoosh(dragon);
 
-     // Update wind volume based on speed
+      // Update wind volume based on speed
     if (windGain) {
       windGain.gain.value = 0.04 + dragon.speed * 0.008;
-     }
+      }
    }
 
   if (gamePhase === 'landing') {
-     // Gentle slow-down
+       // Gentle slow-down with visual approach guide
     dragon.update(dt, { glide: true, ...inputState });
-    dragon.vx *= 0.98;
-    dragon.vz *= 0.98;
-    dragon.vy = 0;
+    dragon.vx *= 0.97;
+    dragon.vz *= 0.97;
+    dragon.vy *= 0.9;
 
-    if (dragon.speed < 0.5) {
+     if (dragon.speed < 0.3 || gameTime - (dragon._landingTime || 0) > 3) {
       gamePhase = 'ended';
       restartFlash = 0;
+       }
      }
-   }
 
-   // Camera follows dragon
+     // Mark landing time when entering landing phase
+   if (gamePhase === 'landing' && !dragon._landingTime) {
+    dragon._landingTime = gameTime;
+     }
+
+    // Camera follows dragon
   const camX = dragon.x - Math.sin(dragon.yaw) * 40;
   const camY = dragon.y - 15;
   const camZ = dragon.z - Math.cos(dragon.yaw) * 40;
@@ -990,6 +1154,7 @@ function gameLoop(timestamp) {
   drawClouds(camX, camY, camZ, dragon.yaw);
   drawThermalColumns(camX, camY, camZ, dragon.yaw);
   drawSkyRings(camX, camY, camZ, dragon.yaw);
+  drawRingParticles(camX, camY, camZ, dragon.yaw);
   drawLandingPerch(camX, camY, camZ, dragon.yaw);
 
    // Thermal highlight on dragon when in thermal
