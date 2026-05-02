@@ -125,9 +125,8 @@
         wingFlapTimer: 0,
         handleInput(dt) {
             // Aircraft-style pitch: W/Up pushes the nose down, S/Down pulls up.
-            const pitchInput = (inputs.w || inputs.arrowUp ? -1 : 0) + (inputs.s || inputs.arrowDown ? 1 : 0);
-            const rollInput = (inputs.a || inputs.arrowLeft ? -1 : 0) + (inputs.d || inputs.arrowRight ? 1 : 0);
-            const yawInput = (inputs.a || inputs.arrowLeft ? -1 : 0) + (inputs.d || inputs.arrowRight ? 1 : 0);
+            const pitchInput = (inputs.w || inputs.arrowUp ? 1 : 0) + (inputs.s || inputs.arrowDown ? -1 : 0);
+            const turnInput = (inputs.a || inputs.arrowLeft ? 1 : 0) + (inputs.d || inputs.arrowRight ? -1 : 0);
 
             dragonRotation.pitch += pitchInput * PITCH_RATE * dt;
             if (pitchInput === 0) {
@@ -135,14 +134,14 @@
             }
             dragonRotation.pitch = THREE.MathUtils.clamp(dragonRotation.pitch, -Math.PI / 3, Math.PI / 3);
 
-            dragonRotation.roll += rollInput * ROLL_RATE * dt;
-            if (rollInput === 0) {
+            dragonRotation.roll += turnInput * ROLL_RATE * dt;
+            if (turnInput === 0) {
                 dragonRotation.roll = THREE.MathUtils.damp(dragonRotation.roll, 0, ROLL_AUTO_LEVEL, dt);
             }
             dragonRotation.roll = THREE.MathUtils.clamp(dragonRotation.roll, -Math.PI / 3, Math.PI / 3);
 
             const autoYaw = dragonRotation.roll * 0.3;
-            dragonRotation.yaw += autoYaw * dt + yawInput * YAW_RATE * dt * 0.3;
+            dragonRotation.yaw += autoYaw * dt + turnInput * YAW_RATE * dt * 0.3;
 
             if (inputs.space && heat > 0) {
                 if (!boostActive) {
@@ -167,7 +166,7 @@
             }
 
             this.wingFlapTimer -= dt;
-            if ((pitchInput !== 0 || rollInput !== 0) && this.wingFlapTimer <= 0) {
+            if ((pitchInput !== 0 || turnInput !== 0) && this.wingFlapTimer <= 0) {
                 playWingFlap();
                 this.wingFlapTimer = 0.12;
             }
@@ -331,8 +330,8 @@
         update(dt) {
             const speed = boostActive ? FLIGHT_SPEED_BOOST : FLIGHT_SPEED_BASE;
             const forward = new THREE.Vector3(
-                -Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
-                Math.sin(dragonRotation.pitch),
+                Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
+                -Math.sin(dragonRotation.pitch),
                 Math.cos(dragonRotation.yaw) * Math.cos(dragonRotation.pitch)
             );
 
@@ -341,8 +340,8 @@
             velocity.y += forward.y * thrustScale * 0.3;
             velocity.z += forward.z * thrustScale * 0.3;
 
-            if (dragonRotation.pitch < -0.2) {
-                velocity.y += DIVE_ACCELERATION * dragonRotation.pitch * dt;
+            if (dragonRotation.pitch > 0.2) {
+                velocity.y -= DIVE_ACCELERATION * dragonRotation.pitch * dt;
             }
 
             for (const ud of updrafts) {
