@@ -612,7 +612,7 @@
         // ---- Wings (left and right with bone structure and membrane) ----
         for (let side = -1; side <= 1; side += 2) {
             const wingGroup = new THREE.Group();
-            wingGroup.position.set(0, 0.4, -0.5);
+            wingGroup.position.set(side * 0.45, 0.35, -0.55);
 
             // Shoulder joint
             const shoulderGeo = new THREE.SphereGeometry(0.3, 5, 5);
@@ -623,10 +623,10 @@
             // Wing bones (fingers)
             const boneMat = new THREE.MeshStandardMaterial({ color: PAL.bone, roughness: 0.5 });
             const bonePositions = [
-                { dir: new THREE.Vector3(side * 0.5, 1.8, -0.3), len: 4.5, idx: 0 },
-                { dir: new THREE.Vector3(side * 0.8, 1.2, -0.5), len: 5.5, idx: 1 },
-                { dir: new THREE.Vector3(side * 1.0, 0.5, -0.8), len: 4.0, idx: 2 },
-                { dir: new THREE.Vector3(side * 1.2, -0.2, -1.0), len: 3.0, idx: 3 },
+                { dir: new THREE.Vector3(side * 1.2, 0.7, -0.35), len: 3.0, idx: 0 },
+                { dir: new THREE.Vector3(side * 1.55, 0.25, -0.6), len: 3.7, idx: 1 },
+                { dir: new THREE.Vector3(side * 1.35, -0.25, -0.85), len: 3.1, idx: 2 },
+                { dir: new THREE.Vector3(side * 0.9, -0.55, -1.0), len: 2.4, idx: 3 },
             ];
 
             const boneMeshes = [];
@@ -654,7 +654,7 @@
 
             // Wing membrane - shape connecting the bone tips
             const membraneShape = new THREE.Shape();
-            const outerR = 3.5;
+            const outerR = 3.0;
             membraneShape.moveTo(side * 0.1, 0);
             membraneShape.bezierCurveTo(side * 1.0, 1.5 * side, side * 2.0, 2.5 * side, side * outerR, 0.5 * side);
             membraneShape.bezierCurveTo(side * (outerR + 0.5), -0.3, side * (outerR - 0.5), -1.0, side * 0.5, -1.5);
@@ -760,12 +760,7 @@
             wingL.rotation.x = flapBase + flapAngle;
             wingR.rotation.x = flapBase - flapAngle;
 
-            // Subtle armature bend on wings
-            if (wingL.userData.bones) {
-                wingL.userData.bones.forEach((bone, i) => {
-                    bone.rotation.z = flapAngle * 0.15 * (i + 1) * 0.5;
-                });
-            }
+            // Keep individual wing fingers fixed; the group flap carries the wing motion.
         }
 
         // Jaw animation when fire breath active
