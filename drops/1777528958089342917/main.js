@@ -330,7 +330,7 @@
         update(dt) {
             const speed = boostActive ? FLIGHT_SPEED_BOOST : FLIGHT_SPEED_BASE;
             const forward = new THREE.Vector3(
-                Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
+                -Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
                 -Math.sin(dragonRotation.pitch),
                 Math.cos(dragonRotation.yaw) * Math.cos(dragonRotation.pitch)
             );
