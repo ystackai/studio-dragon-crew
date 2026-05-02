@@ -620,54 +620,39 @@
             const shoulder = new THREE.Mesh(shoulderGeo, darkPlateMat);
             wingGroup.add(shoulder);
 
-            // Wing bones (fingers)
             const boneMat = new THREE.MeshStandardMaterial({ color: PAL.bone, roughness: 0.5 });
-            const bonePositions = [
-                { dir: new THREE.Vector3(side * 1.2, 0.7, -0.35), len: 3.0, idx: 0 },
-                { dir: new THREE.Vector3(side * 1.55, 0.25, -0.6), len: 3.7, idx: 1 },
-                { dir: new THREE.Vector3(side * 1.35, -0.25, -0.85), len: 3.1, idx: 2 },
-                { dir: new THREE.Vector3(side * 0.9, -0.55, -1.0), len: 2.4, idx: 3 },
-            ];
 
-            const boneMeshes = [];
-            bonePositions.forEach(bp => {
-                const boneGeo = new THREE.CylinderGeometry(0.04, 0.06, bp.len, 4);
+            const makeWingBone = (from, to, radius = 0.055) => {
+                const delta = new THREE.Vector3().subVectors(to, from);
+                const boneGeo = new THREE.CylinderGeometry(radius, radius * 1.25, delta.length(), 5);
                 const bone = new THREE.Mesh(boneGeo, boneMat);
-                const dir = bp.dir.clone().normalize();
-                bone.position.copy(dir.clone().multiplyScalar(bp.len / 2));
-
-                // Orient bone along direction
+                bone.position.copy(from).addScaledVector(delta, 0.5);
                 const up = new THREE.Vector3(0, 1, 0);
-                const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-                bone.quaternion.copy(quat);
-
-                // Jagged tips
-                const tipGeo = new THREE.ConeGeometry(0.06, 0.5, 3);
-                const tip = new THREE.Mesh(tipGeo, boneMat);
-                tip.position.copy(dir.clone().multiplyScalar(bp.len));
-                tip.quaternion.copy(quat);
-                wingGroup.add(tip);
-
+                bone.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(up, delta.clone().normalize()));
                 wingGroup.add(bone);
-                boneMeshes.push(bone);
-            });
+                return bone;
+            };
 
-            // Wing membrane - shape connecting the bone tips
-            const membraneShape = new THREE.Shape();
-            const outerR = 3.0;
-            membraneShape.moveTo(side * 0.1, 0);
-            membraneShape.bezierCurveTo(side * 1.0, 1.5 * side, side * 2.0, 2.5 * side, side * outerR, 0.5 * side);
-            membraneShape.bezierCurveTo(side * (outerR + 0.5), -0.3, side * (outerR - 0.5), -1.0, side * 0.5, -1.5);
-            membraneShape.bezierCurveTo(side * 0.3, -1.0, side * 0.2, -0.5, side * 0.1, 0);
+            const root = new THREE.Vector3(0, 0.02, 0.08);
+            const leading = new THREE.Vector3(side * 3.0, 0.38, -0.2);
+            const mid = new THREE.Vector3(side * 3.45, -0.05, -0.95);
+            const trailing = new THREE.Vector3(side * 2.15, -0.55, -1.65);
+            const inner = new THREE.Vector3(side * 0.35, -0.42, -1.05);
 
-            const membraneGeo = new THREE.ShapeGeometry(membraneShape);
+            makeWingBone(root, leading, 0.065);
+            makeWingBone(root, mid, 0.045);
+            makeWingBone(root, trailing, 0.045);
+            makeWingBone(inner, trailing, 0.04);
+
+            const membraneGeo = new THREE.BufferGeometry();
+            membraneGeo.setFromPoints([root, leading, mid, trailing, inner]);
+            membraneGeo.setIndex([0, 1, 2, 0, 2, 4, 4, 2, 3]);
+            membraneGeo.computeVertexNormals();
             const membrane = new THREE.Mesh(membraneGeo, membraneMat);
-            membrane.rotation.y = side > 0 ? Math.PI / 2 : -Math.PI / 2;
-            membrane.position.set(0, 0, 0);
             wingGroup.add(membrane);
 
             wingGroup.name = side < 0 ? "wingL" : "wingR";
-            wingGroup.userData.bones = boneMeshes;
+            wingGroup.userData.side = side;
             dragonGroup.add(wingGroup);
         }
 
@@ -756,11 +741,9 @@
 
         if (wingL && wingR) {
             const flapAngle = Math.sin(time * wingFlapSpeed) * wingFlapAmount;
-            const flapBase = -0.15;
-            wingL.rotation.x = flapBase + flapAngle;
-            wingR.rotation.x = flapBase - flapAngle;
-
-            // Keep individual wing fingers fixed; the group flap carries the wing motion.
+            const dihedral = 0.18;
+            wingL.rotation.set(0, 0, -dihedral - flapAngle);
+            wingR.rotation.set(0, 0, dihedral + flapAngle);
         }
 
         // Jaw animation when fire breath active
