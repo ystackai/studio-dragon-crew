@@ -27,6 +27,8 @@
     const PITCH_RATE = 1.5;
     const ROLL_RATE = 2.0;
     const YAW_RATE = 1.2;
+    const PITCH_AUTO_LEVEL = 1.8;
+    const ROLL_AUTO_LEVEL = 2.8;
     const LIFT_FORCE = 9.8;
     const GRAVITY = 9.8;
     const DIVE_ACCELERATION = 20;
@@ -122,14 +124,21 @@
     const flightController = {
         wingFlapTimer: 0,
         handleInput(dt) {
+            // Aircraft-style pitch: W/Up pushes the nose down, S/Down pulls up.
             const pitchInput = (inputs.w || inputs.arrowUp ? -1 : 0) + (inputs.s || inputs.arrowDown ? 1 : 0);
             const rollInput = (inputs.a || inputs.arrowLeft ? -1 : 0) + (inputs.d || inputs.arrowRight ? 1 : 0);
-            const yawInput = (inputs.a || inputs.arrowLeft ? 1 : 0) + (inputs.d || inputs.arrowRight ? -1 : 0);
+            const yawInput = (inputs.a || inputs.arrowLeft ? -1 : 0) + (inputs.d || inputs.arrowRight ? 1 : 0);
 
             dragonRotation.pitch += pitchInput * PITCH_RATE * dt;
+            if (pitchInput === 0) {
+                dragonRotation.pitch = THREE.MathUtils.damp(dragonRotation.pitch, 0, PITCH_AUTO_LEVEL, dt);
+            }
             dragonRotation.pitch = THREE.MathUtils.clamp(dragonRotation.pitch, -Math.PI / 3, Math.PI / 3);
 
             dragonRotation.roll += rollInput * ROLL_RATE * dt;
+            if (rollInput === 0) {
+                dragonRotation.roll = THREE.MathUtils.damp(dragonRotation.roll, 0, ROLL_AUTO_LEVEL, dt);
+            }
             dragonRotation.roll = THREE.MathUtils.clamp(dragonRotation.roll, -Math.PI / 3, Math.PI / 3);
 
             const autoYaw = dragonRotation.roll * 0.3;
@@ -322,9 +331,9 @@
         update(dt) {
             const speed = boostActive ? FLIGHT_SPEED_BOOST : FLIGHT_SPEED_BASE;
             const forward = new THREE.Vector3(
-                Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
+                -Math.sin(dragonRotation.yaw) * Math.cos(dragonRotation.pitch),
                 Math.sin(dragonRotation.pitch),
-                -Math.cos(dragonRotation.yaw) * Math.cos(dragonRotation.pitch)
+                Math.cos(dragonRotation.yaw) * Math.cos(dragonRotation.pitch)
             );
 
             const thrustScale = speed * dt;
@@ -332,8 +341,8 @@
             velocity.y += forward.y * thrustScale * 0.3;
             velocity.z += forward.z * thrustScale * 0.3;
 
-            if (dragonRotation.pitch > 0.2) {
-                velocity.y -= DIVE_ACCELERATION * dragonRotation.pitch * dt;
+            if (dragonRotation.pitch < -0.2) {
+                velocity.y += DIVE_ACCELERATION * dragonRotation.pitch * dt;
             }
 
             for (const ud of updrafts) {
