@@ -926,7 +926,7 @@
 
         // Magma veins (with dynamic glow)
         const magmaMat = new THREE.MeshStandardMaterial({
-            color: PAL.magma, emissive: 0xFF4400, emissiveIntensity: 0.8, roughness: 0.3
+            color: PAL.magma, emissive: 0xFF4400, emissiveIntensity: 1.4, roughness: 0.3
         });
 
         for (let i = 0; i < MAGMA_VEIN_COUNT; i++) {
@@ -936,7 +936,7 @@
             vein.position.set(sideX, Math.random() * WALL_HEIGHT * 0.8, -Math.random() * (TRACK_LENGTH - 20));
             vein.rotation.y = Math.PI / 2;
             vein.userData = {
-                baseEmissive: 0.8 + Math.random() * 0.6,
+                baseEmissive: 1.4 + Math.random() * 0.6,
                 pulseSpeed: 0.5 + Math.random() * 1.5,
                 pulseOffset: Math.random() * Math.PI * 2
             };
@@ -948,7 +948,7 @@
         for (let i = 0; i < 12; i++) {
             const poolGeo = new THREE.CylinderGeometry(1.5 + Math.random(), 2 + Math.random(), 0.15, 7);
             const poolMat = new THREE.MeshStandardMaterial({
-                color: 0xFF3300, emissive: 0xFF2200, emissiveIntensity: 1.0,
+                color: 0xFF3300, emissive: 0xFF2200, emissiveIntensity: 1.6,
                 roughness: 0.2, metalness: 0.4
             });
             const pool = new THREE.Mesh(poolGeo, poolMat);
@@ -1198,25 +1198,30 @@
 
     // ---- Lighting ----
     function setupLighting() {
-        const ambient = new THREE.AmbientLight(0x221111, 0.45);
+        const ambient = new THREE.AmbientLight(0x3a2620, 0.85);
         scene.add(ambient);
 
         // Main environment light (warm sunset direction)
-        const mainLight = new THREE.DirectionalLight(0xFFAA66, 0.75);
+        const mainLight = new THREE.DirectionalLight(0xFFAA66, 1.1);
         mainLight.position.set(10, 30, -50);
         scene.add(mainLight);
 
         // Hemisphere light
-        const hemi = new THREE.HemisphereLight(0xCC5533, 0x1A0A0A, 0.35);
+        const hemi = new THREE.HemisphereLight(0xCC5533, 0x1A0A0A, 0.55);
         scene.add(hemi);
 
         // Subtle fill light from below (magma glow)
-        const fillLight = new THREE.DirectionalLight(0xFF3300, 0.15);
+        const fillLight = new THREE.DirectionalLight(0xFF3300, 0.25);
         fillLight.position.set(0, -5, -100);
         scene.add(fillLight);
 
-        scene.fog = new THREE.FogExp2(0x1A0A0A, 0.007);
-        scene.background = new THREE.Color(0x150808);
+        // Cool rim light from above so obsidian walls catch a highlight against the warm fog
+        const rimLight = new THREE.DirectionalLight(0x6688AA, 0.35);
+        rimLight.position.set(0, 60, 20);
+        scene.add(rimLight);
+
+        scene.fog = new THREE.FogExp2(0x2A1810, 0.003);
+        scene.background = new THREE.Color(0x281410);
     }
 
     // ---- Volumetric Fog Planes ----
@@ -1687,8 +1692,6 @@
     // ---- Scene Setup ----
     function initScene() {
         scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x1A0A0A, 0.007);
-        scene.background = new THREE.Color(0x150808);
 
         camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
         camera.position.set(0, 23, -8);
