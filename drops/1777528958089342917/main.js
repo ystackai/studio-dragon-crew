@@ -125,8 +125,8 @@
         wingFlapTimer: 0,
         handleInput(dt) {
             // Aircraft-style pitch: W/Up pushes the nose down, S/Down pulls up.
-            const pitchInput = (inputs.w || inputs.arrowUp ? 1 : 0) + (inputs.s || inputs.arrowDown ? -1 : 0);
-            const turnInput = (inputs.a || inputs.arrowLeft ? 1 : 0) + (inputs.d || inputs.arrowRight ? -1 : 0);
+            const pitchInput = (inputs.w || inputs.arrowUp ? -1 : 0) + (inputs.s || inputs.arrowDown ? 1 : 0);
+            const turnInput = (inputs.a || inputs.arrowLeft ? -1 : 0) + (inputs.d || inputs.arrowRight ? 1 : 0);
 
             dragonRotation.pitch += pitchInput * PITCH_RATE * dt;
             if (pitchInput === 0) {
