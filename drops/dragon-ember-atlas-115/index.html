@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ember Atlas · Dragon Crew</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="overlay">
+  <h1>EMBER ATLAS</h1>
+  <p>Six dragons awaken the ember grid. Tap to begin.<br>Hold or drag to scatter embers.<br>Select a dragon's element to reshape the world.</p>
+</div>
+<canvas id="c"></canvas>
+<div id="phase">ember.atlas &mdash; dragon.crew</div>
+<div id="info">
+  <span id="dragon-label">—</span>
+  <span id="ember-count">0</span> embers
+</div>
+<div id="ui">
+  <button data-element="water" data-idx="0" class="active">💧 WATER</button>
+  <button data-element="sea" data-idx="1">🌊 SEA</button>
+  <button data-element="ice" data-idx="2">❄️ ICE</button>
+  <button data-element="snow" data-idx="3">🌨 SNOW</button>
+  <button data-element="fire" data-idx="4">🔥 FIRE</button>
+  <button data-element="lava" data-idx="5">🌋 LAVA</button>
+</div>
+<script src="game.js"></script>
+</body>
+</html>

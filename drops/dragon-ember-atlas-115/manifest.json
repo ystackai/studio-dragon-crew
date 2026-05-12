@@ -1,0 +1,12 @@
+{
+  "title": "Ember Atlas",
+  "description": "Six dragons awaken the ember grid. Breathe, hold, and reshape the world through elemental fire.", 
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "urls": [
+    "/drops/dragon-ember-atlas-115/"
+  ],
+  "dragon_crew": ["Water Dragon","Sea Dragon","Ice Dragon","Snow Dragon","Fire Dragon","Lava Dragon"],
+  "tags": ["ember","atlas","dragon","crew","interactive","canvas"],
+  "author": "Dragon Crew Studio"
+}
