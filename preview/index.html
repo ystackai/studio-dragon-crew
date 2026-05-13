@@ -52,6 +52,12 @@
       font-size: 0.95rem;
       margin-bottom: 28px;
     }
+    .section-title {
+      font-size: 1.6rem;
+      margin: 32px 0 16px;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -71,6 +77,13 @@
       aspect-ratio: 1 / 1;
       object-fit: cover;
       background: linear-gradient(135deg, rgba(98, 182, 203, 0.2), rgba(255, 159, 90, 0.14));
+    }
+    .card iframe {
+      display: block;
+      width: 100%;
+      height: 400px;
+      border: none;
+      background: #0a0e14;
     }
     .copy {
       padding: 18px 18px 20px;
@@ -93,16 +106,46 @@
       line-height: 1.55;
     }
     .warm { color: var(--accent-warm); }
+    .game-link {
+      display: inline-block;
+      padding: 8px 20px;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      color: var(--text);
+      text-decoration: none;
+      background: rgba(98, 182, 203, 0.08);
+      transition: all 0.2s;
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    .game-link:hover {
+      background: rgba(98, 182, 203, 0.2);
+      box-shadow: 0 0 20px rgba(98, 182, 203, 0.15);
+    }
   </style>
 </head>
 <body>
   <main>
     <h1>The Dragon Crew</h1>
     <p class="intro">
-      Preview gallery for the six dragon portraits before any Director SQLite inserts, GitHub repo creation,
-      or Discord wiring. The brief is fixed: photorealistic, beautiful, and welcoming, with no horror or villain energy.
+      Preview gallery for dragon portraits and the playable Dragon Rhythm music game.
     </p>
-    <div class="note">Expected image output path: <span class="warm">../team/avatars/generated/&lt;dragon&gt;.png</span></div>
+    <div class="note">New: <span class="warm">Dragon Rhythm</span> — a Web Audio rhythm game. Play it now!</div>
+
+    <h2 class="section-title">🎵 Dragon Rhythm — Music Game</h2>
+    <div class="grid">
+      <article class="card">
+        <iframe src="../drops/dragon-rhythm-v1/index.html" title="Dragon Rhythm game"></iframe>
+        <div class="copy">
+          <div class="eyebrow">Playable Drop</div>
+          <h2>Dragon Rhythm v1</h2>
+          <p>An 8-lane keyboard rhythm game with Web Audio synthesis, combo scoring, particle effects, and responsive touch controls. Press A–F and J–; to hit notes in time with the beat.</p>
+          <a class="game-link" href="../drops/dragon-rhythm-v1/index.html">▶ Play Fullscreen</a>
+        </div>
+      </article>
+    </div>
+
+    <h2 class="section-title">🐉 Dragon Portraits</h2>
     <section class="grid">
       <article class="card">
         <img src="../team/avatars/generated/water-dragon.png" alt="Water Dragon preview">

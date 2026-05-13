@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Dragon Rhythm — The Dragon Crew</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0e14;
+      --lane: rgba(98,182,203,0.07);
+      --hit: #62b6cb;
+      --perfect: #ff9f5a;
+      --good: #3f88c5;
+      --miss: #ff4a4a;
+      --text: #eef7fb;
+      --muted: #8ea4b0;
+      --combo-gold: #ffcc33;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'Avenir Next', system-ui, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: radial-gradient(ellipse at 50% 60%, rgba(98,182,203,0.04), transparent 70%);
+    }
+    #header {
+      width: 100%;
+      padding: 10px 20px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 10;
+      background: linear-gradient(180deg, rgba(10,14,20,0.96), transparent);
+    }
+    #title {
+      font-size: clamp(0.9rem, 2vw, 1.3rem);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--hit);
+      text-shadow: 0 0 12px rgba(98,182,203,0.25);
+    }
+    #stats { display: flex; gap: 16px; font-size: clamp(0.8rem, 1.5vw, 1rem); }
+    .stat { text-align: right; }
+    .stat-label { font-size: 0.6em; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .stat-value { font-size: 1.3em; font-weight: 700; }
+    #combo { color: var(--combo-gold); }
+    #score { color: var(--text); }
+    #streak { color: var(--hit); }
+
+    #lane-wrapper {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    #lanes {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .lane {
+      flex: 1;
+      border-left: 1px solid rgba(98,182,203,0.06);
+      position: relative;
+      transition: background 0.1s;
+    }
+    .lane:first-child { border-left: none; }
+
+    #hit-zone {
+      position: absolute;
+      bottom: 18%;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: linear-gradient(180deg, transparent, rgba(98,182,203,0.04) 30%, rgba(98,182,203,0.04) 70%, transparent);
+      border-top: 2px solid rgba(98,182,203,0.15);
+      border-bottom: 2px solid rgba(98,182,203,0.15);
+      pointer-events: none; z-index: 2;
+      transition: background 0.1s;
+    }
+    #hit-line {
+      position: absolute;
+      bottom: 18%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--hit);
+      box-shadow: 0 0 10px var(--hit);
+      pointer-events: none; z-index: 3;
+      transition: box-shadow 0.1s;
+    }
+    #hit-line.flash-perfect { box-shadow: 0 0 24px var(--perfect), 0 0 60px rgba(255,159,90,0.3); }
+    #hit-line.flash-good { box-shadow: 0 0 16px var(--good); }
+
+    .note {
+      position: absolute;
+      width: 80%;
+      left: 10%;
+      height: 28px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.1s, background 0.05s;
+    }
+    .note.visible { opacity: 0.9; }
+    .note.perfect-hit { background: var(--perfect); box-shadow: 0 0 10px var(--perfect); opacity: 0.9; }
+    .note.good-hit { background: var(--good); box-shadow: 0 0 6px var(--good); opacity: 0.85; }
+    .note.missed {
+      background: var(--miss);
+      opacity: 0.6;
+      transform: scaleX(0.2);
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      background: rgba(10,14,20,0.88);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.35s;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    #overlay h2 {
+      font-size: clamp(1.5rem, 5vw, 2.8rem);
+      margin-bottom: 6px;
+      color: var(--hit);
+      text-shadow: 0 0 30px rgba(98,182,203,0.25);
+    }
+    #overlay p {
+      color: var(--muted);
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      max-width: 480px;
+      margin: 6px 0 14px;
+      line-height: 1.5;
+    }
+    #overlay .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 10px 0;
+      max-width: 360px;
+      width: 100%;
+    }
+    #overlay .key-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      padding: 5px;
+      border-radius: 6px;
+      border: 1px solid rgba(98,182,203,0.1);
+    }
+    #overlay .key-label strong { color: var(--text); font-size: 1.1em; }
+    .btn {
+      background: rgba(98,182,203,0.12);
+      border: 1px solid var(--hit);
+      color: var(--text);
+      padding: 10px 28px;
+      border-radius: 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-top: 8px;
+    }
+    .btn:hover { background: rgba(98,182,203,0.25); box-shadow: 0 0 16px rgba(98,182,203,0.15); }
+    .btn.primary { background: var(--hit); color: #0a0e14; border-color: var(--hit); }
+    .btn.primary:hover { box-shadow: 0 0 28px rgba(98,182,203,0.35); }
+
+    #results {
+      margin: 12px 0 0;
+      font-size: 0.95rem;
+      color: var(--text);
+      display: none;
+    }
+    #results.show { display: block; }
+    #results .rstat { display: inline-block; margin: 0 8px; }
+    #results .rstat span { color: var(--hit); font-weight: 700; }
+
+    #bpm-display {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: rgba(98,182,203,0.04);
+      letter-spacing: 0.15em;
+      pointer-events: none; z-index: 0;
+    }
+
+    #dragon-corner {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+      opacity: 0.05;
+      pointer-events: none; z-index: 0;
+    }
+    #dragon-corner svg { width: 100%; height: 100%; }
+
+    #touch-controls {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 8px 6px;
+      gap: 4px;
+      z-index: 15;
+    }
+    .touch-btn {
+      flex: 1;
+      height: 48px;
+      border: 1px solid rgba(98,182,203,0.18);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 600;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .touch-btn:active { background: rgba(98,182,203,0.18); }
+
+    @media (pointer: coarse) { #touch-controls { display: flex; } .note { height: 34px; } }
+    @media (max-width: 480px) { #header { padding: 6px 10px 4px; } #stats { gap: 8px; } #hit-zone { bottom: 10%; height: 60px; } #hit-line { bottom: 10%; } }
+  </style>
+</head>
+<body>
+<div id="game-container">
+  <div id="header">
+    <div id="title">✦ Dragon Rhythm</div>
+    <div id="stats">
+      <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+      <div class="stat"><div class="stat-label">Combo</div><div class="stat-value" id="combo">0x</div></div>
+      <div class="stat"><div class="stat-label">Peak</div><div class="stat-value" id="streak">0</div></div>
+    </div>
+  </div>
+
+  <div id="lane-wrapper">
+    <div id="lanes"></div>
+    <div id="hit-zone"></div>
+    <div id="hit-line"></div>
+    <div id="bpm-display">♩=120</div>
+    <div id="dragon-corner">
+      <svg viewBox="0 0 100 100">
+        <path d="M80 90 Q60 70 70 50 Q80 30 60 20 Q50 10 40 25 Q30 40 45 50 Q55 55 50 65 Q45 75 30 70 Q20 65 25 55 Q30 45 20 35 Q15 25 25 15 Q35 5 45 10" stroke="#62b6cb" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="35" cy="12" r="2" fill="#62b6cb" opacity="0.5"/>
+        <circle cx="50" cy="20" r="3" fill="#ff9f5a" opacity="0.4"/>
+      </svg>
+    </div>
+
+    <div id="overlay">
+      <h2>Dragon Rhythm</h2>
+      <p>Press the correct key when each note reaches the hit zone. Keep the beat — let the dragon sing.</p>
+      <div class="controls">
+        <div class="key-label"><strong>A</strong><br>C4</div>
+        <div class="key-label"><strong>S</strong><br>D4</div>
+        <div class="key-label"><strong>D</strong><br>E4</div>
+        <div class="key-label"><strong>F</strong><br>F4</div>
+        <div class="key-label"><strong>J</strong><br>G4</div>
+        <div class="key-label"><strong>K</strong><br>A4</div>
+        <div class="key-label"><strong>L</strong><br>B4</div>
+        <div class="key-label"><strong>;</strong><br>C5</div>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);">Or tap buttons on mobile.</p>
+      <div id="results">
+        <div class="rstat">Notes: <span id="r-notes">0</span></div>
+        <div class="rstat">Hit%: <span id="r-hitpct">—</span></div>
+        <div class="rstat">Peak: <span id="r-peak">0</span></div>
+      </div>
+      <button class="btn primary" id="start-btn">▶ Start Game</button>
+    </div>
+  </div>
+  <div id="touch-controls"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ─── Audio Engine ───
+  let audioCtx = null;
+  const noteDefs = [
+    { freq: 261.63, wave: 'sine',      gain: 0.26 },  // C4
+    { freq: 293.66, wave: 'triangle',  gain: 0.21 },  // D4
+    { freq: 329.63, wave: 'sawtooth',  gain: 0.16 },  // E4
+    { freq: 349.23, wave: 'sine',      gain: 0.28 },  // F4
+    { freq: 392.00, wave: 'triangle',  gain: 0.22 },  // G4
+    { freq: 440.00, wave: 'sawtooth',  gain: 0.18 },  // A4
+    { freq: 493.88, wave: 'sine',      gain: 0.26 },  // B4
+    { freq: 523.25, wave: 'square',    gain: 0.12 },  // C5
+  ];
+
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playNote(idx, volMul) {
+    if (!audioCtx) return;
+    const ndef = noteDefs[idx];
+    if (!ndef) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = ndef.wave;
+    osc.frequency.value = ndef.freq;
+    const v = (ndef.gain || 0.22) * (volMul || 1);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(v, now + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.40);
+  }
+
+  // ─── Game State ───
+  const LANE_COUNT = 8;
+  let gameRunning = false;
+  let sessionActive = false;
+  let score = 0;
+  let combo = 0;
+  let maxStreak = 0;
+  let totalNotes = 0;
+  let hitCount = 0;
+  let missCount = 0;
+  let beatInterval = null;
+  let gameLoopId = null;
+  let bpm = 120;
+  let difficulty = 1;
+  let noteIdCounter = 0;
+  let activeNotes = new Map();
+
+  const KEY_LANE = {
+    'a': 0, 's': 1, 'd': 2, 'f': 3,
+    'j': 4, 'k': 5, 'l': 6, ';': 7,
+  };
+  const TOUCH_LABELS = ['A','S','D','F','J','K','L',';'];
+
+  // ─── DOM ───
+  const lanesEl = document.getElementById('lanes');
+  const hitLine = document.getElementById('hit-line');
+  const hitZone = document.getElementById('hit-zone');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('start-btn');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const streakEl = document.getElementById('streak');
+  const bpmDisplay = document.getElementById('bpm-display');
+  const touchControls = document.getElementById('touch-controls');
+  const resultsEl = document.getElementById('results');
+  const rNotes = document.getElementById('r-notes');
+  const rHitPct = document.getElementById('r-hitpct');
+  const rPeak = document.getElementById('r-peak');
+  const titleEl = document.getElementById('title');
+
+  // ─── Init lanes ───
+  function initLanes() {
+    lanesEl.innerHTML = '';
+    for (let i = 0; i < LANE_COUNT; i++) {
+      const lane = document.createElement('div');
+      lane.className = 'lane';
+      lane.dataset.idx = i;
+      lanesEl.appendChild(lane);
+    }
+  }
+  initLanes();
+
+  // ─── Touch controls ───
+  function initTouchControls() {
+    touchControls.innerHTML = '';
+    for (let i = 0; i < LANE_COUNT; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'touch-btn';
+      btn.textContent = TOUCH_LABELS[i];
+      btn.dataset.lane = i;
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (gameRunning) hitLane(i);
+      });
+      touchControls.appendChild(btn);
+    }
+  }
+  initTouchControls();
+
+  // ─── Note creation ───
+  function createNote(laneIdx) {
+    const lane = document.querySelector(`.lane[data-idx="${laneIdx}"]`);
+    if (!lane) return null;
+    const el = document.createElement('div');
+    el.className = 'note';
+    el.dataset.lane = laneIdx;
+    const id = ++noteIdCounter;
+    el.dataset.id = id;
+
+    const wrapper = document.getElementById('lane-wrapper');
+    const bbox = wrapper.getBoundingClientRect();
+    // Scroll speed depends on bpm, ~2px per frame at 120bpm
+    const spd = 2.0 * (bpm / 120) * (0.9 + Math.random() * 0.2);
+    el.dataset.speed = spd.toFixed(4);
+
+    lane.appendChild(el);
+    el.style.top = '-30px';
+
+    requestAnimationFrame(() => { el.classList.add('visible'); });
+
+    activeNotes.set(id, { el, lane: laneIdx, id, hit: false });
+    return id;
+  }
+
+  function removeNote(id, style) {
+    const note = activeNotes.get(id);
+    if (!note) return;
+    note.hit = true;
+    if (style && note.el) {
+      note.el.classList.remove('visible');
+      note.el.classList.add(style);
+    }
+    activeNotes.delete(id);
+    const el = note.el;
+    if (el && el.isConnected) {
+      setTimeout(() => { if (el.isConnected) el.remove(); }, style === 'missed' ? 200 : 150);
+    }
+  }
+
+  function missNote(id) {
+    const note = activeNotes.get(id);
+    if (!note || note.hit) return;
+    note.hit = true;
+    combo = 0;
+    missCount++;
+    updateDisplay();
+    removeNote(id, 'missed');
+    spawnParticles(note.el, '#ff4a4a', 5);
+    // Flash miss on hit line
+    hitZone.style.background = 'linear-gradient(180deg, transparent, rgba(255,74,74,0.1) 30%, rgba(255,74,74,0.1) 70%, transparent)';
+    setTimeout(() => { hitZone.style.background = ''; }, 100);
+  }
+
+  // ─── Hit detection ───
+  function hitLane(laneIdx) {
+    if (!gameRunning) return;
+
+    const lane = document.querySelector(`.lane[data-idx="${laneIdx}"]`);
+    if (!lane) return;
+
+    const hitY = hitLine.getBoundingClientRect().top + hitLine.getBoundingClientRect().height / 2;
+    let closest = null;
+    let closestDist = Infinity;
+
+    for (const [id, note] of activeNotes) {
+      if (note.hit || note.lane !== laneIdx) continue;
+      const rect = note.el.getBoundingClientRect();
+      const noteY = rect.top + rect.height / 2;
+      const dist = Math.abs(noteY - hitY);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = { id, note };
+      }
+    }
+
+    if (!closest || closestDist > 200) return;
+
+    let timing = null;
+    let points = 0;
+    let mul = 1;
+    if (closestDist < 20) {
+      timing = 'perfect';
+      points = 100;
+      mul = 1 + (combo + 1) * 0.1;
+    } else if (closestDist < 50) {
+      timing = 'good';
+      points = 60;
+      mul = 1 + (combo + 1) * 0.06;
+    } else {
+      timing = 'ok';
+      points = 25;
+      mul = 1;
+    }
+
+    const finalPoints = Math.round(points * Math.min(mul, 3.5));
+    score += finalPoints;
+    combo++;
+    if (combo > maxStreak) maxStreak = combo;
+    hitCount++;
+    totalNotes++;
+
+    updateDisplay();
+
+    // Play note with combo volume boost
+    playNote(laneIdx, 0.8 + combo * 0.015);
+
+    // Visual feedback
+    if (timing === 'perfect') {
+      hitLine.classList.add('flash-perfect');
+      hitZone.style.background = 'linear-gradient(180deg, transparent, rgba(255,159,90,0.18) 30%, rgba(255,159,90,0.18) 70%, transparent)';
+      lane.style.background = 'rgba(255,159,90,0.1)';
+      spawnParticles(closest.note.el, '#ff9f5a', 12);
+    } else if (timing === 'good') {
+      hitLine.classList.add('flash-good');
+      hitZone.style.background = 'linear-gradient(180deg, transparent, rgba(98,182,203,0.12) 30%, rgba(98,182,203,0.12) 70%, transparent)';
+      lane.style.background = 'rgba(98,182,203,0.08)';
+      spawnParticles(closest.note.el, '#62b6cb', 6);
+    } else {
+      hitZone.style.background = 'linear-gradient(180deg, transparent, rgba(98,182,203,0.06) 30%, rgba(98,182,203,0.06) 70%, transparent)';
+      lane.style.background = 'rgba(98,182,203,0.04)';
+      spawnParticles(closest.note.el, '#8ea4b0', 3);
+    }
+    setTimeout(() => {
+      hitLine.classList.remove('flash-perfect', 'flash-good');
+      hitZone.style.background = '';
+      lane.style.background = '';
+    }, 120);
+
+    removeNote(closest.id, timing === 'perfect' ? 'perfect-hit' : timing === 'good' ? 'good-hit' : null);
+  }
+
+  // ─── Particles ───
+  function spawnParticles(el, color, count) {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const container = document.getElementById('game-container');
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 3 + Math.random() * 5;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.background = color;
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.opacity = '1';
+      p.style.borderRadius = '50%';
+      container.appendChild(p);
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 50 + Math.random() * 80;
+      const dx = Math.cos(angle) * spd;
+      const dy = Math.sin(angle) * spd;
+      let frame = 0;
+      const anim = () => {
+        frame++;
+        p.style.transform = `translate(${dx * frame * 0.015}px, ${dy * frame * 0.015}px)`;
+        p.style.opacity = Math.max(0, 1 - frame * 0.033);
+        if (frame > 30) { if (p.isConnected) p.remove(); return; }
+        requestAnimationFrame(anim);
+      };
+      requestAnimationFrame(anim);
+    }
+  }
+
+  // ─── Display ───
+  function updateDisplay() {
+    scoreEl.textContent = score;
+    comboEl.textContent = combo + 'x';
+    streakEl.textContent = maxStreak;
+  }
+
+  // ─── Game Loop ───
+  function gameLoop() {
+    if (!gameRunning) return;
+
+    const hitY = hitLine.getBoundingClientRect().top + hitLine.getBoundingClientRect().height / 2;
+
+    for (const [id, note] of activeNotes) {
+      if (note.hit) continue;
+      const speed = parseFloat(note.el.dataset.speed) || 2.0;
+      const top = note.el.offsetTop + speed;
+      note.el.style.top = top + 'px';
+
+      // Check miss
+      const rect = note.el.getBoundingClientRect();
+      const noteY = rect.top + rect.height / 2;
+      if (noteY > hitY + 120) {
+        missNote(id);
+      }
+    }
+
+    gameLoopId = requestAnimationFrame(gameLoop);
+  }
+
+  // ─── Beat Spawning ───
+  function startBeatSpawning() {
+    const beatMs = 60000 / bpm;
+    let beatCount = 0;
+
+    function spawnBeat() {
+      if (!gameRunning) return;
+      beatCount++;
+      const count = 1 + (beatCount % 3 === 0 ? 1 : 0);
+      // Gradually increase difficulty
+      if (beatCount > 16) difficulty = 2;
+      if (beatCount > 40) difficulty = 3;
+      for (let i = 0; i < count; i++) {
+        const laneIdx = Math.floor(Math.random() * LANE_COUNT);
+        createNote(laneIdx);
+      }
+      beatInterval = setTimeout(spawnBeat, beatMs + (Math.random() - 0.5) * 30);
+    }
+    spawnBeat();
+  }
+
+  // ─── Show Results ───
+  function showResults() {
+    gameRunning = false;
+    sessionActive = false;
+    if (beatInterval) clearTimeout(beatInterval);
+    if (gameLoopId) cancelAnimationFrame(gameLoopId);
+    overlay.classList.remove('hidden');
+    startBtn.textContent = '▶ Play Again';
+    const hitPct = totalNotes > 0 ? Math.round(hitCount / totalNotes * 100) : 0;
+    rNotes.textContent = totalNotes;
+    rHitPct.textContent = hitPct + '%';
+    rPeak.textContent = maxStreak;
+    resultsEl.classList.add('show');
+    const pct = hitPct;
+    titleEl.textContent = pct >= 90 ? '✦ Dragon Rhythm — Legendary!' : pct >= 70 ? '✦ Dragon Rhythm — Great!' : '✦ Dragon Rhythm';
+  }
+
+  // ─── End game after a duration ───
+  let endTimer = null;
+
+  function scheduleEnd() {
+    if (endTimer) clearTimeout(endTimer);
+    endTimer = setTimeout(() => {
+      if (gameRunning) showResults();
+    }, 30000); // 30 second session
+  }
+
+  // ─── Start ───
+  function startGame() {
+    ensureAudio();
+    score = 0;
+    combo = 0;
+    maxStreak = 0;
+    totalNotes = 0;
+    hitCount = 0;
+    missCount = 0;
+    difficulty = 1;
+    gameRunning = true;
+    sessionActive = true;
+
+    // Clean
+    document.querySelectorAll('.note').forEach(n => n.remove());
+    document.querySelectorAll('.particle').forEach(p => p.remove());
+    activeNotes = new Map();
+
+    overlay.classList.add('hidden');
+    resultsEl.classList.remove('show');
+    updateDisplay();
+
+    startBeatSpawning();
+    gameLoop();
+    scheduleEnd();
+  }
+
+  function stopGame() {
+    gameRunning = false;
+    sessionActive = false;
+    if (beatInterval) clearTimeout(beatInterval);
+    if (gameLoopId) cancelAnimationFrame(gameLoopId);
+  }
+
+  // ─── Keyboard ───
+  document.addEventListener('keydown', function(e) {
+    const key = e.key.toLowerCase();
+    if (key === 'a' || key === 's' || key === 'd' || key === 'f' ||
+        key === 'j' || key === 'k' || key === 'l' || key === ';' ||
+        key === 'enter' || key === ' ') {
+      e.preventDefault();
+    }
+    if (key in KEY_LANE && gameRunning) {
+      hitLane(KEY_LANE[key]);
+    }
+    if ((key === 'enter' || key === ' ') && !gameRunning && overlay.classList.contains('hidden') === false) {
+      startGame();
+    }
+  });
+
+  // ─── Start button ───
+  startBtn.addEventListener('click', function() {
+    if (gameRunning) {
+      showResults();
+    } else {
+      startGame();
+    }
+  });
+
+  console.log('Dragon Rhythm loaded. Press Start to play!');
+})();
+</script>
+</body>
+</html>
