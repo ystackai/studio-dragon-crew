@@ -11,23 +11,27 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
 #overlay{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,10,18,0.94);transition:opacity .9s}
 #overlay.hidden{opacity:0;pointer-events:none}
 #overlay h1{font-size:clamp(1.8rem,4.5vw,3.4rem);font-weight:200;letter-spacing:.1em;background:linear-gradient(135deg,#f0d0b0,#72b6cb,#c8a8e0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-#overlay p{color:rgba(234,226,218,.5);font-size:.88rem;max-width:360px;text-align:center;line-height:1.55;margin-bottom:20px}
+#overlay p{color:rgba(234,226,218,.5);font-size:.88rem;max-width:400px;text-align:center;line-height:1.55;margin-bottom:20px}
 #start-btn{padding:14px 38px;border:1px solid rgba(234,226,218,.18);border-radius:28px;background:rgba(234,226,218,.06);color:#eae2da;font-size:1rem;cursor:pointer;transition:all .3s}
 #start-btn:hover{background:rgba(234,226,218,.14);border-color:rgba(234,226,218,.35)}
 #hud{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;pointer-events:none}
 .dtag{font-size:.65rem;padding:3px 10px;border-radius:14px;border:1px solid rgba(234,226,218,.08);background:rgba(8,10,18,.6);opacity:.45;transition:all .4s}
 .dtag.active{opacity:1;border-color:rgba(234,226,218,.28);box-shadow:0 0 8px rgba(234,226,218,.12)}
+.dtag.lit{opacity:1;border-color:#f0d0b0;box-shadow:0 0 16px rgba(240,208,176,.3)}
 #info{position:fixed;top:10px;right:12px;z-index:5;font-size:.62rem;color:rgba(234,226,218,.28);text-align:right;line-height:1.5;pointer-events:none}
 #msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:8;font-size:1.3rem;color:#eae2da;opacity:0;transition:opacity 1.2s;pointer-events:none;text-shadow:0 0 28px rgba(234,226,218,.3)}
 #msg.show{opacity:1}
 #breath-ring{position:fixed;pointer-events:none;border:1px solid rgba(234,226,218,.15);border-radius:50%;background:transparent;transition:opacity .3s;z-index:3}
+#bloom-overlay{position:fixed;inset:0;pointer-events:none;z-index:2;background:transparent;transition:background 1.5s}
+@media (prefers-reduced-motion:reduce){.dtag,#overlay,#msg{transition:none}.dtag.active{opacity:1}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="bloom-overlay"></div>
 <div id="overlay">
   <h1>✦ Dragon Sanctuary ✦</h1>
-  <p>Six elemental dragons drift through a magical realm. Click a dragon to hear its song. Drag to stir the breeze and redirect its drift. Hold to deepen the breath and bloom the sanctuary.</p>
+  <p>Six elemental dragons drift through a magical realm. Click a dragon to hear its song. Drag to stir the breeze and redirect its drift. Hold to deepen the breath and bloom the sanctuary. Keyboard shortcuts: keys 1–6.</p>
   <button id="start-btn">Enter the Sanctuary</button>
 </div>
 <div id="hud"></div>
@@ -36,6 +40,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
 <div id="breath-ring"></div>
 <script>
 "use strict";
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Dragon Sanctuary – The Dragon Crew
+// WebGL2 interactive experience with 6 elemental dragons
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // ─── DRAGON DEFINITIONS ───
 const DRAGONS = [
@@ -88,7 +96,6 @@ void main(){
   float glow=exp(-d*5.)*uL*.35;
   col+=uG*glow;
   col+=vec3(1)*exp(-d*8.)*uL*.08;
-  // Pulse ring
   float ring=abs(0.35-length(vT-0.5));
   col+=uG*smoothstep(.03,.0,ring)*uL*.25;
   float edge=a*(1.-abs(vT.x-.5)*3.);
@@ -140,7 +147,7 @@ function circle(n){
 }
 const CIRC=circle(36);
 
-// ─── BACKGROUND SHADER (full-screen quad for nebula) ───
+// ─── BACKGROUND SHADER ───
 const BGV=`#version 300 es
 layout(location=0)in vec2 P;
 out vec2 vU;
@@ -150,17 +157,15 @@ const BGF=`#version 300 es
 precision highp float;
 in vec2 vU;uniform float uT,uD;
 out vec4 oF;
-vec2 hash2(float t){return vec2(frac(sin(t)*43758.5),frac(cos(t)*42758.5));}
-float n2(vec2 p,float t){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=frac(sin(dot(i,vec2(127.1,311.7))+t)*43758.5);float b=frac(sin(dot(i+vec2(1,0),vec2(127.1,311.7))+t)*43758.5);float c=frac(sin(dot(i+vec2(0,1),vec2(127.1,311.7))+t)*43758.5);float d=frac(sin(dot(i+vec2(1,1),vec2(127.1,311.7))+t)*43758.5);return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}
+float n2(vec2 p,float t){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=fract(sin(dot(i,vec2(127.1,311.7))+t)*43758.5);float b=fract(sin(dot(i+vec2(1,0),vec2(127.1,311.7))+t)*43758.5);float c=fract(sin(dot(i+vec2(0,1),vec2(127.1,311.7))+t)*43758.5);float d=fract(sin(dot(i+vec2(1,1),vec2(127.1,311.7))+t)*43758.5);return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}
 void main(){
   vec2 uv=vU*.8;float t=uT*.06;
   float n1=n2(uv*2.1,t);float n2=n2(uv*3.2+1.2,t*1.1);
   vec3 col=mix(vec3(.02,.03,.05),vec3(.06,.04,.1),n1);
   col=mix(col,vec3(.15,.06,.02),n2*.3);
-  // Starfield
   float stars=0.;
   for(int i=0;i<3;i++){
-    vec2 sp=vec2(frac(sin(float(i)*37.7+12.9)*43758.5),frac(sin(float(i)*73.1+47.3)*43758.5));
+    vec2 sp=vec2(fract(sin(float(i)*37.7+12.9)*43758.5),fract(sin(float(i)*73.1+47.3)*43758.5));
     vec2 sv=uv*8.+sp;float sd=length(sv);
     stars+=exp(-sd*80.);
   }
@@ -169,11 +174,10 @@ void main(){
   col*=vig;
   oF=vec4(col,1);
 }`;
-
 const bgProg=link(BGV,BGF);
 const uBgT=gl.getUniformLocation(bgProg,'uT'),uBgD=gl.getUniformLocation(bgProg,'uD');
 
-// Full-screen quad geometry
+// Full-screen quad
 const fsq=new Float32Array([-1,-1,1,-1,-1,1,1,1]);
 const fsqBuf=gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER,fsqBuf);
@@ -202,7 +206,7 @@ class D{
     this.sz=.16+Math.random()*.04;
     this.ph=Math.random()*6.28;this.sp=.1+Math.random()*.08;
     this.b=0;this.gi=0;this.ang=0;this.pu=0;
-    this.dragged=false;
+    this.dragged=false;this.lastHit=0;
   }
   up(t){
     if(!this.dragged){
@@ -213,7 +217,8 @@ class D{
     if(this.b>0){this.b-=.012;this.gi=this.b;}else this.gi*=.95;
     this.ang+=.003;this.pu=.5+Math.sin(t*2+this.ph)*.5;
   }
-  hit(ar){this.b=1;this.gi=1;ps.emit(this.x*ar,this.y,this.c,20);}
+  hit(ar){this.b=1;this.gi=1;this.lastHit=t;ps.emit(this.x*ar,this.y,this.c,20);}
+  getActivity(){return Date.now()-this.lastHit*1000<3000?this.gi:0;}
 }
 const dragons=DRAGONS.map((d,i)=>new D(d,i));
 const ps=new PS();
@@ -223,6 +228,7 @@ const msg=document.getElementById('msg'),fps=document.getElementById('fps-label'
 const breathLabel=document.getElementById('breath-label');
 const hud=document.getElementById('hud');
 const breathRing=document.getElementById('breath-ring');
+const bloomEl=document.getElementById('bloom-overlay');
 
 // HUD
 for(const d of DRAGONS){
@@ -246,7 +252,7 @@ btn.addEventListener('click',()=>{
 
 // ─── INTERACTION ───
 let dragDragon=null,dragActive=false,holdTime=0;
-let mouseX=0,mouseY=0,prevMouseX=0,prevMouseY=0;
+let mouseX=0,mouseY=0;
 
 canvas.addEventListener('pointerdown',e=>{
   if(!started)return;
@@ -269,6 +275,8 @@ canvas.addEventListener('pointerdown',e=>{
     close.hit(a);
     playNote(audio,close.f);
     showMsg(close.n+' awakens ✦');
+    updateBloom();
+    updateHUD();
   }
 });
 
@@ -284,20 +292,13 @@ canvas.addEventListener('pointermove',e=>{
     dragDragon.x=cx;
     dragDragon.y=cy;
     holdTime+=.016;
-    // Building breath
     if(holdTime>2){
       dragDragon.b=Math.min(1,dragDragon.b+.015);
       dragDragon.gi=dragDragon.b;
       ps.emit(dragDragon.x*a,dragDragon.y,dragDragon.c,2);
       breathLabel.textContent='Breath: '+Math.round(dragDragon.b*100)+'%';
-      // Update HUD active
-      document.querySelectorAll('.dtag').forEach(el=>el.classList.remove('active'));
-      document.getElementById('t-'+dragDragon.id)?.classList.add('active');
     }
-    // Emit trail
-    if(Math.random()<.3){
-      ps.emit(dragDragon.x*a,dragDragon.y,dragDragon.c,2);
-    }
+    if(Math.random()<.3)ps.emit(dragDragon.x*a,dragDragon.y,dragDragon.c,2);
   }
 });
 
@@ -308,13 +309,13 @@ canvas.addEventListener('pointerup',e=>{
   document.querySelectorAll('.dtag').forEach(el=>el.classList.remove('active'));
   const msg=Math.round(dragDragon.b*100);
   if(msg>50)showMsg(dragDragon.n+' breathes deeply ('+msg+'%)');
-  dragDragon=null;
+  dragDragon=null;holdTime=0;
+  updateHUD();
 });
 
 canvas.addEventListener('pointerleave',()=>{
   if(dragDragon)dragDragon.dragged=false;
-  dragActive=false;
-  dragDragon=null;
+  dragActive=false;dragDragon=null;holdTime=0;
   document.querySelectorAll('.dtag').forEach(el=>el.classList.remove('active'));
 });
 
@@ -327,6 +328,8 @@ document.addEventListener('keydown',e=>{
       dragons[i].hit(canvas.width/canvas.height);
       playNote(audio,dragons[i].f);
       showMsg(dragons[i].n+' responds ✦');
+      updateBloom();
+      updateHUD();
     }
   }
 });
@@ -348,7 +351,6 @@ function initAudio(ctx){
     const g=ctx.createGain();g.gain.value=.03;
     o.connect(g);g.connect(wet);o.start();
   }
-  // Subtle LFO
   const lfo=ctx.createOscillator();lfo.type='sine';lfo.frequency.value=.15;
   const lfoG=ctx.createGain();lfoG.gain.value=.15;
   lfo.connect(lfoG);lfoG.connect(wet.gain);
@@ -374,32 +376,45 @@ function playNote(ctx,f){
 
 function showMsg(txt){msg.textContent=txt;msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),1400);}
 
+// ─── BLOOM EFFECT ───
+function updateBloom(){
+  // Count recently active dragons
+  let active=0;
+  for(const d of dragons)if(d.lastHit>t-5)active++;
+  if(active>=3){
+    bloomEl.style.background='radial-gradient(circle at 50% 50%, rgba(240,208,176,0.06), transparent 70%)';
+    setTimeout(()=>bloomEl.style.background='transparent',2000);
+  }
+}
+function updateHUD(){
+  document.querySelectorAll('.dtag').forEach(el=>el.classList.remove('active'));
+  if(dragDragon){
+    document.getElementById('t-'+dragDragon.id)?.classList.add('active');
+  }
+}
+
 // ─── RENDER ───
 let fr=0,ft=0,windPhase=0;
-
 function render(time){
   t=time/1000;resize();
   const ar=canvas.width/canvas.height;
 
-  // 1. Draw background nebula
+  // Background nebula
   gl.useProgram(bgProg);
   gl.uniform1f(uBgT,t);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
-  // 2. Draw sanctuary overlay
+  // Sanctuary render
   gl.useProgram(prog);
   gl.uniform1f(uT,t);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
-  // Wind
   windPhase+=.003;
   const wind={x:Math.sin(windPhase)*.4,y:Math.cos(windPhase*1.3)*.3};
 
-  // Update particles with wind
   ps.up(t,wind);
 
-  // Draw dragons
   for(const d of dragons){
     d.up(t);
     gl.uniform2f(uO,d.x,d.y);
@@ -409,7 +424,6 @@ function render(time){
     gl.drawElements(gl.TRIANGLES,CIRC,gl.UNSIGNED_SHORT,0);
   }
 
-  // Draw particles
   gl.uniform1f(uL,.55);
   gl.uniform3f(uG,.6,.8,1);
   for(const p of ps.p){
@@ -419,10 +433,8 @@ function render(time){
     gl.drawElements(gl.TRIANGLES,CIRC,gl.UNSIGNED_SHORT,0);
   }
 
-  // FPS
   fr++;
   if(t-ft>=1){fps.textContent='FPS: '+fr;fr=0;ft=t;}
-
   requestAnimationFrame(render);
 }
 requestAnimationFrame(render);
