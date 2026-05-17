@@ -2,7 +2,7 @@
 
 Self-contained browser experience. All visuals procedural (Canvas 2D) or reused from:
 
-- `../../../team/avatars/generated/*.png` — the six dragon portraits (Fire, Ice, Water, Snow, Sea, Lava).
+- `../../team/avatars/generated/*.png` — the six dragon portraits (Fire, Ice, Water, Snow, Sea, Lava).
 
 No external images, fonts, or paid services.
 

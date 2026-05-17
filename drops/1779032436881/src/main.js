@@ -309,8 +309,8 @@
     currentTrial = null;
     if (success && currentDragon) {
       if (currentDragon.id === 'lava' && !window.SanctuaryState.get().blessing) {
-        // ensure a blessing exists even if user clicked Claim without preview tap
-        const words = { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
+        // ensure a blessing exists even if user clicked Claim without preview tap; prefer latest ring choice
+        const words = (window._lavaChosen && window._lavaChosen.adj) ? window._lavaChosen : { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
         window.SanctuaryState.setBlessing(window.SanctuaryDragons.makeBlessing(words));
       }
       window.SanctuaryState.complete(currentDragon.id);
@@ -485,14 +485,14 @@
 
     // expose for debugging (remove in prod if wanted)
     window.SANCTUARY_DEBUG = { draw: drawSanctuary, openTrial, reset: resetAll };
-    console.log('%c[Sanctuary] The Dragon Crew: Sanctuary of the Six Lights ready. Slice 1 skeleton active.', 'color:#9aa8b8');
+    console.log('%c[Sanctuary] The Dragon Crew: Sanctuary of the Six Lights ready — all six trials complete.', 'color:#9aa8b8');
   }
 
   // ===== FINALE (rich with Lava blessing + 6 dragons) =====
   function openFinale() {
     const state = window.SanctuaryState.get();
     if (!state.blessing) {
-      const words = { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
+      const words = (window._lavaChosen && window._lavaChosen.adj) ? window._lavaChosen : { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
       const b = window.SanctuaryDragons.makeBlessing(words);
       window.SanctuaryState.setBlessing(b);
     }

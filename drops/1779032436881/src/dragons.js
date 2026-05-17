@@ -4,7 +4,7 @@
  * All dialogue, names, colors, portrait paths, trial hints.
  */
 (function (global) {
-  const PORTRAIT_ROOT = '../../../team/avatars/generated/';
+  const PORTRAIT_ROOT = '../../team/avatars/generated/';
 
   const DRAGONS = [
     {

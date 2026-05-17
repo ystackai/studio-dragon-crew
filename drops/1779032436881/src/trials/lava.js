@@ -16,6 +16,7 @@
       place: rings.place[0],
       vow: rings.vow[0]
     };
+    window._lavaChosen = { ...chosen };
 
     container.innerHTML = `
       <div style="text-align:center;">
@@ -45,6 +46,7 @@
       chosen[key] = arr[idx];
       document.getElementById(`ring-${key}`).textContent = chosen[key];
       document.getElementById('lava-preview').textContent = `${chosen.adj} ${chosen.place} ${chosen.vow}`;
+      window._lavaChosen = { ...chosen }; // for claim handler to use latest words
     }
 
     ['adj','place','vow'].forEach(k => {
@@ -61,9 +63,11 @@
     // auto-claim hint
     const claim = document.getElementById('trial-complete');
     if (claim) claim.style.display = 'inline-block';
-    // when user happy, they click Claim (wired in main)
-    // also allow double-click preview to auto-claim for speed
-    document.getElementById('lava-preview').addEventListener('click', () => {
+    // wire the Claim handler immediately so user can finish without tapping preview first
+    if (onCompleteRef) onCompleteRef();
+    // also allow click on preview to set blessing early + trigger claim path
+    const preview = document.getElementById('lava-preview');
+    if (preview) preview.addEventListener('click', () => {
       const b = window.SanctuaryDragons.makeBlessing(chosen);
       window.SanctuaryState.setBlessing(b);
       if (onCompleteRef) onCompleteRef();
