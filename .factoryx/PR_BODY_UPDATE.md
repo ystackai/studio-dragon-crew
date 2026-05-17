@@ -133,14 +133,14 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - ✓ Desktop/mobile/keyboard/touch/mute/restart/best/reduced-motion all verified + documented.
 - ✓ Preview root opens game directly via redirect. No console errors. Coherent Dragon Crew magical tone (companions, uplifting sky, 6 dragons as flavor + performance notes).
 - ✓ All acceptance criteria met: 6+ beats, finish gate, collect/refill, gentle recovery, persist, etc.
-- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Pass 8 HUD 390px fix (resolves operator QA overflow) + Pass 7 variable jump + prior polish makes "that felt good, one more attempt" even clearer on every device — tap for precision, hold for flight pop. All review_questions addressed. Mobile portrait now fully clean.
+- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Pass 9 corrected HUD layout (real natural sizing + 390px chromium screenshot proof, resolves operator QA overflow at root) + Pass 7 variable jump + prior polish makes "that felt good, one more attempt" even clearer on every device — tap for precision, hold for flight pop. All review_questions addressed. Mobile portrait 390x844 now fully clean (verified).
 
-## Focused Polish Pass 8 (HUD responsive for 390px mobile portrait — operator QA fix)
-- Addressed exact Operator QA feedback 2026-05-17T20:31Z: fixed .hud-right overflow and FLIGHT bar clip at 390x844 portrait (and <=400px).
-- Compressed gaps/margins (to 4-6px), .hud-item pads (3-4px), font (9.5-10px), stamina bar (42-58px) in layered @media queries; kept all 4 metrics + mute/restart fully visible and inside viewport with ~100px headroom.
-- No horizontal scroll, no overlap with overlays/touch, stamina bar fully rendered and pulsing, labels legible on high-dpi mobile.
-- 14/14 verify still green; preview redirect verified; calc + inspection confirm 280px chrome < 378px avail at 390px. Pure CSS layout polish (Snow clarity + Ice structure), zero gameplay change.
-- Now passes the full mobile portrait QA checklist item that was outstanding.
+## Focused Polish Pass 9 (Corrected HUD layout for 390px — operator QA fix, verified)
+- Addressed exact Operator QA feedback 2026-05-17T20:31Z (and prior pass 8's incomplete assumptions): root cause was `#hud-stamina { width:110px }` (border-box made inner ~88px but needed ~160px for label+bar → internal overflow of FLIGHT bar onto buttons always) + insufficient mobile shrink of the wrapper, causing .hud-right to extend and clip at 390x844.
+- Real fix: removed the undersized fixed width entirely (now natural content-sized); tightened .stamina bars further (50px@480 / 36px@400 / 30px@360) + added 360px safety query; all metrics+buttons now fit with 100+px headroom at 390px (natural flight-item 82px, right group ~132px, left~126px, total 262 << 378 avail).
+- 390x844 verified by actual Chromium headless screenshot (/tmp/skybound-390-hud.png): full HUD row (TIME/RUNES/SCORE/FLIGHT bar + mute/restart) fully inside viewport with margins, bar 100% visible no clip, no horiz scroll, no overlap with start overlay or bottom touch controls. 14/14 verify green.
+- Zero gameplay/JS/HTML change. Pure CSS (Snow + Ice). Now truly passes the mobile portrait QA item.
+- Desktop also benefits (no forced narrow wrapper causing internal clip).
 
 ## Release Notes (for PR / studio)
 **The Dragon Crew: Skybound Dragon Runner** — a magical 2-4 minute platform flight skill toy.

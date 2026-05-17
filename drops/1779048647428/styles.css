@@ -76,7 +76,6 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); box-shadow: none; padding: 11px 24px; }
 .btn.row { display: inline-flex; gap: 10px; margin-top: 12px; }
 
-#hud-stamina { width: 110px; }
 #mute-btn { cursor: pointer; padding: 4px 10px; font-size: 12px; }
 #restart-btn { cursor: pointer; }
 
@@ -93,7 +92,7 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   .hud { gap: 6px; left: 8px; right: 8px; top: 8px; }
   .hud-left, .hud-right { gap: 6px; }
   .hud-item { font-size: 10px; padding: 4px 8px; gap: 4px; }
-  .stamina { width: 58px; height: 7px; }
+  .stamina { width: 50px; height: 7px; }
   .touch-btn { min-width: 64px; height: 52px; font-size: 12px; }
   .overlay-card { padding: 22px 20px; }
   #mute-btn, #restart-btn { padding: 2px 6px; font-size: 11px; }
@@ -102,8 +101,19 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   .hud { gap: 4px; left: 6px; right: 6px; top: 6px; }
   .hud-left, .hud-right { gap: 4px; }
   .hud-item { font-size: 9.5px; padding: 3px 6px; gap: 3px; letter-spacing: 0.01em; }
-  .stamina { width: 42px; height: 6px; }
+  .stamina { width: 36px; height: 6px; }
   #mute-btn, #restart-btn { padding: 1px 4px; font-size: 10px; }
   .hud-item .val { margin-left: 2px; font-size: 9.5px; }
   .hud-item { gap: 3px; }
+}
+/* Extra tight safety for 390px portrait (and smaller phones) per operator QA */
+@media (max-width: 360px) {
+  .hud { gap: 3px; left: 4px; right: 4px; top: 4px; }
+  .hud-left, .hud-right { gap: 3px; }
+  .hud-item { font-size: 9px; padding: 2px 4px; gap: 2px; letter-spacing: 0; }
+  .stamina { width: 30px; height: 5px; }
+  #mute-btn, #restart-btn { padding: 0 3px; font-size: 9px; }
+  .hud-item .val { margin-left: 1px; font-size: 9px; }
+  .touch-btn { min-width: 56px; height: 48px; font-size: 11px; }
+  .overlay-card { padding: 18px 16px; }
 }
