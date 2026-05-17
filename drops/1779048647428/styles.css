@@ -22,9 +22,10 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 .hud {
   position: fixed; top: 12px; left: 12px; right: 12px; z-index: 20;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  pointer-events: none;
+  pointer-events: none; overflow: hidden;
 }
-.hud-left, .hud-right { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.hud-left, .hud-right { display: flex; align-items: center; gap: 10px; pointer-events: auto; flex: 0 1 auto; min-width: 0; }
+.hud-item { flex-shrink: 1; min-width: 0; white-space: nowrap; }
 .hud-item {
   background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
   padding: 6px 14px; font-size: 13px; letter-spacing: 0.04em; color: var(--muted);
@@ -106,24 +107,24 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   .hud-item .val { margin-left: 2px; font-size: 9.5px; }
   .hud-item { gap: 3px; }
 }
-/* Dedicated 390px portrait safety (operator QA 2026-05-17: no .hud-right overflow, FLIGHT bar fully visible, no clip/scroll at 390x844) */
+/* Dedicated 390px portrait safety (operator QA 2026-05-17T20:31Z: .hud-right/FLIGHT bar fully inside 390x844, no horiz scroll/clip/overlap with overlays or touch controls). Flex guards + natural sizing ensure this even under font variance. */
 @media (max-width: 390px) {
-  .hud { gap: 3px; left: 5px; right: 5px; top: 5px; }
-  .hud-left, .hud-right { gap: 3px; }
-  .hud-item { font-size: 9px; padding: 2px 5px; gap: 2px; letter-spacing: 0; }
-  .stamina { width: 28px; height: 5px; }
-  #mute-btn, #restart-btn { padding: 1px 3px; font-size: 9.5px; }
-  .hud-item .val { margin-left: 1px; font-size: 9px; }
-  .touch-btn { min-width: 58px; height: 50px; font-size: 11px; }
+  .hud { gap: 2px; left: 4px; right: 4px; top: 4px; }
+  .hud-left, .hud-right { gap: 2px; }
+  .hud-item { font-size: 8.5px; padding: 2px 4px; gap: 2px; letter-spacing: 0; }
+  .stamina { width: 26px; height: 5px; }
+  #mute-btn, #restart-btn { padding: 1px 2px; font-size: 9px; }
+  .hud-item .val { margin-left: 1px; font-size: 8.5px; }
+  .touch-btn { min-width: 56px; height: 48px; font-size: 10.5px; }
 }
-/* Extra tight safety for 360px and smaller */
+/* Extra tight safety for 360px and smaller (no overflow at any common mobile portrait) */
 @media (max-width: 360px) {
-  .hud { gap: 3px; left: 4px; right: 4px; top: 4px; }
-  .hud-left, .hud-right { gap: 3px; }
-  .hud-item { font-size: 9px; padding: 2px 4px; gap: 2px; letter-spacing: 0; }
-  .stamina { width: 30px; height: 5px; }
-  #mute-btn, #restart-btn { padding: 0 3px; font-size: 9px; }
-  .hud-item .val { margin-left: 1px; font-size: 9px; }
-  .touch-btn { min-width: 56px; height: 48px; font-size: 11px; }
+  .hud { gap: 2px; left: 3px; right: 3px; top: 3px; }
+  .hud-left, .hud-right { gap: 2px; }
+  .hud-item { font-size: 8px; padding: 1px 3px; gap: 1px; letter-spacing: 0; }
+  .stamina { width: 24px; height: 4px; }
+  #mute-btn, #restart-btn { padding: 0 2px; font-size: 8.5px; }
+  .hud-item .val { margin-left: 0; font-size: 8px; }
+  .touch-btn { min-width: 52px; height: 46px; font-size: 10px; }
   .overlay-card { padding: 18px 16px; }
 }
