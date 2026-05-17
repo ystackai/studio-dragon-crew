@@ -14,6 +14,8 @@
   let scale = 1;
   let viewW = LOG_W;
   let viewH = LOG_H;
+  let offsetX = 0;
+  let offsetY = 0;
 
   // Game constants (tuned for feel)
   const RUN_SPEED = 172;
@@ -211,6 +213,8 @@
     canvas.width = viewW;
     canvas.height = viewH;
     scale = Math.min(viewW / LOG_W, viewH / LOG_H);
+    offsetX = (viewW - LOG_W * scale) / 2;
+    offsetY = (viewH - LOG_H * scale) / 2;
   }
   function checkReducedMotion() {
     const m = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -262,7 +266,8 @@
       if (gameState === 'start') { startRun(); return; }
       if (gameState === 'running') {
         const rect = canvas.getBoundingClientRect();
-        const tx = (e.touches[0].clientX - rect.left) / scale;
+        const screenX = (e.touches[0].clientX - rect.left) - offsetX;
+        const tx = screenX / scale;
         if (tx < LOG_W * 0.38) { touchState.jump = true; tryJump(); }
         else if (tx > LOG_W * 0.62) { touchState.dive = true; }
         else { touchState.fly = true; }
@@ -275,7 +280,8 @@
       if (gameState === 'start') startRun();
       else if (gameState === 'running' && e.button === 0) {
         const rect = canvas.getBoundingClientRect();
-        const mx = (e.clientX - rect.left) / scale;
+        const screenX = (e.clientX - rect.left) - offsetX;
+        const mx = screenX / scale;
         if (mx < LOG_W * 0.38) tryJump();
         else if (mx > LOG_W * 0.62) touchState.dive = true;
         else touchState.fly = true;
@@ -607,10 +613,8 @@
     ctx.save();
     ctx.clearRect(0, 0, viewW, viewH);
 
-    // Scale + letterbox
-    const ox = (viewW - LOG_W * scale) / 2;
-    const oy = (viewH - LOG_H * scale) / 2;
-    ctx.translate(ox, oy);
+    // Scale + letterbox (use precomputed for input parity too)
+    ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
 
     const camX = camera.x + (Math.random() - 0.5) * camera.shake * 0.6;
@@ -905,6 +909,12 @@
     resize();
     window.addEventListener('resize', resize);
 
+    // ?debug=1 enables collision/FPS overlay (per spec, keyboard D+Shift also works)
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('debug') === '1') debug = true;
+    } catch (e) {}
+
     setupInput();
 
     const muteBtn = document.getElementById('mute-btn');
@@ -937,7 +947,7 @@
     requestAnimationFrame(frame);
 
     // Keyboard hint once
-    console.log('%c[Skybound] R=restart • M=mute • D+Shift=debug • fully keyboard + touch playable', 'color:#5a7a8a');
+    console.log('%c[Skybound] R=restart • M=mute • D+Shift or ?debug=1=debug • fully keyboard + touch playable', 'color:#5a7a8a');
   }
 
   // Expose tiny API for manual verification if needed
