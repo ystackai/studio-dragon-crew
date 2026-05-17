@@ -110,6 +110,7 @@
   let jumpBuffered = 0;
   let coyote = 0;
   let wasFlying = false;
+  let jumpWasHeld = false;
   let inWindRing = false;
   let didDiveLift = false;
   let performanceNote = ''; // set on finish for magical end feedback (Lava)
@@ -366,6 +367,7 @@
     jumpBuffered = 0;
     coyote = 0;
     wasFlying = false;
+    jumpWasHeld = false;
     inWindRing = false;
     didDiveLift = false;
     performanceNote = '';
@@ -399,6 +401,7 @@
     const flyHeld = keys[' '] || keys['Spacebar'] || keys['Shift'] || keys['f'] || keys['F'] || touchState.fly;
     const diveHeld = keys['ArrowDown'] || keys['s'] || keys['S'] || touchState.dive;
     const wantJump = keys[' '] || keys['w'] || keys['W'] || keys['ArrowUp'] || jumpBuffered > 0;
+    const jumpHeld = !!(keys[' '] || keys['Spacebar'] || keys['w'] || keys['W'] || keys['ArrowUp'] || touchState.jump);
 
     // Horizontal run
     const targetVx = RUN_SPEED;
@@ -441,6 +444,13 @@
       }
       player.vy = Math.min(MAX_VY, player.vy + GRAVITY * gFactor * dt);
     }
+
+    // Variable jump (Ice-tuned feel): releasing the jump key while ascending produces a short hop.
+    // Tap = tighter lower arc for precise gaps; hold = full pop into flight or long jump. Expressive control, pairs with flight bursts.
+    if (!player.onGround && !isFlying && player.vy < -60 && jumpWasHeld && !jumpHeld) {
+      player.vy *= 0.52;
+    }
+    jumpWasHeld = jumpHeld;
 
     // Apply velocity
     player.x += player.vx * dt;
