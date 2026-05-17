@@ -98,6 +98,9 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 
 ## Polish in This Pass (used budget for core + feel + delivery)
 - Built full 6-beat course, physics (coyote/buffer/flight arcs/graceful release/dive-lift), particles, trails, dragon silhouette, audio, UI, persistence in one coherent slice.
+
+## Focused Polish Pass 6 (camera vertical bias for high arcs)
+- Added gentle, nausea-free vertical camera follow (slow 0.18 lerp, clamped) so that during expressive climbs (post wind-ring lift + finale thermals) the bright finish gate and upper golden-path platforms stay comfortably framed. Recovery damps cleanly. Purely visual/readability polish (Ice clarity + Water flow), zero behavior change. Still passes all 14/14 + full controls. Makes the "befriending the sky" moments even more uplifting to watch.
 - Tuned numbers for replayable feel (not punishing).
 - Preview redirect + verify script + WORKLOG/PR template updated.
 - Preserved every working prior studio element.

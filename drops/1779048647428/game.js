@@ -556,6 +556,7 @@
       player.stamina = Math.max(22, player.stamina - 12);
       if (!reducedMotion) camera.shake = 4;
       spawnDust(player.x + 8, 380, 6);
+      camera.y *= 0.5; // damp vertical bias cleanly after recovery
     }
     if (player.x < 40) player.x = 40;
 
@@ -573,9 +574,18 @@
       player.stamina = Math.min(STAMINA_MAX, player.stamina + STAMINA_REGEN * dt * 0.9);
     }
 
-    // Camera (smooth but responsive follow)
+    // Camera (smooth but responsive follow + gentle vertical bias for high flight moments)
     const targetX = Math.max(0, Math.min(LEVEL.length - 280, player.x - 205));
     camera.x = camera.x * 0.76 + targetX * 0.24;
+    // Subtle y follow: when runner climbs high (low y) on thermals/wind ring, ease camY up slowly so gate + upper platforms readable. No nausea, reduced-motion safe (still follows x fully).
+    let targetY = 0;
+    if (player.y < 235) {
+      targetY = (player.y - 235) * 0.65;
+    } else if (player.y > 410) {
+      targetY = (player.y - 410) * 0.25;
+    }
+    targetY = Math.max(-95, Math.min(45, targetY));
+    camera.y = camera.y * 0.82 + targetY * 0.18;
     if (camera.shake > 0) camera.shake *= 0.78;
 
     // Particles & ribbons
