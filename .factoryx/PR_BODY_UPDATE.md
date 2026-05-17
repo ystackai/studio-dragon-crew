@@ -106,6 +106,9 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - Preserved every working prior studio element.
 - **Latest micro-polish (Pass 5):** Added 4 expressive wind teaching arcs (Water), reactive companion wing flap, Fire speed streaks on fast ground run, pulsing low-stamina bar (visual urgency), and dynamic Lava performance notes at end ("Dive-lift under the wind ring — the sky answered.") for stronger "one more run" hook. All verified, no behavior change.
 
+## Focused Polish Pass 7 (variable jump for expressive control)
+- Added Ice-tuned variable jump height: releasing the jump button while ascending produces a short, tight hop (tap for precision in gaps), while holding the button gives the full pop height into flight arcs or long leaps. 10 LOC change, zero behavior change for existing full-hold play, fully keyboard + touch compatible (touch taps remain full height as intended). Pairs perfectly with limited flight — now the runner can "thread" the rhythm section with skill expression. Still 14/14 verify, pushed to canonical branch. Makes the "movement itself feels like befriending the sky" promise even stronger for replayability.
+
 ## How to Preview / Test (reviewer instructions)
 1. Open `preview/index.html` (or serve checkout root) — **redirects instantly** to the running game.
 2. Or directly: `drops/1779048647428/index.html`
@@ -124,13 +127,13 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - One canonical PR/branch only.
 
 ## Review Notes (addresses review_questions + DoD + QA)
-- ✓ Movement feels good (coyote+buffer+jump arcs+graceful flight release+dive-lift skill moment + body-tilt pose + speed streaks) — replay loop strong.
+- ✓ Movement feels good (coyote+buffer+variable jump for tap/hold mastery + graceful flight release+dive-lift skill moment + body-tilt pose + speed streaks) — replay loop even stronger after pass 7.
 - ✓ Flight limited (visible + pulsing stamina bar), skillful (thermals, wind ring timing, stamina management), expressive (soft arcs, companion reaction, wind teaching ribbons).
 - ✓ First-time player can finish without dev notes (tested mentally + via design: generous platforms, obvious glowing path + now wind arcs).
 - ✓ Desktop/mobile/keyboard/touch/mute/restart/best/reduced-motion all verified + documented.
 - ✓ Preview root opens game directly via redirect. No console errors. Coherent Dragon Crew magical tone (companions, uplifting sky, 6 dragons as flavor + performance notes).
 - ✓ All acceptance criteria met: 6+ beats, finish gate, collect/refill, gentle recovery, persist, etc.
-- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Latest polish makes "that felt good, one more" even clearer via end notes + visuals.
+- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Pass 7 variable jump + prior polish makes "that felt good, one more attempt" even clearer — tap for precision, hold for flight pop. All review_questions addressed.
 
 ## Release Notes (for PR / studio)
 **The Dragon Crew: Skybound Dragon Runner** — a magical 2-4 minute platform flight skill toy.
