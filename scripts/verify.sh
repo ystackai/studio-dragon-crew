@@ -51,8 +51,8 @@ check "grep -q 'reduced-motion\|prefers-reduced-motion' $DROP/game.js" "Reduced-
 # 10. Dragon blessings + end copy
 check "grep -q 'BLESSINGS\|Lava Dragon' $DROP/game.js" "Dragon Crew blessings (Lava style) at finish"
 
-# 11. Preview link integrity (will check after preview update)
-check "true" "Preview entry will be verified in next step"
+# 11. Preview link integrity + clean redirect to game (no marketing first screen)
+check "grep -q 'drops/1779048647428' preview/index.html && grep -q 'redirect' preview/index.html" "Preview root redirects cleanly to skybound game (fresh load = game)"
 
 # 12. Mobile meta + viewport
 check "grep -q 'viewport-fit=cover' $DROP/index.html" "Mobile viewport meta (no-scale + cover)"
