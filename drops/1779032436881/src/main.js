@@ -308,6 +308,11 @@
     trialCleanup = null;
     currentTrial = null;
     if (success && currentDragon) {
+      if (currentDragon.id === 'lava' && !window.SanctuaryState.get().blessing) {
+        // ensure a blessing exists even if user clicked Claim without preview tap
+        const words = { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
+        window.SanctuaryState.setBlessing(window.SanctuaryDragons.makeBlessing(words));
+      }
       window.SanctuaryState.complete(currentDragon.id);
       updateRunes();
       drawSanctuary();
