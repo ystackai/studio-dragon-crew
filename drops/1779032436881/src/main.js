@@ -209,6 +209,40 @@
       }
     }
 
+    // Environmental blessings (visual transformation)
+    const comp = (id) => window.SanctuaryState.isComplete(id);
+    // Water: gentle wave lines
+    if (comp('water')) {
+      ctx.strokeStyle = 'rgba(79,179,216,0.35)';
+      ctx.lineWidth = 1.2;
+      for (let k = 0; k < 3; k++) {
+        ctx.beginPath();
+        const wy = cy + 52 + k * 7;
+        ctx.moveTo(cx - scale * 0.7, wy);
+        for (let j = 0; j < 5; j++) {
+          ctx.quadraticCurveTo(cx - scale * 0.4 + j * 48, wy + Math.sin(time * 2 + j) * 2.5, cx - scale * 0.7 + (j + 1) * 48, wy);
+        }
+        ctx.stroke();
+      }
+    }
+    // Snow: soft falling dots
+    if (comp('snow') && !reducedMotion) {
+      ctx.fillStyle = 'rgba(224,232,242,0.4)';
+      for (let s = 0; s < 14; s++) {
+        const sx = ((s * 53 + time * 18) % (scale * 1.6)) + cx - scale * 0.8;
+        const sy = cy + 20 + ((s * 31 + time * 11) % (scale * 0.5));
+        ctx.fillRect(sx, sy, 1.6, 1.6);
+      }
+    }
+    // Fire: extra warm glow on loom
+    if (comp('fire')) {
+      const fg = ctx.createRadialGradient(cx, cy, 30, cx, cy, 92);
+      fg.addColorStop(0, 'rgba(255,140,66,0.08)');
+      fg.addColorStop(1, 'rgba(255,140,66,0)');
+      ctx.fillStyle = fg;
+      ctx.beginPath(); ctx.arc(cx, cy, 92, 0, Math.PI * 2); ctx.fill();
+    }
+
     ctx.restore();
   }
 
