@@ -112,6 +112,7 @@
   let wasFlying = false;
   let inWindRing = false;
   let didDiveLift = false;
+  let performanceNote = ''; // set on finish for magical end feedback (Lava)
 
   let particles = [];
   let ribbons = []; // flight trail points
@@ -325,7 +326,8 @@
     document.getElementById('end-score').textContent = String(finalScore).padStart(4, '0');
     document.getElementById('end-best').textContent = best.score > 0 ? String(best.score).padStart(4, '0') : '—';
     const bless = BLESSINGS[Math.floor(Math.random() * BLESSINGS.length)];
-    document.getElementById('end-blessing').textContent = bless;
+    const note = performanceNote || 'The sky remembers your wings.';
+    document.getElementById('end-blessing').textContent = bless + ' ' + note;
     document.getElementById('end-overlay').classList.add('active');
   }
   function hideEnd() { document.getElementById('end-overlay').classList.remove('active'); }
@@ -340,6 +342,7 @@
     runesCollected = 0;
     lastSafeX = LEVEL.startX;
     didDiveLift = false;
+    performanceNote = '';
     updateHUD();
   }
   function resetRun(keepPos = false) {
@@ -365,6 +368,7 @@
     wasFlying = false;
     inWindRing = false;
     didDiveLift = false;
+    performanceNote = '';
     for (const r of LEVEL.runes) r.collected = false;
     if (!keepPos) lastSafeX = LEVEL.startX;
     updateHUD();
@@ -378,6 +382,10 @@
     const timeBonus = Math.max(0, 380 - finalTime * 15);
     const skillBonus = didDiveLift ? 70 : 0;
     const finalScore = Math.floor(Math.max(0, score + runeBonus + timeBonus + skillBonus));
+    // Magical performance note for one-more-run loop (Lava Dragon flavor)
+    performanceNote = didDiveLift ? 'Dive-lift under the wind ring — the sky answered.' :
+      (finalRunes >= 6 ? 'Every rune caught. The dragons flew with you.' :
+      (finalTime < 22 ? 'Swift and clean. The thermals remember.' : 'A good line through the ruins.'));
     playTone(1240, 0.6, 'sine', 0.5, 0.1);
     playTone(780, 0.9, 'triangle', 0.35, -0.05);
     showEnd(finalTime, finalRunes, finalScore);
@@ -638,14 +646,32 @@
       ctx.fill();
     }
 
-    // Wind ribbons (background teaching lines)
-    ctx.strokeStyle = 'rgba(160,210,235,0.12)';
-    ctx.lineWidth = 1.5;
+    // Wind ribbons (background teaching lines) — more arcs to teach golden flight paths (Water flavor)
+    ctx.strokeStyle = 'rgba(160,210,235,0.11)';
+    ctx.lineWidth = 1.4;
     for (let i = 0; i < 3; i++) {
       const rx = 620 + i * 340 - camX * 0.3;
       ctx.beginPath();
       ctx.moveTo(rx, 210 + Math.sin(t * 1.2 + i) * 8);
       ctx.quadraticCurveTo(rx + 70, 195, rx + 160, 225 + Math.cos(t * 0.9) * 6);
+      ctx.stroke();
+    }
+    // Extra expressive arcs near key flight beats (first thermal, rhythm, wind ring, finale)
+    const extraArcs = [
+      { bx: 780, by: 265, qx: 60, qy: -22, ex: 130, ey: 18 },   // pre-thermal lift hint
+      { bx: 1350, by: 295, qx: 55, qy: -28, ex: 115, ey: 12 },  // rhythm arc
+      { bx: 1680, by: 318, qx: 48, qy: -18, ex: 95, ey: -8 },   // into wind ring
+      { bx: 2080, by: 240, qx: 52, qy: -32, ex: 108, ey: 22 }    // finale climb
+    ];
+    ctx.strokeStyle = 'rgba(140,200,230,0.09)';
+    ctx.lineWidth = 1.6;
+    for (let k = 0; k < extraArcs.length; k++) {
+      const a = extraArcs[k];
+      const bx = a.bx - camX * 0.28;
+      const by = a.by + Math.sin(t * 1.6 + k) * 3;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(bx + a.qx, by + a.qy, bx + a.ex, by + a.ey);
       ctx.stroke();
     }
 
@@ -743,6 +769,21 @@
       ctx.stroke();
     }
 
+    // Subtle Fire Dragon speed streaks (ground run only, readable momentum)
+    if (player.onGround && player.vx > 140) {
+      ctx.strokeStyle = 'rgba(255,140,66,0.22)';
+      ctx.lineWidth = 2;
+      const sbase = px - 14;
+      for (let s = 0; s < 3; s++) {
+        const sy = py + 6 + s * 2.5;
+        const sl = 12 + (player.vx - 140) * 0.06 + Math.sin(t * 12 + s) * 2;
+        ctx.beginPath();
+        ctx.moveTo(sbase, sy);
+        ctx.lineTo(sbase - sl, sy);
+        ctx.stroke();
+      }
+    }
+
     // Player — small dragon-bonded runner (readable silhouette)
     const px = player.x - camX;
     const py = player.y - camY;
@@ -823,13 +864,21 @@
 
     ctx.restore();
 
-    // Small companion dragon silhouette (high, following)
+    // Small companion dragon silhouette (high, following) — reacts to player flight for presence
     const compX = px + 38 + Math.sin(t * 0.7) * 6;
     const compY = py - 38 - Math.cos(t * 0.5) * 4;
-    ctx.fillStyle = 'rgba(160,130,90,0.35)';
+    const compFlap = (player.flap > 0.1 || !player.onGround) ? Math.sin(t * 9) * 0.6 + 0.3 : 0.15;
+    ctx.fillStyle = 'rgba(160,130,90,0.32)';
     ctx.beginPath();
     ctx.ellipse(compX + 4, compY, 5, 3, -0.2, 0, Math.PI * 2);
     ctx.fill();
+    // tiny wing on companion
+    ctx.strokeStyle = 'rgba(120,100,80,0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(compX + 1, compY - 1);
+    ctx.lineTo(compX - 3 - compFlap * 4, compY - 4 - compFlap * 5);
+    ctx.stroke();
     ctx.fillStyle = 'rgba(160,130,90,0.55)';
     ctx.beginPath();
     ctx.arc(compX + 9, compY - 1, 2.2, 0, Math.PI * 2);
@@ -881,8 +930,12 @@
     if (scoreEl) scoreEl.textContent = String(Math.floor(score)).padStart(4, '0');
     if (fill) {
       const pct = Math.max(0, Math.min(100, Math.round(player.stamina)));
+      const staminaBar = fill.parentElement;
       fill.style.width = pct + '%';
       fill.style.background = pct < 22 ? 'linear-gradient(90deg,#ff6b6b,#f4d35e)' : 'linear-gradient(90deg,#ffd166,#fff7d1)';
+      if (staminaBar) {
+        if (pct < 22) staminaBar.classList.add('low'); else staminaBar.classList.remove('low');
+      }
     }
   }
 

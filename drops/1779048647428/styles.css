@@ -35,6 +35,9 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   width: 92px; height: 8px; background: rgba(0,0,0,0.4); border-radius: 999px; overflow: hidden; border: 1px solid var(--line);
 }
 .stamina > i { display: block; height: 100%; background: linear-gradient(90deg, var(--stamina), #fff7d1); width: 100%; transition: width 60ms linear; }
+.stamina.low { box-shadow: 0 0 0 2px rgba(255,107,107,0.35); }
+.stamina.low > i { animation: stamina-pulse 820ms infinite ease-in-out; }
+@keyframes stamina-pulse { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
 
 #touch-controls {
   position: fixed; bottom: 16px; left: 0; right: 0; z-index: 30;

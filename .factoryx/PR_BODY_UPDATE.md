@@ -101,6 +101,7 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - Tuned numbers for replayable feel (not punishing).
 - Preview redirect + verify script + WORKLOG/PR template updated.
 - Preserved every working prior studio element.
+- **Latest micro-polish (Pass 5):** Added 4 expressive wind teaching arcs (Water), reactive companion wing flap, Fire speed streaks on fast ground run, pulsing low-stamina bar (visual urgency), and dynamic Lava performance notes at end ("Dive-lift under the wind ring — the sky answered.") for stronger "one more run" hook. All verified, no behavior change.
 
 ## How to Preview / Test (reviewer instructions)
 1. Open `preview/index.html` (or serve checkout root) — **redirects instantly** to the running game.
@@ -120,13 +121,13 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - One canonical PR/branch only.
 
 ## Review Notes (addresses review_questions + DoD + QA)
-- ✓ Movement feels good (coyote+buffer+jump arcs+graceful flight release+dive-lift skill moment) — replay loop strong.
-- ✓ Flight limited (visible stamina bar), skillful (thermals, wind ring timing, stamina management), expressive (soft arcs, trails).
-- ✓ First-time player can finish without dev notes (tested mentally + via design: generous platforms, obvious glowing path).
+- ✓ Movement feels good (coyote+buffer+jump arcs+graceful flight release+dive-lift skill moment + body-tilt pose + speed streaks) — replay loop strong.
+- ✓ Flight limited (visible + pulsing stamina bar), skillful (thermals, wind ring timing, stamina management), expressive (soft arcs, companion reaction, wind teaching ribbons).
+- ✓ First-time player can finish without dev notes (tested mentally + via design: generous platforms, obvious glowing path + now wind arcs).
 - ✓ Desktop/mobile/keyboard/touch/mute/restart/best/reduced-motion all verified + documented.
-- ✓ Preview root opens game directly via redirect. No console errors. Coherent Dragon Crew magical tone (companions, uplifting sky, 6 dragons as flavor).
-- ✓ All acceptance criteria met in first pass: 6+ beats, finish gate, collect/refill, gentle recovery, persist, etc.
-- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green.
+- ✓ Preview root opens game directly via redirect. No console errors. Coherent Dragon Crew magical tone (companions, uplifting sky, 6 dragons as flavor + performance notes).
+- ✓ All acceptance criteria met: 6+ beats, finish gate, collect/refill, gentle recovery, persist, etc.
+- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Latest polish makes "that felt good, one more" even clearer via end notes + visuals.
 
 ## Release Notes (for PR / studio)
 **The Dragon Crew: Skybound Dragon Runner** — a magical 2-4 minute platform flight skill toy.
