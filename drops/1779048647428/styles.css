@@ -1,0 +1,93 @@
+:root {
+  --bg: #0a1420;
+  --sky-top: #1a2a4a;
+  --sky-mid: #2a3f5f;
+  --gold: #f4d35e;
+  --gold-warm: #ffbf46;
+  --ice: #a8d5e5;
+  --water: #5fb4c9;
+  --fire: #ff8c42;
+  --text: #e8f4f8;
+  --muted: #8fa8b8;
+  --panel: rgba(12, 22, 36, 0.92);
+  --line: rgba(160, 200, 220, 0.25);
+  --stamina: #ffd166;
+  --accent: #6ec6ff;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+#game { display: block; width: 100vw; height: 100vh; background: #0b1626; touch-action: none; }
+
+.hud {
+  position: fixed; top: 12px; left: 12px; right: 12px; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  pointer-events: none;
+}
+.hud-left, .hud-right { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.hud-item {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 14px; font-size: 13px; letter-spacing: 0.04em; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; backdrop-filter: blur(8px);
+}
+.hud-item .val { color: var(--text); font-weight: 600; margin-left: 4px; }
+.stamina {
+  width: 92px; height: 8px; background: rgba(0,0,0,0.4); border-radius: 999px; overflow: hidden; border: 1px solid var(--line);
+}
+.stamina > i { display: block; height: 100%; background: linear-gradient(90deg, var(--stamina), #fff7d1); width: 100%; transition: width 60ms linear; }
+
+#touch-controls {
+  position: fixed; bottom: 16px; left: 0; right: 0; z-index: 30;
+  display: flex; justify-content: space-between; padding: 0 16px; gap: 12px;
+  pointer-events: none;
+}
+.touch-btn {
+  pointer-events: auto; min-width: 78px; height: 58px; border-radius: 999px;
+  background: var(--panel); border: 2px solid var(--line); color: var(--text);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em; display: flex; align-items: center; justify-content: center;
+  user-select: none; touch-action: none; transition: transform 60ms ease, background 60ms;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.touch-btn:active, .touch-btn.pressed { background: rgba(110,198,255,0.25); border-color: var(--accent); transform: scale(0.96); }
+.touch-btn.fly { flex: 1; max-width: 160px; }
+.touch-btn.dive { background: rgba(255,140,66,0.1); }
+
+#start-overlay, #end-overlay {
+  position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+  background: rgba(8, 16, 28, 0.82); backdrop-filter: blur(4px);
+}
+#start-overlay.active, #end-overlay.active { display: flex; }
+
+.overlay-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
+  padding: 28px 32px; max-width: 420px; width: calc(100% - 48px); text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+}
+.overlay-card h1 { margin: 0 0 8px; font-size: 1.6rem; letter-spacing: 0.02em; color: var(--gold); }
+.overlay-card p { margin: 0 0 20px; color: var(--muted); line-height: 1.5; font-size: 0.95rem; }
+.btn {
+  background: linear-gradient(180deg, #f4d35e, #e8b94a); color: #1a2a3a; border: 0; border-radius: 999px;
+  padding: 12px 28px; font-size: 15px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(244,211,94,0.35);
+}
+.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); box-shadow: none; padding: 11px 24px; }
+.btn.row { display: inline-flex; gap: 10px; margin-top: 12px; }
+
+#hud-stamina { width: 110px; }
+#mute-btn { cursor: pointer; padding: 4px 10px; font-size: 12px; }
+#restart-btn { cursor: pointer; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; text-align: left; font-size: 0.9rem; }
+.stats div { background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); }
+.stats .label { color: var(--muted); font-size: 11px; }
+.stats .num { color: var(--gold); font-weight: 700; font-size: 1.05rem; }
+
+.blessing { margin: 12px 0 8px; font-size: 0.92rem; color: var(--gold-warm); font-style: italic; line-height: 1.4; }
+
+.debug { position: fixed; bottom: 8px; right: 12px; font-size: 10px; color: var(--muted); opacity: 0.6; z-index: 50; pointer-events: none; }
+
+@media (max-width: 480px) {
+  .hud-item { font-size: 11px; padding: 5px 10px; }
+  .touch-btn { min-width: 64px; height: 52px; font-size: 12px; }
+  .overlay-card { padding: 22px 20px; }
+}
