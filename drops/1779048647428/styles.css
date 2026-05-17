@@ -106,7 +106,17 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   .hud-item .val { margin-left: 2px; font-size: 9.5px; }
   .hud-item { gap: 3px; }
 }
-/* Extra tight safety for 390px portrait (and smaller phones) per operator QA */
+/* Dedicated 390px portrait safety (operator QA 2026-05-17: no .hud-right overflow, FLIGHT bar fully visible, no clip/scroll at 390x844) */
+@media (max-width: 390px) {
+  .hud { gap: 3px; left: 5px; right: 5px; top: 5px; }
+  .hud-left, .hud-right { gap: 3px; }
+  .hud-item { font-size: 9px; padding: 2px 5px; gap: 2px; letter-spacing: 0; }
+  .stamina { width: 28px; height: 5px; }
+  #mute-btn, #restart-btn { padding: 1px 3px; font-size: 9.5px; }
+  .hud-item .val { margin-left: 1px; font-size: 9px; }
+  .touch-btn { min-width: 58px; height: 50px; font-size: 11px; }
+}
+/* Extra tight safety for 360px and smaller */
 @media (max-width: 360px) {
   .hud { gap: 3px; left: 4px; right: 4px; top: 4px; }
   .hud-left, .hud-right { gap: 3px; }

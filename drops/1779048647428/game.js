@@ -789,7 +789,11 @@
       ctx.stroke();
     }
 
-    // Subtle Fire Dragon speed streaks (ground run only, readable momentum)
+    // Player — small dragon-bonded runner (readable silhouette)
+    const px = player.x - camX;
+    const py = player.y - camY;
+
+    // Subtle Fire Dragon speed streaks (ground run only, readable momentum) — now after px/py declaration (fixes TDZ ReferenceError)
     if (player.onGround && player.vx > 140) {
       ctx.strokeStyle = 'rgba(255,140,66,0.22)';
       ctx.lineWidth = 2;
@@ -804,9 +808,6 @@
       }
     }
 
-    // Player — small dragon-bonded runner (readable silhouette)
-    const px = player.x - camX;
-    const py = player.y - camY;
     const runCycle = (player.x * 0.028) % (Math.PI * 2);
     const legSwing = Math.sin(runCycle) * 0.6;
     const wingAngle = player.onGround ? 0.3 + Math.sin(runCycle * 1.7) * 0.15 : (player.flap * 1.6 - 0.4);
