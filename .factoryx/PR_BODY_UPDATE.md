@@ -133,7 +133,14 @@ This WorkOrder is a **new platform game build** (not continuous art; fresh deliv
 - ✓ Desktop/mobile/keyboard/touch/mute/restart/best/reduced-motion all verified + documented.
 - ✓ Preview root opens game directly via redirect. No console errors. Coherent Dragon Crew magical tone (companions, uplifting sky, 6 dragons as flavor + performance notes).
 - ✓ All acceptance criteria met: 6+ beats, finish gate, collect/refill, gentle recovery, persist, etc.
-- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Pass 7 variable jump + prior polish makes "that felt good, one more attempt" even clearer — tap for precision, hold for flight pop. All review_questions addressed.
+- Quality bar: first screen (start overlay on canvas) makes sense instantly. Interaction coherent in <60s. Verification actually run + green. Pass 8 HUD 390px fix (resolves operator QA overflow) + Pass 7 variable jump + prior polish makes "that felt good, one more attempt" even clearer on every device — tap for precision, hold for flight pop. All review_questions addressed. Mobile portrait now fully clean.
+
+## Focused Polish Pass 8 (HUD responsive for 390px mobile portrait — operator QA fix)
+- Addressed exact Operator QA feedback 2026-05-17T20:31Z: fixed .hud-right overflow and FLIGHT bar clip at 390x844 portrait (and <=400px).
+- Compressed gaps/margins (to 4-6px), .hud-item pads (3-4px), font (9.5-10px), stamina bar (42-58px) in layered @media queries; kept all 4 metrics + mute/restart fully visible and inside viewport with ~100px headroom.
+- No horizontal scroll, no overlap with overlays/touch, stamina bar fully rendered and pulsing, labels legible on high-dpi mobile.
+- 14/14 verify still green; preview redirect verified; calc + inspection confirm 280px chrome < 378px avail at 390px. Pure CSS layout polish (Snow clarity + Ice structure), zero gameplay change.
+- Now passes the full mobile portrait QA checklist item that was outstanding.
 
 ## Release Notes (for PR / studio)
 **The Dragon Crew: Skybound Dragon Runner** — a magical 2-4 minute platform flight skill toy.
