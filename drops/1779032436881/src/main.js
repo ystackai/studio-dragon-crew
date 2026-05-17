@@ -449,46 +449,76 @@
     console.log('%c[Sanctuary] The Dragon Crew: Sanctuary of the Six Lights ready. Slice 1 skeleton active.', 'color:#9aa8b8');
   }
 
-  // ===== FINALE (stub for Slice 3) =====
+  // ===== FINALE (rich with Lava blessing + 6 dragons) =====
   function openFinale() {
     const state = window.SanctuaryState.get();
     if (!state.blessing) {
-      // create a default one if Lava not yet played
       const words = { adj: 'Luminous', place: 'Sanctuary', vow: 'Remembers' };
       const b = window.SanctuaryDragons.makeBlessing(words);
       window.SanctuaryState.setBlessing(b);
     }
     const b = window.SanctuaryState.get().blessing;
     blessingTitle.textContent = b.title;
-    blessingText.textContent = b.text;
+    blessingText.textContent = b.text || 'The six lights now travel together.';
 
     finaleOverlay.classList.add('visible');
-    drawFinale();
+    drawFinale(b);
   }
 
-  function drawFinale() {
+  function drawFinale(blessing) {
     const fctx = finaleCanvas.getContext('2d');
     const fw = finaleCanvas.width, fh = finaleCanvas.height;
-    fctx.fillStyle = '#050b14';
-    fctx.fillRect(0, 0, fw, fh);
-    // simple constellation lift (will be rich later)
-    fctx.strokeStyle = 'rgba(244,217,168,0.6)';
-    fctx.lineWidth = 1;
-    for (let i = 0; i < 18; i++) {
-      const x = 60 + (i % 6) * 120 + Math.sin(i) * 10;
-      const y = 80 + Math.floor(i / 6) * 90;
-      fctx.beginPath(); fctx.arc(x, y, 2.5, 0, Math.PI * 2); fctx.stroke();
-    }
-    // dragons silhouettes as small circles
+    let t = 0;
     const colors = ['#ff8c42','#a8d5ff','#4fb3d8','#e0e8f2','#3aa8a8','#d46a3a'];
-    colors.forEach((col, i) => {
-      const x = 140 + i * 95;
-      fctx.fillStyle = col;
-      fctx.beginPath(); fctx.arc(x, 260, 11, 0, Math.PI * 2); fctx.fill();
-    });
-    fctx.fillStyle = '#f4d9a8';
-    fctx.font = '13px system-ui';
-    fctx.fillText('All six dragons lift the sanctuary into the living constellation.', 60, 320);
+    const names = ['Fire','Ice','Water','Snow','Sea','Lava'];
+
+    function frame() {
+      t += 0.016;
+      fctx.fillStyle = '#050b14';
+      fctx.fillRect(0, 0, fw, fh);
+
+      // rising constellation
+      fctx.strokeStyle = 'rgba(244,217,168,0.45)';
+      fctx.lineWidth = 1;
+      for (let i = 0; i < 26; i++) {
+        const x = 48 + (i % 7) * 110 + Math.sin(t * 0.6 + i) * 4;
+        const y = 52 + Math.floor(i / 7) * 68 + (t * 6 + i * 3) % 18;
+        fctx.beginPath(); fctx.arc(x, y % (fh * 0.72), 2.2, 0, Math.PI * 2); fctx.stroke();
+      }
+
+      // six dragons lifting (glowing orbs rising)
+      colors.forEach((col, i) => {
+        const x = 118 + i * 98;
+        const y = 198 + Math.sin(t * 1.1 + i) * 18 - t * 4;
+        const r = 13 + Math.sin(t * 2 + i) * 1.5;
+        const g = fctx.createRadialGradient(x, y - 8, 4, x, y, r * 1.8);
+        g.addColorStop(0, col);
+        g.addColorStop(1, 'rgba(5,11,20,0)');
+        fctx.fillStyle = g;
+        fctx.beginPath(); fctx.arc(x, Math.max(60, y), r, 0, Math.PI * 2); fctx.fill();
+
+        fctx.fillStyle = '#f0e6d8';
+        fctx.font = '10px system-ui';
+        fctx.fillText(names[i], x - 14, Math.max(60, y) + 26);
+      });
+
+      // sanctuary platform rising
+      fctx.fillStyle = 'rgba(30,38,52,0.9)';
+      fctx.beginPath();
+      fctx.ellipse(fw / 2, 268 + Math.sin(t) * 3 - t * 1.5, 138, 28, 0, 0, Math.PI * 2);
+      fctx.fill();
+      fctx.strokeStyle = 'rgba(244,217,168,0.5)';
+      fctx.lineWidth = 1.5;
+      fctx.stroke();
+
+      // blessing echo
+      fctx.fillStyle = 'rgba(244,217,168,0.7)';
+      fctx.font = '13px system-ui';
+      fctx.fillText((blessing && blessing.title) || 'Luminous Sanctuary Remembers', 60, fh - 28);
+
+      if (finaleOverlay.classList.contains('visible')) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
 
   function closeFinale() {
