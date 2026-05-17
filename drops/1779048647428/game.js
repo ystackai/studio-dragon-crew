@@ -424,6 +424,10 @@
       if (!reducedMotion && Math.random() < 0.8) {
         ribbons.push({ x: player.x - 6, y: player.y + 4, life: 0.28, vy: player.vy * 0.1 });
       }
+      // Subtle wing-gust wind particles (visual equivalent of flap burst) — expressive "befriending the sky" uplift, reduced-motion safe
+      if (!reducedMotion && Math.random() < 0.32) {
+        particles.push({ x: player.x - 10 - Math.random() * 6, y: player.y + 1, vx: -38 - Math.random() * 32, vy: 8 + Math.random() * 24, life: 0.22 + Math.random() * 0.18, type: 'wind' });
+      }
     }
 
     // Dive / fast fall (skill expression + recovery)
