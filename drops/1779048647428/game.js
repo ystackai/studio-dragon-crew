@@ -750,8 +750,17 @@
     const legSwing = Math.sin(runCycle) * 0.6;
     const wingAngle = player.onGround ? 0.3 + Math.sin(runCycle * 1.7) * 0.15 : (player.flap * 1.6 - 0.4);
 
+    // Body tilt for dive / flight readability (dive nose-down pose makes skill moment clear)
+    let bodyTilt = 0;
+    if (!player.onGround) {
+      if (player.diveTime > 0.08) bodyTilt = Math.min(0.65, 0.22 + player.diveTime * 1.1);
+      else if (player.vy > 95) bodyTilt = 0.14;
+      else if (player.vy < -55) bodyTilt = -0.16;
+    }
+
     ctx.save();
     ctx.translate(px + player.w * 0.5, py + player.h * 0.5);
+    ctx.rotate(bodyTilt);
 
     // Tail
     ctx.strokeStyle = '#3f2a1f';
