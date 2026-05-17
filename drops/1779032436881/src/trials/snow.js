@@ -88,6 +88,7 @@
         g.caught = true;
         caught++;
         if (countEl) countEl.textContent = caught;
+        if (window.SanctuaryAudio && window.SanctuaryAudio.playSoftTone) window.SanctuaryAudio.playSoftTone(810 + (caught%3)*20, 0.12);
         if (caught >= GOAL && onCompleteRef) {
           setTimeout(() => onCompleteRef(), 260);
         }

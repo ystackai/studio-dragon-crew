@@ -47,12 +47,29 @@
     notes.forEach((f, i) => setTimeout(() => playChime(f, 0.36, 'triangle'), i * 90));
   }
 
+  // extra tactile feedback sounds (visuals always present; safe when muted)
+  function playRotateClick() {
+    if (muted || !ensureCtx()) return;
+    playChime(365 + (Math.random() * 25 | 0), 0.08, 'sawtooth');
+  }
+  function playSoftTone(freq = 520, dur = 0.18) {
+    if (muted || !ensureCtx()) return;
+    playChime(freq, dur, 'sine');
+  }
+  function playBeamTone() {
+    if (muted || !ensureCtx()) return;
+    playChime(295, 0.26, 'triangle');
+  }
+
   // public
   global.SanctuaryAudio = {
     ensureCtx,
     setMuted,
     playChime,
     playSuccess,
+    playRotateClick,
+    playSoftTone,
+    playBeamTone,
     isMuted: () => muted
   };
 

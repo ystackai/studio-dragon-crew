@@ -5,8 +5,7 @@
  * Success: crystalline bridges + sharper stars in sanctuary.
  */
 (function (global) {
-  let angles = [35, 90, 145]; // degrees, solution tuned for nice path
-  const TARGETS = [42, 95, 150]; // forgiving solution window
+  let angles = [22, 68, 115]; // starting (misses gate); steer with sliders/drag/keyboard until the path glows gold into gate
   let canvas, ctx, onCompleteRef = null;
   let dragging = -1;
   let keyHandler = null;
@@ -16,7 +15,7 @@
     angles = [35, 90, 145];
     container.innerHTML = `
       <div style="text-align:center;">
-        <p style="margin:0 0 10px;color:#9aa8b8;font-size:13px;">Drag the mirrors or use ← → on focused slider. Get the blue beam to touch the gate.</p>
+        <p style="margin:0 0 10px;color:#9aa8b8;font-size:13px;">Drag mirrors or ←→ on sliders. Steer the beam through reflections until it reaches the gate on the right.</p>
         <canvas id="ice-canvas" width="420" height="220" style="border:1px solid #2a3f55;border-radius:8px;background:#0b1626;cursor:grab;display:block;margin:0 auto;"></canvas>
         <div class="mirror-controls" style="margin-top:14px;">
           ${[0,1,2].map(i => `
@@ -26,7 +25,7 @@
             </div>
           `).join('')}
         </div>
-        <div id="ice-hint" style="margin-top:8px;font-size:11px;color:#a8d5ff;opacity:0.7;">Beam path updates live. Snap near 30° steps for clarity.</div>
+        <div id="ice-hint" style="margin-top:8px;font-size:11px;color:#a8d5ff;opacity:0.7;">Live path shows bends. Adjust until beam glows gold into the gate.</div>
       </div>
     `;
 
@@ -40,6 +39,7 @@
         angles[i] = parseFloat(r.value);
         draw();
         checkWin();
+        if (window.SanctuaryAudio && window.SanctuaryAudio.playSoftTone) window.SanctuaryAudio.playSoftTone(310 + i*18, 0.07);
       });
     });
 
@@ -60,7 +60,10 @@
     canvas.addEventListener('pointermove', (e) => {
       if (dragging >= 0) updateFromPointer(e);
     });
-    window.addEventListener('pointerup', () => { dragging = -1; canvas.style.cursor = 'grab'; });
+    window.addEventListener('pointerup', () => {
+      if (dragging >= 0 && window.SanctuaryAudio && window.SanctuaryAudio.playBeamTone) window.SanctuaryAudio.playBeamTone();
+      dragging = -1; canvas.style.cursor = 'grab';
+    });
 
     // keyboard: focus on sliders + arrows
     const sliders = [0,1,2].map(i => container.querySelector(`#ice-m${i}`));
@@ -83,7 +86,7 @@
     // gentle auto-hint after 12s if not solved
     setTimeout(() => {
       const hint = container.querySelector('#ice-hint');
-      if (hint && !isSolved()) hint.textContent = 'Tip: Try 42°, 95°, 150° — or experiment; the beam turns gold near the gate.';
+      if (hint && !isSolved()) hint.textContent = 'Tip: Try ~8° / 22° / 38° (or nearby); steer until beam flies into the gate and glows gold.';
     }, 12000);
 
     return () => { document.removeEventListener('keydown', keyHandler); };
@@ -112,8 +115,56 @@
     checkWin();
   }
 
+  function simulateBeam() {
+    // Trace ray + 3 reflections. After last bounce, outgoing *dir* decides if it flies to gate or misses.
+    const w = 420, h = 220;
+    const srcX = 48, srcY = 58;
+    const gateX = w - 52, gateY = h - 58;
+    const mirrors = [
+      { x: 118, y: 110, r: 22 },
+      { x: 210, y: 92, r: 22 },
+      { x: 302, y: 118, r: 22 }
+    ];
+    let pos = { x: srcX + 18, y: srcY + 2 };
+    let dir = { x: 0.98, y: 0.12 };
+    const points = [ { x: pos.x, y: pos.y } ];
+
+    for (let i = 0; i < 3; i++) {
+      const m = mirrors[i];
+      const t = (m.x - pos.x) / (dir.x || 0.001);
+      if (t > 1 && t < 320) {
+        const hy = pos.y + dir.y * t * 0.9;
+        if (Math.abs(hy - m.y) < 40) {
+          points.push({ x: m.x - 3, y: hy });
+          const a = (angles[i] - 90) * Math.PI / 180;
+          const nx = Math.cos(a), ny = Math.sin(a);
+          const dot = dir.x * nx + dir.y * ny;
+          dir = { x: dir.x - 2 * dot * nx, y: dir.y - 2 * dot * ny };
+          const len = Math.hypot(dir.x, dir.y) || 1; dir.x /= len; dir.y /= len;
+          pos = { x: m.x + 5, y: hy };
+          continue;
+        }
+      }
+      pos = { x: m.x, y: m.y };
+      points.push({ x: pos.x, y: pos.y });
+    }
+    // march forward in *current outgoing dir* (no homing)
+    const march = 95;
+    const proj = { x: pos.x + dir.x * march, y: pos.y + dir.y * march };
+    points.push(proj);
+
+    // does the free-flight ray cross the gate rect?
+    const atGateX = (gateX - pos.x) / (dir.x || 0.0001);
+    let hitsGate = false;
+    if (atGateX > 6 && atGateX < 115) {
+      const yAtGate = pos.y + dir.y * atGateX;
+      if (yAtGate > gateY - 32 && yAtGate < gateY + 32) hitsGate = true;
+    }
+    return { points, hitsGate };
+  }
+
   function isSolved() {
-    return angles.every((a, i) => Math.abs(a - TARGETS[i]) < 14);
+    return simulateBeam().hitsGate;
   }
 
   function checkWin() {
@@ -151,6 +202,7 @@
     ctx.lineWidth = 2;
     ctx.strokeRect(gateX - 14, gateY - 22, 28, 44);
     ctx.fillStyle = '#a8d5ff';
+    ctx.font = '10px system-ui';
     ctx.fillText('GATE', gateX - 14, gateY + 36);
 
     // mirrors positions
@@ -160,40 +212,14 @@
       { x: 302, y: 118 }
     ];
 
-    // compute beam path
-    let beamPoints = [{ x: srcX + 14, y: srcY + 4 }];
-    let dir = { x: 1, y: 0.15 }; // initial shallow angle
+    // real beam path via simulation (player can now steer it to gate)
+    const { points: beamPoints, hitsGate: solved } = simulateBeam();
 
-    mirrors.forEach((m, i) => {
-      // incoming
-      const hit = intersectRay(beamPoints[beamPoints.length-1], dir, m.x - 22, m.y - 26, m.x + 22, m.y + 26);
-      if (hit) {
-        beamPoints.push({ x: hit.x, y: hit.y });
-        // reflect using angle
-        const a = (angles[i] - 90) * Math.PI / 180; // 0=flat, positive tilts
-        const nx = Math.cos(a), ny = Math.sin(a);
-        const dot = dir.x * nx + dir.y * ny;
-        dir = { x: dir.x - 2 * dot * nx, y: dir.y - 2 * dot * ny };
-        // normalize a bit
-        const len = Math.hypot(dir.x, dir.y) || 1;
-        dir.x /= len; dir.y /= len;
-      }
-      // always push mirror center for viz
-      beamPoints.push({ x: m.x, y: m.y });
-    });
-
-    // final leg to gate area
-    const last = beamPoints[beamPoints.length-1];
-    const toGate = { x: gateX - 18 - last.x, y: gateY - last.y };
-    const dlen = Math.hypot(toGate.x, toGate.y) || 1;
-    beamPoints.push({ x: last.x + toGate.x / dlen * 68, y: last.y + toGate.y / dlen * 68 });
-
-    // draw beam (faint preview + bright if close)
-    const solved = isSolved();
+    // draw beam (live preview; gold when path reaches gate)
     ctx.strokeStyle = solved ? '#f4d9a8' : '#7fb8e6';
-    ctx.lineWidth = solved ? 2.5 : 1.8;
+    ctx.lineWidth = solved ? 2.8 : 1.9;
     ctx.shadowColor = solved ? '#f4d9a8' : '#7fb8e6';
-    ctx.shadowBlur = solved ? 6 : 2;
+    ctx.shadowBlur = solved ? 7 : 2;
     ctx.beginPath();
     ctx.moveTo(beamPoints[0].x, beamPoints[0].y);
     for (let p = 1; p < beamPoints.length; p++) {
@@ -209,7 +235,7 @@
       ctx.translate(m.x, m.y);
       ctx.rotate(a);
       ctx.fillStyle = '#e0f0ff';
-      ctx.strokeStyle = solved && Math.abs(angles[i]-TARGETS[i])<14 ? '#f4d9a8' : '#a8d5ff';
+      ctx.strokeStyle = solved ? '#f4d9a8' : '#a8d5ff';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(0, -18); ctx.lineTo(8, 0); ctx.lineTo(0, 18); ctx.lineTo(-8, 0); ctx.closePath();
@@ -222,20 +248,19 @@
       ctx.fillText((angles[i] | 0) + '°', m.x - 12, m.y + 32);
     });
 
-    // success indicator
+    // success indicator + gate highlight
     if (solved) {
       ctx.fillStyle = '#6ee7b7';
       ctx.font = '600 12px system-ui';
-      ctx.fillText('PATH CLEAR — Gate reachable', 128, 28);
+      ctx.fillText('PATH CLEAR — Gate reachable', 118, 26);
+      // subtle gate glow
+      ctx.strokeStyle = '#f4d9a8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(gateX - 16, gateY - 24, 32, 48);
     }
   }
 
-  function intersectRay(p, dir, x1, y1, x2, y2) {
-    // simple box hit for viz
-    const t = ((x1 + x2) / 2 - p.x) / (dir.x || 0.0001);
-    if (t > 2 && t < 180) return { x: p.x + dir.x * t * 0.6, y: p.y + dir.y * t * 0.6 };
-    return null;
-  }
+  // (simulateBeam handles all ray + reflection math now)
 
   function cleanup() {
     if (keyHandler) document.removeEventListener('keydown', keyHandler);

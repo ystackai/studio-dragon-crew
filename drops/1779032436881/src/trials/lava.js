@@ -46,6 +46,7 @@
       chosen[key] = arr[idx];
       document.getElementById(`ring-${key}`).textContent = chosen[key];
       document.getElementById('lava-preview').textContent = `${chosen.adj} ${chosen.place} ${chosen.vow}`;
+      if (window.SanctuaryAudio && window.SanctuaryAudio.playRotateClick) window.SanctuaryAudio.playRotateClick();
       window._lavaChosen = { ...chosen }; // for claim handler to use latest words
     }
 

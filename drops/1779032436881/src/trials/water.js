@@ -26,33 +26,53 @@
       }
       grid.push(row);
     }
-    // force a connectable path with some straights
-    grid[0][0] = { type: 0, rot: 0 }; // horz out of spring
-    grid[0][1] = { type: 2, rot: 3 };
-    grid[1][1] = { type: 1, rot: 0 };
-    grid[2][1] = { type: 3, rot: 0 };
-    grid[2][2] = { type: 0, rot: 0 };
-    grid[3][2] = { type: 2, rot: 1 };
-    grid[4][2] = { type: 1, rot: 0 };
-    grid[4][3] = { type: 0, rot: 0 };
-    grid[4][4] = { type: 1, rot: 0 }; // into basin
+    // simple clear path: horz across top row, L-turn at top-right, then vert down right column to basin.
+    // Player rotates the L once to connect flow. Other tiles provide visual variety + extra paths once unlocked.
+    grid[0][0] = { type: 0, rot: 0 }; // EW
+    grid[0][1] = { type: 0, rot: 0 }; // EW
+    grid[0][2] = { type: 0, rot: 0 }; // EW
+    grid[0][3] = { type: 0, rot: 0 }; // EW
+    grid[0][4] = { type: 2, rot: 0 }; // L (needs +1 rot to open S+W for turn)
+    grid[1][4] = { type: 1, rot: 1 }; // NS
+    grid[2][4] = { type: 1, rot: 1 }; // NS
+    grid[3][4] = { type: 1, rot: 1 }; // NS
+    grid[4][4] = { type: 1, rot: 1 }; // NS into basin
+    // decorative side tiles (cross or T for interest, do not block)
+    grid[1][0] = { type: 4, rot: 0 };
+    grid[2][0] = { type: 3, rot: 0 };
+    grid[1][1] = { type: 2, rot: 2 };
+    grid[3][1] = { type: 0, rot: 1 };
+    grid[4][0] = { type: 2, rot: 1 };
+    grid[1][2] = { type: 1, rot: 0 };
+    grid[2][1] = { type: 4, rot: 0 };
+    grid[3][2] = { type: 2, rot: 3 };
+    grid[4][1] = { type: 0, rot: 0 };
+    grid[2][3] = { type: 3, rot: 2 };
+    grid[3][3] = { type: 0, rot: 1 };
+    grid[4][2] = { type: 1, rot: 1 };
+    grid[4][3] = { type: 2, rot: 2 };
 
     container.innerHTML = `
       <div style="text-align:center;">
-        <p style="margin:2px 0 8px;color:#9aa8b8;font-size:13px;">Tap tiles to rotate pipes. Connect the spring (top-left) to the basin (bottom-right). Blue = flowing.</p>
+        <p style="margin:2px 0 8px;color:#9aa8b8;font-size:13px;">Tap or select tiles to rotate pipes. Turn the L (top-right) to connect spring to basin. Blue = flowing.</p>
         <div id="flow-grid"></div>
-        <div style="margin-top:8px;font-size:11px;color:#4fb3d8;opacity:0.75;">Keyboard: Tab to grid, arrows move, Space/Enter rotates selected.</div>
+        <div style="margin-top:8px;font-size:11px;color:#4fb3d8;opacity:0.75;">Keyboard: Tab/arrows select, Space/Enter rotates. One turn solves.</div>
       </div>
     `;
 
     renderGrid(container);
 
-    // global keyboard for accessibility
+    // global keyboard for accessibility (arrows + space/enter on logical selection)
     const key = (e) => {
+      // if focus is on a grid tile, let its own handler manage activation (prevents double-rotate)
+      if (e.target && e.target.classList && e.target.classList.contains('flow-tile')) {
+        return;
+      }
       if (!selected) return;
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        rotate(selected.x, selected.y);
+        const c = getContainer();
+        rotate(selected.x, selected.y, c);
       }
       if (e.key === 'ArrowLeft') { moveSel(-1, 0); e.preventDefault(); }
       if (e.key === 'ArrowRight') { moveSel(1, 0); e.preventDefault(); }
@@ -78,9 +98,14 @@
         div.dataset.x = x;
         div.dataset.y = y;
         div.setAttribute('tabindex', '0');
-        div.setAttribute('aria-label', `Pipe at ${x},${y}`);
+        div.setAttribute('aria-label', `Pipe at ${x},${y}, rot ${tile.rot}`);
         div.textContent = tileSymbol(tile);
-        if (selected && selected.x === x && selected.y === y) div.style.outline = '2px solid #f4d9a8';
+        // visible rotation via CSS (styles already have transition)
+        div.style.transform = `rotate(${((tile.rot % 4) * 90)}deg)`;
+        if (selected && selected.x === x && selected.y === y) {
+          div.style.outline = '2px solid #f4d9a8';
+          div.style.boxShadow = '0 0 0 1px rgba(244,217,168,0.3)';
+        }
 
         const isFlowing = isConnected(x, y);
         if (isFlowing) {
@@ -93,8 +118,22 @@
           rotate(x, y, container);
         });
         div.addEventListener('keydown', (ev) => {
+          const moves = {
+            ArrowLeft: [-1, 0],
+            ArrowRight: [1, 0],
+            ArrowUp: [0, -1],
+            ArrowDown: [0, 1]
+          };
+          if (moves[ev.key]) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            selected = { x, y };
+            moveSel(moves[ev.key][0], moves[ev.key][1], container);
+            return;
+          }
           if (ev.key === ' ' || ev.key === 'Enter') {
             ev.preventDefault();
+            ev.stopPropagation();
             select(x, y, container);
             rotate(x, y, container);
           }
@@ -103,62 +142,86 @@
       }
     }
 
-    // spring + basin labels
+    // spring + basin labels (override, keep upright)
     const first = gridEl.children[0];
-    if (first) first.textContent = '◉';
+    if (first) { first.textContent = '◉'; first.style.transform = 'none'; }
     const last = gridEl.children[SIZE*SIZE-1];
-    if (last) last.textContent = '◈';
+    if (last) { last.textContent = '◈'; last.style.transform = 'none'; }
+  }
+
+  function getContainer() {
+    const g = document.querySelector('#flow-grid');
+    if (!g) return null;
+    return g.closest('#trial-content') || g.parentElement || g;
   }
 
   function tileSymbol(t) {
-    const s = ['─','│','└','┬','┼'][t.type] || '·';
-    const rot = t.rot % 4;
-    return ['─','│','└','┬','┼'][t.type] || '·'; // simple, rotation visual via class later if wanted
+    // base glyph for rot=0 of each type; actual facing shown via CSS rotate on the tile
+    return ['─','│','└','┬','┼'][t.type] || '·';
   }
 
   function rotate(x, y, container) {
     grid[y][x].rot = (grid[y][x].rot + 1) % 4;
-    // re-render
+    if (window.SanctuaryAudio && window.SanctuaryAudio.playRotateClick) window.SanctuaryAudio.playRotateClick();
     if (container) renderGrid(container);
     checkWin(container);
   }
 
   function select(x, y, container) {
     selected = { x, y };
-    renderGrid(container);
+    if (container) renderGrid(container);
   }
 
-  function moveSel(dx, dy) {
+  function moveSel(dx, dy, container) {
     if (!selected) selected = { x: 0, y: 0 };
     selected.x = Math.max(0, Math.min(SIZE-1, selected.x + dx));
     selected.y = Math.max(0, Math.min(SIZE-1, selected.y + dy));
-    // find container and re-render (hacky but works in trial)
-    const g = document.querySelector('#flow-grid');
-    if (g) {
-      // re-render from parent trial
-      const c = g.closest('#trial-content');
-      if (c) renderGrid({ querySelector: (s) => c.querySelector(s) });
+    const c = container || getContainer();
+    if (c) {
+      renderGrid(c);
+      const next = c.querySelector(`.flow-tile[data-x="${selected.x}"][data-y="${selected.y}"]`);
+      if (next) next.focus({ preventScroll: true });
     }
   }
 
-  // Simple connectivity check: flood from (0,0) using current rotations (very forgiving)
+  // Real pipe connectivity: each tile has openings based on type+rot; flood only through matching adjacent openings.
+  function getOpenings(type, rot) {
+    const r = ((rot % 4) + 4) % 4;
+    switch (type) {
+      case 0: // straight (horz base)
+      case 1: // straight (vert base) - both are straights, rot decides axis
+        return (r % 2 === 0) ? ['E','W'] : ['N','S'];
+      case 2: // L corner
+        return [ ['S','E'], ['S','W'], ['N','W'], ['N','E'] ][r];
+      case 3: // T junction
+        return [ ['N','E','W'], ['E','S','W'], ['S','W','N'], ['W','N','E'] ][r];
+      case 4: // cross
+        return ['N','S','E','W'];
+      default:
+        return [];
+    }
+  }
+
+  const DXY = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] };
+  const OPP = { N: 'S', S: 'N', E: 'W', W: 'E' };
+
   function isConnected(tx, ty) {
     const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
     const q = [[0, 0]];
     visited[0][0] = true;
-    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
 
     while (q.length) {
       const [x, y] = q.shift();
       if (x === tx && y === ty) return true;
 
-      const t = grid[y][x];
-      // crude: any pipe can send to neighbors if not blocker
-      for (const [dx, dy] of dirs) {
+      const opens = getOpenings(grid[y][x].type, grid[y][x].rot);
+      for (const dir of opens) {
+        const [dx, dy] = DXY[dir];
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE || visited[ny][nx]) continue;
-        // accept most connections
-        if (grid[ny][nx].type !== 5) {
+        // neighbor must have the opposite opening
+        const nOpens = getOpenings(grid[ny][nx].type, grid[ny][nx].rot);
+        if (nOpens.includes(OPP[dir])) {
           visited[ny][nx] = true;
           q.push([nx, ny]);
         }
@@ -168,7 +231,6 @@
   }
 
   function checkWin(container) {
-    // win when bottom-right is reached in flood
     if (isConnected(SIZE-1, SIZE-1) && onCompleteRef) {
       setTimeout(() => {
         if (onCompleteRef) onCompleteRef();
@@ -184,4 +246,3 @@
   global.SanctuaryTrials = global.SanctuaryTrials || {};
   global.SanctuaryTrials.water = { init, cleanup };
 })(window);
-
