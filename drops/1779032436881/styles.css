@@ -451,10 +451,45 @@ canvas#sanctuary {
 
 /* Mobile adjustments */
 @media (max-width: 640px) {
-  header { padding: 10px 14px; }
-  #title { font-size: 13px; }
+  header {
+    padding: 8px 10px;
+    gap: 7px 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  #title {
+    flex: 1 1 170px;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    line-height: 1.18;
+  }
+  #title .subtitle {
+    margin-left: 0;
+    font-size: 9px;
+  }
+  #controls {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+  button.ctrl {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  #reset-btn {
+    padding: 5px 8px;
+  }
+  #progress {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 6px;
+  }
   #progress .rune { width: 15px; height: 15px; font-size: 8px; }
-  canvas#sanctuary { max-height: 540px; }
+  canvas#sanctuary { max-height: calc(100vh - 116px); }
   #trial-panel { width: 96vw; }
   .flow-tile { width: 36px; height: 36px; font-size: 15px; }
   #word-rings { gap: 6px; }
