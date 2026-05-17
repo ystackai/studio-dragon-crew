@@ -442,8 +442,8 @@
       if (player.x + player.w > p.x && player.x < px2) {
         // forgiving landing: crossed or slightly overlapping top while descending
         const prevBottom = player.y + player.h - player.vy * dt;
-        if ((player.y + player.h >= p.y && prevBottom <= p.y + 3) || (player.y + player.h > p.y && player.y + player.h < py2 && player.vy >= -12)) {
-          if (player.vy >= 0 || (player.y + player.h > p.y && player.y + player.h < py2)) {
+        if ((player.y + player.h >= p.y && prevBottom <= p.y + 3) || (player.y + player.h > p.y && player.y + player.h < py2 && player.vy >= 0)) {
+          if (player.vy >= 0) {
             impactVy = player.vy;
             player.y = p.y - player.h;
             player.vy = 0;
