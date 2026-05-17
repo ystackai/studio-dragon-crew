@@ -16,23 +16,23 @@
   let viewH = LOG_H;
 
   // Game constants (tuned for feel)
-  const RUN_SPEED = 168;
+  const RUN_SPEED = 172;
   const ACCEL = 620;
   const FRICTION = 480;
-  const GRAVITY = 920;
-  const JUMP_VEL = -395;
+  const GRAVITY = 980;
+  const JUMP_VEL = -410;
   const COYOTE_TIME = 0.085;
   const JUMP_BUFFER = 0.095;
-  const FLIGHT_DRAIN = 28;        // stamina per second while holding
-  const FLIGHT_LIFT = 295;        // upward force when flying
-  const FLIGHT_FORWARD = 48;      // extra forward when flapping
-  const DIVE_ACCEL = 620;
-  const MAX_VY = 620;
-  const MAX_VX = 265;
+  const FLIGHT_DRAIN = 26;        // stamina per second while holding
+  const FLIGHT_LIFT = 310;        // upward force when flying
+  const FLIGHT_FORWARD = 52;      // extra forward when flapping
+  const DIVE_ACCEL = 680;
+  const MAX_VY = 640;
+  const MAX_VX = 268;
   const STAMINA_MAX = 100;
-  const STAMINA_REGEN = 22;       // per second on ground or in thermal
-  const THERMAL_LIFT = 185;
-  const THERMAL_REGEN = 38;
+  const STAMINA_REGEN = 24;       // per second on ground or in thermal
+  const THERMAL_LIFT = 195;
+  const THERMAL_REGEN = 40;
 
   // Level (handcrafted golden path, 6 beats)
   const LEVEL = {
@@ -84,7 +84,7 @@
 
   // State
   let player = {
-    x: LEVEL.startX, y: 320, vx: 0, vy: 0,
+    x: LEVEL.startX, y: 354, vx: 0, vy: 0,
     w: 18, h: 26,
     onGround: false, lastGroundY: 0,
     stamina: STAMINA_MAX,
@@ -300,7 +300,7 @@
     player.onGround = false;
     coyote = 0;
     player.flap = 0.18;
-    playLand();
+    playFlap();
     spawnDust(player.x + player.w * 0.5, player.y + player.h, 5);
   }
 
@@ -338,7 +338,7 @@
   }
   function resetRun(keepPos = false) {
     player.x = keepPos ? player.x : LEVEL.startX;
-    player.y = keepPos ? Math.min(player.y, 340) : 320;
+    player.y = keepPos ? Math.min(player.y, 360) : 354;
     player.vx = 60;
     player.vy = 0;
     player.onGround = true;
@@ -367,10 +367,14 @@
   function finishRun() {
     const finalTime = t;
     const finalRunes = runesCollected;
-    const finalScore = Math.floor(score + (LEVEL.runes.length - runesCollected) * -12 + Math.max(0, 420 - finalTime * 18));
+    // Rewarding score: base (distance+style) + runes + time + dive-lift skill
+    const runeBonus = finalRunes * 48;
+    const timeBonus = Math.max(0, 380 - finalTime * 15);
+    const skillBonus = didDiveLift ? 70 : 0;
+    const finalScore = Math.floor(Math.max(0, score + runeBonus + timeBonus + skillBonus));
     playTone(1240, 0.6, 'sine', 0.5, 0.1);
     playTone(780, 0.9, 'triangle', 0.35, -0.05);
-    showEnd(finalTime, finalRunes, Math.max(0, finalScore));
+    showEnd(finalTime, finalRunes, finalScore);
   }
 
   // Update (fixed dt)
@@ -403,25 +407,25 @@
       if (!reducedMotion && Math.random() < 0.8) {
         ribbons.push({ x: player.x - 6, y: player.y + 4, life: 0.28, vy: player.vy * 0.1 });
       }
-    } else if (!player.onGround) {
-      // graceful glide decay
-      if (wasFlying) {
-        player.vy *= 0.82;
-      }
-      player.vy = Math.min(MAX_VY, player.vy + GRAVITY * 0.6 * dt);
     }
 
-    // Dive / fast fall (skill expression)
-    if (diveHeld && !player.onGround) {
+    // Dive / fast fall (skill expression + recovery)
+    const diving = diveHeld && !player.onGround;
+    if (diving) {
       player.vy = Math.min(MAX_VY, player.vy + DIVE_ACCEL * dt);
       player.diveTime = Math.min(0.9, player.diveTime + dt);
     } else {
       player.diveTime = Math.max(0, player.diveTime - dt * 3);
     }
 
-    // Normal gravity when not flying
+    // Gravity only when not flying. Graceful release from flight (no hard drop).
     if (!isFlying && !player.onGround) {
-      player.vy = Math.min(MAX_VY, player.vy + GRAVITY * dt);
+      let gFactor = 1.0;
+      if (wasFlying && !diving) {
+        gFactor = 0.58;
+        if (player.vy > 30) player.vy *= 0.76; // soften on release for graceful glide/fall
+      }
+      player.vy = Math.min(MAX_VY, player.vy + GRAVITY * gFactor * dt);
     }
 
     // Apply velocity
@@ -431,12 +435,16 @@
     // Platform collision (top only, generous)
     player.onGround = false;
     let landed = false;
+    let impactVy = 0;
     for (const p of LEVEL.platforms) {
       const px2 = p.x + p.w;
       const py2 = p.y + p.h;
       if (player.x + player.w > p.x && player.x < px2) {
-        if (player.y + player.h >= p.y && player.y + player.h - player.vy * dt <= p.y + 2) {
-          if (player.vy >= 0) {
+        // forgiving landing: crossed or slightly overlapping top while descending
+        const prevBottom = player.y + player.h - player.vy * dt;
+        if ((player.y + player.h >= p.y && prevBottom <= p.y + 3) || (player.y + player.h > p.y && player.y + player.h < py2 && player.vy >= -12)) {
+          if (player.vy >= 0 || (player.y + player.h > p.y && player.y + player.h < py2)) {
+            impactVy = player.vy;
             player.y = p.y - player.h;
             player.vy = 0;
             player.onGround = true;
@@ -449,9 +457,8 @@
     }
 
     if (landed) {
-      if (!reducedMotion) spawnDust(player.x + player.w * 0.5, player.y + player.h, 3 + (player.vy > 180 ? 2 : 0));
-      if (Math.abs(player.vy) > 80) playLand();
-      player.vy = Math.min(0, player.vy);
+      if (!reducedMotion) spawnDust(player.x + player.w * 0.5, player.y + player.h, 3 + (impactVy > 140 ? 2 : 0));
+      if (Math.abs(impactVy) > 70) playLand();
       player.flap *= 0.4;
     }
 
@@ -538,8 +545,8 @@
     }
     if (player.x < 40) player.x = 40;
 
-    // Finish gate
-    if (player.x + player.w * 0.5 > LEVEL.finishX && player.y < 310) {
+    // Finish gate (must thread the visible arch, not fly over or clip under)
+    if (player.x + player.w * 0.5 > LEVEL.finishX && player.y > 175 && player.y < 305) {
       finishRun();
       return;
     }
@@ -552,10 +559,10 @@
       player.stamina = Math.min(STAMINA_MAX, player.stamina + STAMINA_REGEN * dt * 0.9);
     }
 
-    // Camera
-    const targetX = Math.max(0, Math.min(LEVEL.length - 280, player.x - 210));
-    camera.x = camera.x * 0.82 + targetX * 0.18;
-    if (camera.shake > 0) camera.shake *= 0.82;
+    // Camera (smooth but responsive follow)
+    const targetX = Math.max(0, Math.min(LEVEL.length - 280, player.x - 205));
+    camera.x = camera.x * 0.76 + targetX * 0.24;
+    if (camera.shake > 0) camera.shake *= 0.78;
 
     // Particles & ribbons
     if (!reducedMotion) {
@@ -905,7 +912,7 @@
 
     // Initial player position
     player.x = LEVEL.startX;
-    player.y = 320;
+    player.y = 354;
     player.vx = 52;
     player.onGround = true;
     camera.x = 40;
