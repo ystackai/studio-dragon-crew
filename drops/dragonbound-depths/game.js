@@ -2777,6 +2777,29 @@
         const py = 160 + ((i * 73 + t * 19) % (r.h - 320)) + Math.sin(t + i * 2) * 14;
         ctx.beginPath(); ctx.arc(px, py, 1.3 + (i % 2), 0, Math.PI * 2); ctx.fill();
       }
+      // Pass 38: final pre-deadline boss arena atmospheric authorship (Fire + Snow + Sea Dragon lens).
+      // Slow-falling heavier ash veils + faint rising heat shimmer lines around central dais/pillars.
+      // Makes the 2-phase Maw of Ash encounter feel like a true climactic handcrafted "painted" set piece — deeper oppressive magic, readable arena boundaries, screenshot-worthy tension before enrage (matches operator "richer room lighting and foreground/background layering" + "moments that look worth sharing").
+      // Pure draw, re-uses t, zero added state/collision/perf; completes room-life consistency for all 6 areas right before 16:38Z deadline.
+      ctx.fillStyle = 'rgba(95, 55, 42, 0.32)';
+      for (let i = 0; i < 9; i++) {
+        const fall = ((t * 11 + i * 67) % (r.h - 80)) + 40;
+        const drift = Math.sin(t * 0.6 + i) * 18;
+        const ax = 210 + ((i * 97) % (r.w - 420)) + drift;
+        const ay = fall;
+        ctx.beginPath(); ctx.arc(ax, ay, 1.6 + (i % 3) * 0.4, 0, Math.PI * 2); ctx.fill();
+      }
+      // faint vertical heat shimmer / rising haze lines near pillars and dais (subtle ARPG "hot air" distortion feel, not literal warp)
+      ctx.strokeStyle = 'rgba(255, 140, 60, 0.09)';
+      ctx.lineWidth = 2.2;
+      for (let s = 0; s < 4; s++) {
+        const sx = 160 + s * 280;
+        const sy = 140 + Math.sin(t * 1.8 + s) * 8;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(sx + 6, sy + 120, sx - 4, sy + 260);
+        ctx.stroke();
+      }
     }
     if (r.theme === 'crypt') {
       // drifting embers and warm soot — scorched crypt, dangerous beauty, lingering magic (Pass 23)
