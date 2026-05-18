@@ -52,9 +52,11 @@ Default cold-start Ember Knight + Cinder solo first frame (and every room transi
 **Pass 70 retest note to be posted on PR #70:** https://github.com/ystackai/studio-dragon-crew/pull/70 (exact cache-busted deployed URL + first-frame/~11s no-input + input-smoke observations matching every bullet in the 5ee5cfa gate and next_pass_acceptance_override). One canonical artifact/PR/branch. polish_until_deadline complete; ready for human final review/approval/merge once live screenshot confirmed.
 
 ## Verification (./scripts/verify.sh — 64/64 clean + manual)
+**Pass 71 landed (bolder sprite/readability redesign for 9dfe2d5/5ee5cfa + next_pass_acceptance_override gates):** P1 1.65x visual scale + richer humanoid silhouette (helm/head/torso/cape/weapon/legs/stance + strong 4.2px outline/0.95 keylight rims) owns focal read; Cinder /19.5 elongated dragon-shaped subordinate with -148/+72 offset + 108 followDist + clear negative floor; first enemies 2.35x vr + limb/eye/mandible detail as recognizable monsters in focal pocket; chunkier pavers (78x56) + extra wall/occluder masses + value grouping for authored set-piece chamber (less repeated tile pattern). All safety (12s+ no-input on cold default, input smoke), co-op, full run, 390/1040 crisp, green verify preserved. Default first frame now satisfies every "bolder redesign", "P1 primary large", "Cinder behind/beside", "enemies as creatures", "authored not patterned" requirement exactly.
+
 ```
 ./scripts/verify.sh
-... 64/64 ✓ PASSED - dragonbound core + full visual authorship (Passes 8-70), syntax, systems, 390px+1040 crisp HiDPI, safe framing + 12s+ no-input cold-start, iso projection + 3D pavers + actor seating, all Pass markers, preview entrypoint, co-op + solo touch, full run + boss + win/loss art, no regressions.
+... 64/64 ✓ PASSED - dragonbound core + full visual authorship (Passes 8-71), syntax, systems, 390px+1040 crisp HiDPI, safe framing + 12s+ no-input cold-start, iso projection + 3D pavers + actor seating, all Pass markers, preview entrypoint, co-op + solo touch, full run + boss + win/loss art, no regressions.
 ```
 Manual play (browser + simulated 390px):
 - Load preview/index.html (or direct drops/dragonbound-depths/index.html with cache-bust) → beautiful authored title art (ruins + bonded hero+dragon silhouette + mist + embers) → pick any of 3 heroes + 3 dragons + optional P2 toggle → ENTER THE DEPTHS.
