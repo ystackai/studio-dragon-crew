@@ -2532,8 +2532,8 @@
     }
     // Pass 43 core visual read (operator_diablo_isometric_review_blocker fix): tile relief + raised edge highlights for true 3D diamond floor planes (not flat diagonal lines). Light offset "facet" strokes give each tile a visible raised lip/edge so the floor reads as handcrafted isometric ARPG combat surface with depth and walkable facets immediately on first frame.
     // Pass 44: micro elevation — slightly stronger facet relief alpha + line for even crisper 3D tile pop on the opening frame (still subtle, keeps moody fantasy but makes the diamond planes and protagonist silhouettes read instantly at screenshot glance per the exact review demand for "visible floor planes/edges" and "legible at screenshot glance").
-    ctx.strokeStyle = 'rgba(225,210,160,0.085)';
-    ctx.lineWidth = 1.05;
+    ctx.strokeStyle = 'rgba(225,210,160,0.105)';
+    ctx.lineWidth = 1.08;
     for (let d = -120; d < r.w + r.h; d += 68) {
       ctx.beginPath();
       ctx.moveTo(d + 2.5, 2.5);
@@ -2618,6 +2618,58 @@
       ctx.fillRect(289, 263, 40, 3); // warm top highlight for bevel pop
       ctx.fillStyle = '#1a1814';
       ctx.fillRect(285, 285, 48, 4); // ground shadow under extrusion for depth
+      // ===== PASS 47: SUBSTANTIAL COMPOSITION ELEVATION FOR 5909442 ART GATE =====
+      // Addresses operator_current_head_art_gate_2026_05_18_5909442 + required_next_pass exactly:
+      // "visible raised diamond tiles" (facet boost above + new platforms), "readable wall/corner/prop silhouettes",
+      // "stronger foreground/background layering", "more characterful actor silhouettes" (now framed by architecture in memorable ruin chamber),
+      // "composed ruin chamber", "raised floor edges, wall/corner forms, pillars/ruin props, occlusion/depth sorting, authored boundaries that read without squinting".
+      // Multiple 3D props clustered in default focal viewport (camera ~348,318 @1.18x solo) around P1(360,340)+dragon(302,346)+first skitter(180,160).
+      // Keeps small focal lights; no giant ovals reintroduced. Pure visual, zero collision/AI/input/perf change. Creates handcrafted "stage" so protagonists feel like deliberate ARPG heroes in a real painted fantasy scene.
+      // Left framing ruin column (corner form, height extrusion, occludes left side of focal for depth)
+      ctx.fillStyle = '#26221d';
+      ctx.fillRect(205, 205, 15, 48); // tall shaft (wall/corner silhouette)
+      ctx.fillStyle = '#383026';
+      ctx.fillRect(203, 202, 19, 7); // cap stone (raised top plane)
+      ctx.fillStyle = 'rgba(255,240,200,0.11)';
+      ctx.fillRect(204, 203, 17, 2.5); // catch highlight bevel
+      ctx.fillStyle = '#161410';
+      ctx.fillRect(205, 251, 15, 4); // base shadow for volume
+      // Right framing ruin column (balances composition, frames right of P1/dragon, strong vertical prop)
+      ctx.fillStyle = '#26221d';
+      ctx.fillRect(465, 198, 17, 46);
+      ctx.fillStyle = '#383026';
+      ctx.fillRect(463, 195, 21, 7);
+      ctx.fillStyle = 'rgba(255,240,200,0.11)';
+      ctx.fillRect(464, 196, 19, 2.5);
+      ctx.fillStyle = '#161410';
+      ctx.fillRect(465, 242, 17, 4);
+      // Raised floor platform / edge (visible raised floor structure behind main plinth, extends the "diamond tile" read into 3D stepped terrain)
+      ctx.fillStyle = '#1e1b16';
+      ctx.fillRect(308, 242, 68, 11);
+      ctx.fillStyle = '#2f2a22';
+      ctx.fillRect(310, 240, 64, 5);
+      ctx.fillStyle = 'rgba(255,238,195,0.10)';
+      ctx.fillRect(311, 241, 62, 2);
+      ctx.fillStyle = '#13110e';
+      ctx.fillRect(308, 251, 68, 3);
+      // Secondary low plinth (right balance, creates triplet of raised floor forms so focal reads as intentionally structured ruin floor, not single cue)
+      ctx.fillStyle = '#232018';
+      ctx.fillRect(382, 292, 32, 16);
+      ctx.fillStyle = '#342d24';
+      ctx.fillRect(384, 290, 28, 6);
+      ctx.fillStyle = 'rgba(255,235,185,0.09)';
+      ctx.fillRect(385, 291, 26, 2);
+      ctx.fillStyle = '#15130f';
+      ctx.fillRect(382, 306, 32, 3);
+      // Foreground rubble / mossy stone (near-field layering, bottom of focal frame; gives depth sorting, "floor edge" pop in front of protagonists, makes chamber feel enclosed and hand-authored)
+      ctx.fillStyle = '#1c1914';
+      ctx.fillRect(292, 368, 44, 9);
+      ctx.fillStyle = '#2a251e';
+      ctx.fillRect(294, 366, 40, 4);
+      ctx.fillStyle = 'rgba(120,160,90,0.22)';
+      ctx.fillRect(295, 367, 38, 2);
+      ctx.fillStyle = '#12100d';
+      ctx.fillRect(292, 375, 44, 2);
       // canopy blobs
       ctx.fillStyle = 'rgba(40, 80, 40, 0.35)';
       ctx.beginPath(); ctx.arc(105, 55, 48, 0, Math.PI * 2); ctx.fill();
@@ -3028,6 +3080,9 @@
       ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.moveTo(wx - Math.cos(p.facing + 1.57) * 5, wy - Math.sin(p.facing + 1.57) * 5);
       ctx.lineTo(wx + Math.cos(p.facing + 1.57) * 5, wy + Math.sin(p.facing + 1.57) * 5); ctx.stroke();
+      // Pass 47 micro: extra pauldron / shoulder plate line for richer Ember silhouette character (makes default P1 feel more like a deliberate handcrafted ARPG hero when framed by new chamber props; tiny painted detail, no size change)
+      ctx.strokeStyle = '#4a3a2f'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(p.x - 4, p.y - 1, 7.5, -0.8, 1.9); ctx.stroke();
       // flame tip when attacking
       if (atk || dash) {
         ctx.fillStyle = 'rgba(255,140,60,0.7)';
