@@ -280,6 +280,18 @@
   let toastTimer = 0;
   let shake = 0;
 
+  // HiDPI + touch polish (Pass 7)
+  const LOGICAL_W = 960;
+  const LOGICAL_H = 620;
+  let dpr = 1;
+  let touch = {
+    moveActive: false,
+    moveCX: 0, moveCY: 0, // logical coords of stick center
+    dirX: 0, dirY: 0,
+    attack: false, special: false, dash: false,
+    show: false
+  };
+
   // ==================== ROOM DEFINITIONS (handcrafted, connected) ====================
   function createRooms() {
     // Each room: {id, name, theme, w, h, walls: [{x,y,w,h}], doors: [{to, x,y,w,h, dir}], spawns: [{x,y,type}] }
@@ -513,6 +525,101 @@
     window.addEventListener('keydown', e => { if (e.key === ' ') e.preventDefault(); }, { passive: false });
   }
 
+  function setupCanvas() {
+    if (!canvas) return;
+    dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2.5)); // cap for perf
+    // Always render at logical * dpr for crisp bespoke art on high-DPI / retina
+    canvas.width = LOGICAL_W * dpr;
+    canvas.height = LOGICAL_H * dpr;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    ctx = canvas.getContext('2d', { alpha: true });
+    // Apply DPR scale so all draw calls continue to use 0..LOGICAL_W logical coords
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // crisp non-pixelated for authored vector-like sprites/effects (remove pixelated feel on modern screens)
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+  }
+
+  // ==================== TOUCH / POINTER (solo mobile grace) ====================
+  function setupTouch() {
+    if (!canvas) return;
+    const hasTouch = 'ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0;
+    touch.show = hasTouch || window.innerWidth <= 520; // show authored pads on small or touch devices
+    canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+    canvas.addEventListener('pointermove', onPointerMove, { passive: false });
+    canvas.addEventListener('pointerup', onPointerUp, { passive: false });
+    canvas.addEventListener('pointercancel', onPointerUp, { passive: false });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  function getLogicalPointer(e) {
+    // Map CSS display coords -> logical game coords (independent of dpr backing)
+    const rect = canvas.getBoundingClientRect();
+    const sx = LOGICAL_W / Math.max(1, rect.width);
+    const sy = LOGICAL_H / Math.max(1, rect.height);
+    return { x: (e.offsetX || e.clientX - rect.left) * sx, y: (e.offsetY || e.clientY - rect.top) * sy };
+  }
+
+  function onPointerDown(e) {
+    if (gameState !== 'playing' || p2Enabled) return;
+    e.preventDefault();
+    const p = getLogicalPointer(e);
+    handleTouchStart(p.x, p.y);
+  }
+  function onPointerMove(e) {
+    if (gameState !== 'playing' || p2Enabled || !touch.moveActive) return;
+    e.preventDefault();
+    const p = getLogicalPointer(e);
+    handleTouchMove(p.x, p.y);
+  }
+  function onPointerUp(e) {
+    if (p2Enabled) return;
+    e.preventDefault();
+    handleTouchEnd();
+  }
+
+  function handleTouchStart(x, y) {
+    const MOVE_ZONE = LOGICAL_W * 0.55; // leave generous right strip for fat-finger action pads on 390px displays
+    if (x < MOVE_ZONE) {
+      // virtual stick center at touch point, clamped to reasonable radius
+      touch.moveActive = true;
+      touch.moveCX = x;
+      touch.moveCY = y;
+      touch.dirX = 0; touch.dirY = 0;
+    } else {
+      // action zones on right: 3 bands (attack mid, special upper, dash lower)
+      const bandH = LOGICAL_H / 3.2;
+      touch.moveActive = false;
+      if (y < bandH * 1.1) { touch.special = true; pulseTouchFlag('special'); }
+      else if (y < bandH * 2.15) { touch.attack = true; pulseTouchFlag('attack'); }
+      else { touch.dash = true; pulseTouchFlag('dash'); }
+      // visual pop
+      if (typeof particles !== 'undefined') {
+        for (let i = 0; i < 6; i++) particles.push(createParticle(x + rand(-8,8), y + rand(-8,8), rand(-0.8,0.8), rand(-1.2,-0.3), 18, '#ffdf9a', 1.8, 'spark'));
+      }
+    }
+  }
+  function handleTouchMove(x, y) {
+    if (!touch.moveActive) return;
+    let dx = x - touch.moveCX;
+    let dy = y - touch.moveCY;
+    const r = 58; // stick radius in logical px
+    const len = Math.hypot(dx, dy);
+    if (len > r) { dx = (dx / len) * r; dy = (dy / len) * r; }
+    touch.dirX = dx / r;
+    touch.dirY = dy / r;
+  }
+  function handleTouchEnd() {
+    touch.moveActive = false;
+    touch.dirX = 0; touch.dirY = 0;
+    // actions are pulsed, cleared by pulse fn
+  }
+  function pulseTouchFlag(flag) {
+    // brief pulse so action fires once per tap, not hold-spam; cooldowns still apply
+    setTimeout(() => { if (touch) touch[flag] = false; }, 90);
+  }
+
   function getInput(p, isP2) {
     let left = false, right = false, up = false, down = false;
     let attack = false, special = false, dash = false;
@@ -533,6 +640,19 @@
       attack = keys['Enter'] || keys['/'];
       special = keys['u'] || keys['U'];
       dash = keys['o'] || keys['O'];
+    }
+
+    // Solo touch steering + action zones (Pass 7, graceful mobile)
+    if (!isP2 && touch.moveActive) {
+      if (touch.dirX < -0.28) left = true;
+      if (touch.dirX >  0.28) right = true;
+      if (touch.dirY < -0.28) up = true;
+      if (touch.dirY >  0.28) down = true;
+    }
+    if (!isP2) {
+      attack = attack || touch.attack;
+      special = special || touch.special;
+      dash = dash || touch.dash;
     }
     return { left, right, up, down, attack, special, dash };
   }
@@ -1000,6 +1120,9 @@
     if (i1.special) playerSpecial(p1, selectedHero.id);
     if (i1.dash) playerDash(p1, selectedHero.id);
 
+    // clear pulsed touch actions after consumption (prevents hold repeat; keyboard unaffected)
+    if (!p2Enabled) { touch.attack = false; touch.special = false; touch.dash = false; }
+
     if (p2 && p2Enabled) {
       const i2 = getInput(p2, true);
       updatePlayerMovement(p2, i2, dt, roomW, roomH);
@@ -1383,8 +1506,8 @@
     cy = lerp(camera.y, cy, followT);
 
     // soft bounds so players don't vanish off edges
-    const viewW = canvas.width / camera.zoom;
-    const viewH = canvas.height / camera.zoom;
+    const viewW = LOGICAL_W / camera.zoom;
+    const viewH = LOGICAL_H / camera.zoom;
     cx = clamp(cx, viewW * 0.5 - 48, room.w - viewW * 0.5 + 48);
     cy = clamp(cy, viewH * 0.5 - 48, room.h - viewH * 0.5 + 48);
 
@@ -1397,12 +1520,12 @@
     if (!ctx || !room) return;
     ctx.save();
     ctx.fillStyle = '#0a0f1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
     // camera transform
     const scale = camera.zoom;
-    const ox = canvas.width * 0.5 - camera.x * scale;
-    const oy = canvas.height * 0.5 - camera.y * scale;
+    const ox = LOGICAL_W * 0.5 - camera.x * scale;
+    const oy = LOGICAL_H * 0.5 - camera.y * scale;
     ctx.translate(ox, oy);
     ctx.scale(scale, scale);
 
@@ -1635,11 +1758,16 @@
     }
 
     // vignette + atmospheric overlay
-    const grd = ctx.createRadialGradient(canvas.width * 0.5, canvas.height * 0.48, 180, canvas.width * 0.5, canvas.height * 0.5, 620);
+    const grd = ctx.createRadialGradient(LOGICAL_W * 0.5, LOGICAL_H * 0.48, 180, LOGICAL_W * 0.5, LOGICAL_H * 0.5, 620);
     grd.addColorStop(0, 'rgba(0,0,0,0)');
     grd.addColorStop(1, 'rgba(4, 7, 14, 0.55)');
     ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+    // Touch control pads (solo only, authored visual, right side action + left virtual stick)
+    if (touch.show && !p2Enabled && gameState === 'playing') {
+      drawTouchControls(ctx);
+    }
   }
 
   function drawRoomBackground(ctx, r) {
@@ -1949,6 +2077,65 @@
     ctx.restore();
   }
 
+  function drawTouchControls(ctx) {
+    // Right-side action pads (fat finger friendly tap zones; visual cues sized for 390px+)
+    const padR = 36;
+    const rightX = LOGICAL_W - 48;
+    const topY = 72;
+    const gap = 78;
+    const isActive = (f) => touch[f];
+
+    // helper ring + icon
+    function drawPad(x, y, label, col, active, icon) {
+      ctx.save();
+      ctx.globalAlpha = active ? 0.95 : 0.72;
+      // outer glow
+      ctx.fillStyle = col + (active ? '55' : '22');
+      ctx.beginPath(); ctx.arc(x, y, padR + 7, 0, 6.28); ctx.fill();
+      // main pad
+      ctx.fillStyle = active ? '#2a2436' : '#1a1f2e';
+      ctx.beginPath(); ctx.arc(x, y, padR, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = active ? col : 'rgba(212,175,119,0.6)';
+      ctx.lineWidth = active ? 3 : 1.5;
+      ctx.beginPath(); ctx.arc(x, y, padR, 0, 6.28); ctx.stroke();
+      // inner rune/icon
+      ctx.fillStyle = active ? col : '#c8b48a';
+      ctx.font = 'bold 15px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(icon, x, y + 1);
+      // label tiny
+      ctx.font = '9px sans-serif';
+      ctx.fillStyle = 'rgba(180,170,140,0.8)';
+      ctx.fillText(label, x, y + padR + 11);
+      ctx.restore();
+    }
+
+    drawPad(rightX, topY, 'SPEC', '#b3e8a0', isActive('special'), '❋');
+    drawPad(rightX, topY + gap, 'ATK', '#ff8a4a', isActive('attack'), '✧');
+    drawPad(rightX, topY + gap*2, 'DASH', '#7fd4ff', isActive('dash'), '⟐');
+
+    // Left virtual stick indicator (only when active)
+    if (touch.moveActive) {
+      const sx = touch.moveCX, sy = touch.moveCY;
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = '#a8d4ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, 22, 0, 6.28); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx, sy, 38, 0, 6.28); ctx.stroke();
+      // stick nub
+      const nubX = sx + touch.dirX * 18;
+      const nubY = sy + touch.dirY * 18;
+      ctx.fillStyle = 'rgba(140,190,255,0.9)';
+      ctx.beginPath(); ctx.arc(nubX, nubY, 9, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(nubX, nubY, 9, 0, 6.28); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   // ==================== HUD ====================
   function updateHUD() {
     const p1s = document.getElementById('p1-hp');
@@ -2097,7 +2284,11 @@
     document.getElementById('game-container').style.display = 'block';
 
     canvas = document.getElementById('game-canvas');
-    ctx = canvas.getContext('2d', { alpha: true });
+    setupCanvas(); // HiDPI backing + DPR transform for sharp authored visuals
+    setupTouch();  // solo drag-to-steer + right-side action pads (fat-finger friendly)
+
+    // reset touch state for fresh run
+    touch.moveActive = false; touch.dirX = 0; touch.dirY = 0; touch.attack = touch.special = touch.dash = false;
 
     rooms = createRooms();
     relics = [];
