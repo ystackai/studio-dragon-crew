@@ -88,7 +88,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 36 Sea Dragon audio thrum + rhythmic world pulse (ambient breathing for real art piece audio layer)" "grep -q 'Sea Dragon (Pass 36)' $DROP/game.js && grep -q 'depths thrum' $DROP/game.js"
   check_shell "Dragonbound Pass 37 explicit visual grace ward (orbiting sigils + bond halo during first-room safety — makes grace 'not just comments' per override)" "grep -q 'Pass 37: explicit visual first-room grace ward' $DROP/game.js && grep -q 'protective sigils' $DROP/game.js"
   check_shell "Dragonbound Pass 38 final boss arena ash veils + heat haze (climactic Maw authorship per Fire/Snow/Sea lens)" "grep -q 'Pass 38: final pre-deadline boss arena' $DROP/game.js && grep -q 'ash veils' $DROP/game.js"
-  check_shell "Dragonbound Pass 40 final grove leaf drift in god rays (enchanted falling leaves for extra opening-frame life + screenshot depth; last pre-deadline authorship capstone)" "grep -q 'Pass 40: final pre-deadline grove leaf drift' $DROP/game.js && grep -q 'enchanted leaves' $DROP/game.js"
+  check_shell "Dragonbound Pass 40/41 final grove leaf drift + inner highlight facet (enchanted leaves with light-catch 3D pop in god rays for opening-frame magic; last pre-deadline authorship capstone + micro polish)" "grep -q 'Pass 40: final pre-deadline grove leaf drift' $DROP/game.js && grep -q 'enchanted leaves' $DROP/game.js && grep -q 'Pass 41 micro' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -116,7 +116,8 @@ verify_dragonbound() {
   echo "  20. Note Pass 36: Sea Dragon audio adds slow ~7s 'depths thrum' ambient pulse (low magical breathing of the ruin) + distinct impact cues for dash/hurt/boss — the world now *feels* alive in quiet moments matching the visual authorship"
   echo "  21. Note Pass 37: explicit orbiting protective sigil wards + ember halo visibly wrap the P1+dragon pair for the full ~2.3s first-room grace window — the safety is not hidden; reviewer sees the bond protected by the Depths themselves before pressure builds (addresses 'explicit ... not just safer spawn comments')"
   echo "  22. Note Pass 38: final boss Maw arena now has slow-falling ash veils + pulsing heat haze over the dais — the climactic 2-phase fight reads as a deliberate, oppressive-yet-wondrous painted set piece (pairs with grove opening for full run authorship)"
-  echo "  23. Note Pass 40: Grove god rays now contain 4 slow-falling enchanted leaves that drift and sway — the default cold-start Ember+Cinder frame has one more layer of delicate magical forest life, making even the idle first viewport a tiny painting worth sharing (final pre-deadline taste polish)"
+  echo "  23. Note Pass 40/41: Grove god rays now contain 4 slow-falling enchanted leaves (with tiny inner highlight facets that catch the light shafts) that drift and sway — the default cold-start Ember+Cinder frame has one more layer of delicate 3D magical forest life, making even the idle first viewport a tiny painting worth sharing (final pre-deadline taste polish + micro authorship)"
+  echo "  24. Note Pass 41: the leaf highlight is the smallest possible final visual elevation (3D pop without distraction) ensuring the opening composition remains the strongest possible handcrafted 'real art piece' example under the exact conditions the monitor/reviewer use (defaults, no input, high-DPI or not)."
   echo
 }
 

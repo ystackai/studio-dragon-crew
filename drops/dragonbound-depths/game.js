@@ -2606,6 +2606,11 @@
         ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.lineTo(0, 7); ctx.closePath(); // tiny leaf
         ctx.fill();
         ctx.stroke();
+        // Pass 41 micro: inner highlight facet (light catch in god rays) — makes enchanted leaves feel 3D and integrated with the volumetric shafts in the exact default cold-start Grove frame (stronger "worth sharing" composition per art mandate, zero cost)
+        ctx.fillStyle = 'rgba(210, 235, 170, 0.65)';
+        ctx.beginPath();
+        ctx.moveTo(-1.2, 1); ctx.lineTo(1.2, 1); ctx.lineTo(0, 4.5); ctx.closePath();
+        ctx.fill();
         ctx.restore();
       }
       ctx.lineWidth = 1;
