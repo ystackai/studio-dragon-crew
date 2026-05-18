@@ -82,6 +82,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 28 dragon idle personality head sway + gaze wander (alive companion emote when still for creature authorship)" "grep -q 'Pass 28' $DROP/game.js && grep -q 'idleSway' $DROP/game.js && grep -q 'idleGaze' $DROP/game.js"
   check_shell "Dragonbound Pass 29 dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final authorship capstone)" "grep -q 'Pass 29' $DROP/game.js && grep -q 'idleTail' $DROP/game.js && grep -q 'idleWing' $DROP/game.js"
   check_shell "Dragonbound Pass 30 minimap cartography authorship (themed parchment, wall glyphs, entity markers, door ticks for magical HUD map)" "grep -q 'Pass 30' $DROP/game.js && grep -q 'minimap cartography' $DROP/game.js && grep -q 'parchment' $DROP/styles.css"
+  check_shell "Dragonbound Pass 31 title art bonded hero silhouette (previews core hero+dragon bond fantasy on entry canvas for stronger first-screen authorship)" "grep -q 'Pass 31' $DROP/game.js && grep -q 'bonded hero silhouette' $DROP/game.js && grep -q 'luminous bond arc' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -103,6 +104,7 @@ verify_dragonbound() {
   echo "  14. Note Pass 28: pause near a cleared area or shrine — the dragon companion now gently sways its head and eyes wander curiously (alive personality, not static); move and it stops — feels like a real bonded creature (screenshot the idle dragon for proof of authorship)"
   echo "  15. Note Pass 29: while idle, watch the dragon's tail slowly flick with curious life and wings show subtle resting micro-twitch (even richer personality in quiet moments; screenshot the still companion near a faceted relic or shrine for the full living bond authorship)"
   echo "  16. Note Pass 30: glance at the minimap in any room — it now shows a warm parchment map with the exact wall layout, door paths, your glowing hero position, the bonded dragon triangle, and color-coded enemy dots (themed per area) — the HUD itself feels like a magical artifact of the world (screenshot the minimap in Grove vs Crypt for proof of cartography authorship)"
+  echo "  17. Note Pass 31: title header canvas now features a small bonded hero knight silhouette (helm, cloak, planted sword with warm tip glow) standing with the dragon before the portal, linked by a subtle luminous arc — the very first art the reviewer sees sells the hero+dragon bond fantasy immediately and tastefully (screenshot the title art for final authorship proof)"
   echo
 }
 

@@ -142,6 +142,53 @@
     ctx.fillStyle = '#ffd7a0';
     ctx.beginPath(); ctx.arc(335, 138, 1.6, 0, Math.PI * 2); ctx.fill();
 
+    // Pass 31: bonded hero silhouette — previews the core "mortal adventurer + young dragon companion" fantasy on the title art itself.
+    // Small cloaked knight (helm + planted sword with warm tip) standing left of the dragon before the portal, with subtle luminous bond arc.
+    // Strengthens immediate visual authorship and "this is about the bond" read from the very first screen, per operator art mandate and Fire Dragon lens (heroic warmth, creature wonder together).
+    ctx.save();
+    ctx.translate(258, 172);
+    // Dark cloak/robe body (silhouette, grounded weight)
+    ctx.fillStyle = '#1a2438';
+    ctx.beginPath();
+    ctx.moveTo(-7, -2);
+    ctx.quadraticCurveTo(-11, 18, -5, 30);
+    ctx.lineTo(5, 30);
+    ctx.quadraticCurveTo(11, 18, 7, -2);
+    ctx.fill();
+    // Helm + head (distinct from dragon)
+    ctx.beginPath();
+    ctx.arc(0, -6, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Helm crest ridge
+    ctx.fillStyle = '#2a3448';
+    ctx.fillRect(-2.5, -12, 5, 3.5);
+    // Planted sword (blade + hilt)
+    ctx.strokeStyle = '#1f2a3f';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(7, 2);
+    ctx.lineTo(15, 16);
+    ctx.stroke();
+    ctx.strokeStyle = '#3a4558';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(15, 16);
+    ctx.lineTo(14, 34);
+    ctx.stroke();
+    // Warm sword tip (tiny echo of dragon ember, bond resonance)
+    ctx.fillStyle = '#ff8a4a';
+    ctx.beginPath(); ctx.arc(14, 33.5, 1.7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffd7a0';
+    ctx.beginPath(); ctx.arc(14, 33.5, 0.85, 0, Math.PI * 2); ctx.fill();
+    // Thin luminous bond arc (warm, connecting hero to dragon's head/eye ~+70x -32y)
+    ctx.strokeStyle = 'rgba(255, 175, 95, 0.32)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(6, -8);
+    ctx.quadraticCurveTo(42, -20, 78, -34);
+    ctx.stroke();
+    ctx.restore();
+
     // Mist layers + particles
     ctx.fillStyle = 'rgba(140, 170, 210, 0.08)';
     for (let i = 0; i < 5; i++) {
