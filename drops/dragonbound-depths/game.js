@@ -280,7 +280,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. Directly addresses "tiny/shape-based" per operator mandate.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17: enemy visual authorship (richer character silhouettes + motion for all 6 types + boss phase accents) to match hero/dragon/room quality and deliver "clearer enemy identity".
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -1620,7 +1620,9 @@
       }
     });
 
-    // enemies (with character)
+    // enemies (with character) — Pass 17 visual authorship upgrade
+    // Richer, readable silhouettes with type identity, motion, and detail to match the handcrafted hero/dragon/room standard.
+    // No behavior change; pure draw polish for "clearer enemy identity" per art mandate.
     enemies.forEach(en => {
       if (en.hp <= 0) return;
       const flash = en.hitFlash > 0 ? 1 : 0;
@@ -1628,20 +1630,26 @@
       if (flash) ctx.fillStyle = '#fff';
 
       if (en.type === 'boss') {
-        // Big ash maw dragon-boss
+        // Big ash maw dragon-boss — upgraded with phase 2 menace + vents
         ctx.fillStyle = flash ? '#fff' : '#2a1f18';
         ctx.beginPath(); ctx.ellipse(en.x, en.y, en.radius * 1.1, en.radius * 0.72, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = flash ? '#fff' : '#4a2f22';
         ctx.beginPath(); ctx.arc(en.x + 16, en.y - 6, 15, 0, Math.PI * 2); ctx.fill();
-        // horns
+        // horns (larger menace)
         ctx.fillStyle = '#1a140f';
-        ctx.beginPath(); ctx.moveTo(en.x + 22, en.y - 14); ctx.lineTo(en.x + 36, en.y - 28); ctx.lineTo(en.x + 28, en.y - 11); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(en.x + 22, en.y + 4); ctx.lineTo(en.x + 34, en.y + 19); ctx.lineTo(en.x + 26, en.y + 6); ctx.fill();
-        // eyes
+        ctx.beginPath(); ctx.moveTo(en.x + 22, en.y - 14); ctx.lineTo(en.x + 38, en.y - 30); ctx.lineTo(en.x + 28, en.y - 11); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(en.x + 22, en.y + 4); ctx.lineTo(en.x + 36, en.y + 21); ctx.lineTo(en.x + 26, en.y + 6); ctx.fill();
+        // eyes (phase 2 glow)
         ctx.fillStyle = en.phase === 2 ? '#ff4a3a' : '#ff9a5a';
-        ctx.beginPath(); ctx.arc(en.x + 24, en.y - 4, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 24, en.y - 4, 4.8, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(en.x + 26, en.y - 5, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 26, en.y - 5, 1.9, 0, Math.PI * 2); ctx.fill();
+        // phase 2 lava vents on skull
+        if (en.phase === 2) {
+          ctx.fillStyle = 'rgba(255,90,40,0.9)';
+          ctx.beginPath(); ctx.arc(en.x + 8, en.y + 9, 2.8, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(en.x + 32, en.y + 2, 2.2, 0, Math.PI * 2); ctx.fill();
+        }
         // health rim
         ctx.strokeStyle = '#ff6b4a';
         ctx.lineWidth = 3;
@@ -1671,55 +1679,149 @@
           }
         }
       } else if (en.type === 'skitter') {
+        // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#5a4638';
-        ctx.fillRect(en.x - 4, en.y - 2, 8, 4);
-        // legs
-        ctx.strokeStyle = '#2a2118';
-        ctx.lineWidth = 1.5;
-        for (let k = 0; k < 4; k++) {
-          const la = (k - 1.5) * 0.7 + (en.vx * 0.3);
-          ctx.beginPath(); ctx.moveTo(en.x, en.y); ctx.lineTo(en.x + Math.cos(la) * 16, en.y + Math.sin(la) * 9); ctx.stroke();
+        ctx.fillStyle = '#4a3a2f';
+        ctx.beginPath(); ctx.arc(en.x - 2.5, en.y + 0.5, en.radius * 0.68, 0, Math.PI * 2); ctx.fill(); // abdomen
+        // mandibles (snappy)
+        const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.1;
+        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.7;
+        ctx.beginPath(); ctx.moveTo(en.x + 5, en.y - 1.5); ctx.lineTo(en.x + 11, en.y - 2.5 - mPhase); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(en.x + 5, en.y + 1.5); ctx.lineTo(en.x + 11, en.y + 2.5 + mPhase); ctx.stroke();
+        // 6 legs, motion-aware scuttle
+        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.35;
+        for (let k = 0; k < 6; k++) {
+          const la = (k - 2.5) * 0.58 + (en.vx || 0) * 0.38 + Math.sin(Date.now() / 190 + k) * 0.35;
+          const len = 13.5 + (k % 2) * 2.5;
+          ctx.beginPath(); ctx.moveTo(en.x, en.y);
+          ctx.lineTo(en.x + Math.cos(la) * len, en.y + Math.sin(la) * (len * 0.58)); ctx.stroke();
         }
+        // eyes
+        ctx.fillStyle = '#ffcc66';
+        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y - 2.1, 1.55, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y + 2.1, 1.55, 0, Math.PI * 2); ctx.fill();
       } else if (en.type === 'archer') {
+        // Thorn Archer — hooded cloak, quiver, bow with tension telegraph (ranged identity)
         ctx.fillStyle = flash ? '#fff' : '#2f3a2a';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
+        // cloak/hood
         ctx.fillStyle = '#1f2a1f';
-        ctx.fillRect(en.x - 3, en.y - 8, 6, 16);
-        ctx.strokeStyle = '#8a9a7a';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(en.x + 9, en.y - 6); ctx.lineTo(en.x + 18, en.y + 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(en.x - 1, en.y + 1, 7, 11, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(en.x - 2, en.y - 9, 5, 18);
+        // legs
+        ctx.fillStyle = '#2a3228';
+        ctx.fillRect(en.x - 4, en.y + 8, 3, 6); ctx.fillRect(en.x + 2, en.y + 8, 3, 6);
+        // quiver
+        ctx.fillStyle = '#3a2f22';
+        ctx.fillRect(en.x - 9, en.y - 1, 3, 9);
+        // bow + string (drawn when about to shoot)
+        const drawT = (en.shootCd || 60) < 28 ? 0.7 : 0.2;
+        ctx.strokeStyle = '#8a9a7a'; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(en.x + 7, en.y - 7); ctx.quadraticCurveTo(en.x + 16 + drawT * 3, en.y, en.x + 7, en.y + 7); ctx.stroke();
+        ctx.strokeStyle = 'rgba(140,160,120,0.6)'; ctx.lineWidth = 0.9;
+        ctx.beginPath(); ctx.moveTo(en.x + 8, en.y - 6); ctx.lineTo(en.x + 8, en.y + 6); ctx.stroke();
+        // arrow nock when tense
+        if (drawT > 0.5) {
+          ctx.strokeStyle = '#a8b89a'; ctx.lineWidth = 1.3;
+          ctx.beginPath(); ctx.moveTo(en.x + 17, en.y); ctx.lineTo(en.x + 23, en.y - 0.5); ctx.stroke();
+        }
       } else if (en.type === 'brute') {
+        // Shield Brute (elite) — horned helm, plate, spiked shield, greaves (tank identity)
         ctx.fillStyle = flash ? '#fff' : '#3f3a32';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
+        // shield plate (bigger, bossed)
         ctx.fillStyle = '#2a2620';
-        ctx.fillRect(en.x - 10, en.y - 4, 20, 8); // shield plate
-        ctx.fillStyle = '#5a5548';
-        ctx.beginPath(); ctx.arc(en.x - 4, en.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(en.x - 12, en.y - 6, 24, 12);
+        ctx.fillStyle = '#4a4235';
+        ctx.fillRect(en.x - 9, en.y - 3, 18, 6);
+        // spikes on shield
+        ctx.fillStyle = '#5a5245';
+        ctx.beginPath(); ctx.moveTo(en.x - 7, en.y - 5); ctx.lineTo(en.x - 4, en.y - 9); ctx.lineTo(en.x - 1, en.y - 5); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(en.x + 7, en.y - 5); ctx.lineTo(en.x + 4, en.y - 9); ctx.lineTo(en.x + 1, en.y - 5); ctx.fill();
+        // helm + crest
+        ctx.fillStyle = '#2f2822';
+        ctx.beginPath(); ctx.arc(en.x - 3, en.y - 1, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#5a3a2a';
+        ctx.beginPath(); ctx.moveTo(en.x - 8, en.y - 7); ctx.lineTo(en.x - 1, en.y - 13); ctx.lineTo(en.x + 5, en.y - 6); ctx.fill();
+        // greaves
+        ctx.fillStyle = '#3a3630';
+        ctx.fillRect(en.x - 7, en.y + 10, 5, 7); ctx.fillRect(en.x + 3, en.y + 10, 5, 7);
       } else if (en.type === 'wisp') {
+        // Wisp Caster — ethereal core + rotating satellites + veil tendrils (summon/slow identity)
+        const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0018;
         ctx.fillStyle = flash ? '#fff' : '#5a3a6a';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(190, 140, 255, 0.6)';
-        ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 1.6, 0, Math.PI * 2); ctx.fill();
+        // outer veil
+        ctx.fillStyle = 'rgba(170, 120, 230, 0.35)';
+        ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 1.65, 0, Math.PI * 2); ctx.fill();
+        // 3 orbiting motes
+        for (let o = 0; o < 3; o++) {
+          const oa = t * 1.8 + (o * 2.094);
+          const ox = en.x + Math.cos(oa) * (en.radius * 1.35);
+          const oy = en.y + Math.sin(oa) * (en.radius * 1.1) - 1;
+          ctx.fillStyle = 'rgba(200, 160, 255, 0.85)';
+          ctx.beginPath(); ctx.arc(ox, oy, 2.8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(230, 210, 255, 0.5)';
+          ctx.beginPath(); ctx.arc(ox, oy, 4.2, 0, Math.PI * 2); ctx.fill();
+        }
+        // subtle veil tendrils
+        ctx.strokeStyle = 'rgba(150, 100, 210, 0.45)'; ctx.lineWidth = 1.4;
+        for (let v = 0; v < 3; v++) {
+          const va = t * 0.6 + v;
+          ctx.beginPath();
+          ctx.moveTo(en.x + Math.cos(va) * 4, en.y + Math.sin(va) * 3);
+          ctx.quadraticCurveTo(en.x + Math.cos(va + 0.8) * 11, en.y + Math.sin(va + 0.6) * 14, en.x + Math.cos(va + 1.6) * 7, en.y + 18);
+          ctx.stroke();
+        }
       } else if (en.type === 'burrow') {
+        // Burrower — emerging dirt carapace + claws + eyes when up; subtle mound when down
         if (!en.underground) {
           ctx.fillStyle = flash ? '#fff' : '#4a3a2a';
           ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
+          // dirt shell plates
+          ctx.fillStyle = '#3a2a1f';
+          ctx.fillRect(en.x - 5, en.y - 3, 11, 7);
           ctx.fillStyle = '#2a2118';
-          ctx.fillRect(en.x - 3, en.y - 2, 6, 4);
+          ctx.fillRect(en.x - 3, en.y + 3, 7, 4);
+          // claws
+          ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(en.x + 5, en.y + 1); ctx.lineTo(en.x + 12, en.y + 4); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(en.x + 5, en.y - 1); ctx.lineTo(en.x + 11, en.y - 5); ctx.stroke();
+          // glowing slit eyes (ambush menace)
+          ctx.fillStyle = '#cc5533';
+          ctx.beginPath(); ctx.arc(en.x + 3, en.y - 2.5, 1.4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(en.x + 3, en.y + 2.5, 1.4, 0, Math.PI * 2); ctx.fill();
         } else {
-          ctx.fillStyle = 'rgba(60, 40, 30, 0.3)';
-          ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 0.7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(60, 40, 30, 0.38)';
+          ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 0.75, 0, Math.PI * 2); ctx.fill();
+          // subtle rising dirt hint
+          ctx.fillStyle = 'rgba(80, 55, 35, 0.25)';
+          ctx.beginPath(); ctx.arc(en.x - 1, en.y - 4, 3, 0, Math.PI * 2); ctx.fill();
         }
       } else if (en.type === 'drake') {
+        // Cursed Drake — winged serpent body, flapping wings, tail, snout horns (flying charger identity)
+        const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0022;
+        const wflap = Math.sin(t * 3.1) * 0.65 + 0.2;
         ctx.fillStyle = flash ? '#fff' : '#2f3a3a';
-        ctx.beginPath(); ctx.ellipse(en.x, en.y, en.radius * 1.3, en.radius * 0.7, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(en.x, en.y, en.radius * 1.28, en.radius * 0.72, -0.35, 0, Math.PI * 2); ctx.fill();
+        // neck + head
         ctx.fillStyle = '#1f2a2a';
-        ctx.beginPath(); ctx.arc(en.x + 8, en.y - 3, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#6a8a7a';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(en.x - 6, en.y); ctx.lineTo(en.x - 16, en.y - 8); ctx.stroke();
+        ctx.beginPath(); ctx.arc(en.x + 9, en.y - 2, 6, 0, Math.PI * 2); ctx.fill();
+        // horns
+        ctx.fillStyle = '#3a2f28';
+        ctx.beginPath(); ctx.moveTo(en.x + 11, en.y - 6); ctx.lineTo(en.x + 17, en.y - 12); ctx.lineTo(en.x + 13, en.y - 5); ctx.fill();
+        // flapping wings (expressive)
+        ctx.fillStyle = '#25302e';
+        ctx.beginPath(); ctx.moveTo(en.x - 2, en.y - 2); ctx.lineTo(en.x - 18, en.y - 9 - wflap * 6); ctx.lineTo(en.x - 3, en.y + 3); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(en.x - 1, en.y + 1); ctx.lineTo(en.x - 17, en.y + 8 + wflap * 5); ctx.lineTo(en.x - 2, en.y + 4); ctx.fill();
+        // tail curl
+        ctx.strokeStyle = '#25302e'; ctx.lineWidth = 3.2;
+        ctx.beginPath(); ctx.moveTo(en.x - 8, en.y + 1); ctx.quadraticCurveTo(en.x - 16, en.y + 5, en.x - 19, en.y + 11); ctx.stroke();
+        // leg claws
+        ctx.fillStyle = '#1a2220';
+        ctx.beginPath(); ctx.arc(en.x + 2, en.y + 6, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x - 5, en.y + 7, 2, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
 

@@ -24,21 +24,22 @@ Key requirements met and exceeded:
 - Self-contained drop: `drops/dragonbound-depths/` (index.html + game.js 2500+ LOC + styles.css) — pure client, no deps.
 - **Title + select:** Beautiful authored canvas title art (ruins + dragon + mist + embers), fast hero/dragon cards with live previews, P2 toggle, control hints.
 - **Gameplay vertical slice:** 6 handcrafted connected rooms across 2+ themes (grove → crystal → sanctum → fissure → ember crypt → boss maw), enemies with distinct AI/telegraphs, relics, dragon companion that fights + emotes, full co-op or solo, win/loss/run summary with stats + best.
-- **Visual authorship (core of this WorkOrder):** 
-  - Heroes: radius 18, fully bespoke per-class vector silhouettes (plumed knight with flame sword + cape, witch with crystal staff + veil, ranger with ribbon spear + hood), shadows, badges, HP, motion.
-  - Dragons: radius 16, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
-  - Rooms: layered textures, tree trunks/vines/mushrooms, crystal facets/stalagmites, pillars/runes, lava rocks/pools/stalactites, boss dais; light shafts, atmospheric particles (Pass 6+10).
-  - Effects: type-specific glowing particles (fire/ice/wind), projectile trails/glows, focal hero/dragon bloom lights, richer feedback.
-  - Desktop canvas 1040x670 logical (Pass 16: crisp 1:1 render + r20 heroes + 1.18x solo zoom for commanding, screenshot-ready presence); 390px mobile graceful.
+- **Visual authorship (core of this WorkOrder — fully landed via Passes 8-17):** 
+  - Heroes: radius 20, fully bespoke per-class vector silhouettes (plumed knight with flame sword + cape, witch with crystal staff + veil, ranger with ribbon spear + hood), shadows, badges, HP, motion.
+  - Dragons: radius 18, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
+  - Rooms: 6 connected areas (grove/forest, crystal, sanctum, fissure/lava, ember crypt, boss maw) with layered textures + strong authored props + light shafts/god rays + fine grain + atmospheric motes per theme.
+  - Enemies (Pass 17): all 6 types + boss with rich character silhouettes with motion (skitter 6-leg mandibles, archer hooded bow-tension, brute horned spiked shield, wisp orbiting orbs+veil, burrow claws+eyes, drake flapping wings+tail; boss phase-2 lava vents) — no generic shapes, clear identity at glance.
+  - Effects: type-specific glowing particles (fire/ice/wind), projectile trails/glows, focal hero/dragon bloom lights, world camera shake on impact, richer feedback.
+  - Desktop canvas 1040x670 logical (Pass 16: crisp 1:1 render + r20 heroes + 1.18x solo zoom for commanding, screenshot-ready presence); 390px mobile graceful. The playable viewport is a real handcrafted magical-fantasy art piece.
 - **Controls + UX:** Full keyboard parity (P1 WASD/Space/Q/E, P2 Arrows/Enter/U/O), solo touch virtual stick + action pads, pause/mute/restart, overlays, no console errors.
 - **Audio:** WebAudio (attacks, hits, abilities, clears, boss, ambient) with mute persist.
-- **Verification:** 25/25 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15+16). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work.
+- **Verification:** 26/26 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15+16+17 enemy authorship). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work.
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
 ## Verification (./scripts/verify.sh — 23/23 clean + manual)
 ```
 ./scripts/verify.sh
-... 25/25 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 16 framing, preview entrypoint
+... 26/26 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 16 framing + Pass 17 enemy authorship, preview entrypoint
 ```
 Manual play (browser):
 - Load preview/index.html (or direct drop) → title → pick hero + dragon + optional P2 → ENTER.
@@ -56,6 +57,7 @@ Manual play (browser):
 - Pass 13: 5th combat room (Ember Crypt) for spec.
 - Pass 14: Preview redirect to game root.
 - Pass 16: Higher-res canvas (1040×670 logical matching CSS), larger crisp heroes/dragons (r20/18), tighter protagonist-centric camera framing (solo 1.18) — final visual authorship polish making the playable viewport unmistakably handcrafted and focal.
+- Pass 17: Enemy visual authorship — all 6 enemy types + boss now have rich bespoke silhouettes with motion/character (skitter 6-leg mandibles, archer hooded bow-tension, brute horned shield, wisp orbiting orbs+veil, burrow claws+eyes, drake flapping wings+tail; boss phase-2 vents). Completes "clearer enemy identity" and matches hero/dragon detail; no generic shapes remain.
 
 ## Known / Limitations (transparent)
 - Pure static client-side (localStorage for best/mute; perfect for FactoryX previews).
