@@ -2181,31 +2181,40 @@
         }
       } else if (en.type === 'skitter') {
         // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
+        // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
+        // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
+        const vr = en.radius * 1.32;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
-        ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x, en.y, vr, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#4a3a2f';
-        ctx.beginPath(); ctx.arc(en.x - 2.5, en.y + 0.5, en.radius * 0.68, 0, Math.PI * 2); ctx.fill(); // abdomen
-        // mandibles (snappy) — Pass 53: boosted line + brighter threat color so first-room skitters read as immediate hostile threats in the chamber (not tiny markers) per tallhamn "first enemy should read as threat in chamber, not tiny marker"
-        const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.1;
-        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.05;
-        ctx.beginPath(); ctx.moveTo(en.x + 5, en.y - 1.5); ctx.lineTo(en.x + 11, en.y - 2.5 - mPhase); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(en.x + 5, en.y + 1.5); ctx.lineTo(en.x + 11, en.y + 2.5 + mPhase); ctx.stroke();
-        // 6 legs, motion-aware scuttle
-        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.35;
+        ctx.beginPath(); ctx.arc(en.x - 3.2, en.y + 0.8, vr * 0.72, 0, Math.PI * 2); ctx.fill(); // abdomen
+        // carapace ridge (3D threat silhouette)
+        ctx.fillStyle = '#2a2118';
+        ctx.beginPath(); ctx.arc(en.x - 0.8, en.y - 1.8, vr * 0.55, 0, Math.PI * 2); ctx.fill();
+        // mandibles (snappy, thicker for menace)
+        const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.25;
+        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.6;
+        ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y - 2.2); ctx.lineTo(en.x + 14.5, en.y - 3.8 - mPhase); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y + 2.0); ctx.lineTo(en.x + 14.5, en.y + 3.6 + mPhase); ctx.stroke();
+        // 6 legs, motion-aware scuttle (longer reach for threat scale)
+        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.65;
         for (let k = 0; k < 6; k++) {
           const la = (k - 2.5) * 0.58 + (en.vx || 0) * 0.38 + Math.sin(Date.now() / 190 + k) * 0.35;
-          const len = 13.5 + (k % 2) * 2.5;
+          const len = 16.5 + (k % 2) * 3.2;
           ctx.beginPath(); ctx.moveTo(en.x, en.y);
           ctx.lineTo(en.x + Math.cos(la) * len, en.y + Math.sin(la) * (len * 0.58)); ctx.stroke();
         }
-        // eyes — Pass 53: warmer/more menacing threat tint + slight size for first-glance readability as hostile pack in the composed chamber (addresses "make the first enemy group readable in first screenshot")
-        ctx.fillStyle = '#ffaa55';
-        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y - 2.1, 1.7, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y + 2.1, 1.7, 0, Math.PI * 2); ctx.fill();
-        // small hostile pupil glint
-        ctx.fillStyle = '#662200';
-        ctx.beginPath(); ctx.arc(en.x + 4.6, en.y - 2.0, 0.7, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 4.6, en.y + 2.2, 0.7, 0, Math.PI * 2); ctx.fill();
+        // eyes — two pairs for alien threat read, warmer glow
+        ctx.fillStyle = '#ffbb66';
+        ctx.beginPath(); ctx.arc(en.x + 5.5, en.y - 3.0, 2.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 5.5, en.y + 2.8, 2.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffdd88';
+        ctx.beginPath(); ctx.arc(en.x + 7.2, en.y - 1.6, 1.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 7.2, en.y + 1.4, 1.1, 0, Math.PI * 2); ctx.fill();
+        // small hostile pupils
+        ctx.fillStyle = '#551100';
+        ctx.beginPath(); ctx.arc(en.x + 5.9, en.y - 2.9, 0.85, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 5.9, en.y + 2.9, 0.85, 0, Math.PI * 2); ctx.fill();
       } else if (en.type === 'archer') {
         // Thorn Archer — hooded cloak, quiver, bow with tension telegraph (ranged identity)
         ctx.fillStyle = flash ? '#fff' : '#2f3a2a';
@@ -2689,8 +2698,9 @@
       // Pass 52 (Snow Dragon): subtle value-shape lift on the playable floor under the exact focal pocket (brighter diamond tiles immediately around P1+dragon+first foes).
       // Makes the hero/dragon/enemy group pop clearly against the now-structured receding chamber per 9ae887d review ("brighten/value-shape the playable floor and make the hero/dragon/enemy group pop clearly against the chamber").
       // Tiny radial only (no giant ovals), layered over the 3D pavers so the central combat space reads as the intentional lit stage inside the authored ruin hall.
+      // Pass 58: stronger focal staging alphas for even clearer value hierarchy — pavers under protagonists catch more light so dark silhouettes + first skitters read as deliberate ARPG focal group at screenshot glance (addresses "stronger value staging", "P1/dragon/enemy pop").
       ctx.save();
-      ctx.globalAlpha = 0.11;
+      ctx.globalAlpha = 0.16;
       const fl = ctx.createRadialGradient(365, 318, 48, 365, 318, 205);
       fl.addColorStop(0, '#c8d8a8');
       fl.addColorStop(1, 'rgba(0,0,0,0)');
@@ -2700,10 +2710,10 @@
 
       // focal pocket light (Pass 46: ... now paints over the new 3D tessellated floor for even stronger "lit stage on real geometry" read)
       ctx.save();
-      ctx.globalAlpha = 0.18;
+      ctx.globalAlpha = 0.24;
       ctx.fillStyle = '#b4e8a8';
       ctx.beginPath(); ctx.ellipse(370, 305, 138, 92, -0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.09;
+      ctx.globalAlpha = 0.13;
       ctx.fillStyle = '#d4f8c8';
       ctx.beginPath(); ctx.ellipse(370, 305, 82, 55, -0.08, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
@@ -2730,42 +2740,47 @@
       // "composed ruin chamber", "raised floor edges, wall/corner forms, pillars/ruin props, occlusion/depth sorting, authored boundaries that read without squinting".
       // Multiple 3D props clustered in default focal viewport (camera ~348,318 @1.18x solo) around P1(360,340)+dragon(302,346)+first skitter(180,160).
       // Keeps small focal lights; no giant ovals reintroduced. Pure visual, zero collision/AI/input/perf change. Creates handcrafted "stage" so protagonists feel like deliberate ARPG heroes in a real painted fantasy scene.
-      // Left framing ruin column (corner form, height extrusion, occludes left side of focal for depth)
+      // Left framing ruin column (chunkier for Pass 58: stronger architectural mass + readable silhouette at glance; taller cap + side bevel for 3D extrusion read)
       ctx.fillStyle = '#26221d';
-      ctx.fillRect(205, 205, 15, 48); // tall shaft (wall/corner silhouette)
+      ctx.fillRect(198, 202, 26, 52); // tall shaft (chunkier wall/corner silhouette)
       ctx.fillStyle = '#383026';
-      ctx.fillRect(203, 202, 19, 7); // cap stone (raised top plane)
-      ctx.fillStyle = 'rgba(255,240,200,0.11)';
-      ctx.fillRect(204, 203, 17, 2.5); // catch highlight bevel
+      ctx.fillRect(195, 198, 32, 9); // cap stone (raised top plane)
+      ctx.fillStyle = 'rgba(255,240,200,0.13)';
+      ctx.fillRect(196, 199, 30, 3); // catch highlight bevel
       ctx.fillStyle = '#161410';
-      ctx.fillRect(205, 251, 15, 4); // base shadow for volume
-      // Right framing ruin column (balances composition, frames right of P1/dragon, strong vertical prop)
+      ctx.fillRect(198, 254, 26, 5); // base shadow for volume
+      // side face for depth (left of column)
+      ctx.fillStyle = '#1a1612';
+      ctx.fillRect(195, 202, 4, 52);
+      // Right framing ruin column (chunkier, balanced)
       ctx.fillStyle = '#26221d';
-      ctx.fillRect(465, 198, 17, 46);
+      ctx.fillRect(458, 196, 28, 50);
       ctx.fillStyle = '#383026';
-      ctx.fillRect(463, 195, 21, 7);
-      ctx.fillStyle = 'rgba(255,240,200,0.11)';
-      ctx.fillRect(464, 196, 19, 2.5);
+      ctx.fillRect(455, 192, 34, 9);
+      ctx.fillStyle = 'rgba(255,240,200,0.13)';
+      ctx.fillRect(456, 193, 32, 3);
       ctx.fillStyle = '#161410';
-      ctx.fillRect(465, 242, 17, 4);
-      // Raised floor platform / edge (visible raised floor structure behind main plinth, extends the "diamond tile" read into 3D stepped terrain)
+      ctx.fillRect(458, 246, 28, 5);
+      ctx.fillStyle = '#1a1612';
+      ctx.fillRect(484, 196, 4, 50);
+      // Raised floor platform / edge (visible raised floor structure behind main plinth, extends the "diamond tile" read into 3D stepped terrain) — Pass 58 chunkier for stronger silhouette
       ctx.fillStyle = '#1e1b16';
-      ctx.fillRect(308, 242, 68, 11);
+      ctx.fillRect(302, 240, 78, 14);
       ctx.fillStyle = '#2f2a22';
-      ctx.fillRect(310, 240, 64, 5);
-      ctx.fillStyle = 'rgba(255,238,195,0.10)';
-      ctx.fillRect(311, 241, 62, 2);
+      ctx.fillRect(304, 237, 74, 7);
+      ctx.fillStyle = 'rgba(255,238,195,0.12)';
+      ctx.fillRect(305, 238, 72, 2.5);
       ctx.fillStyle = '#13110e';
-      ctx.fillRect(308, 251, 68, 3);
-      // Secondary low plinth (right balance, creates triplet of raised floor forms so focal reads as intentionally structured ruin floor, not single cue)
+      ctx.fillRect(302, 254, 78, 4);
+      // Secondary low plinth (right balance, creates triplet of raised floor forms so focal reads as intentionally structured ruin floor, not single cue) — Pass 58 wider
       ctx.fillStyle = '#232018';
-      ctx.fillRect(382, 292, 32, 16);
+      ctx.fillRect(378, 290, 40, 18);
       ctx.fillStyle = '#342d24';
-      ctx.fillRect(384, 290, 28, 6);
-      ctx.fillStyle = 'rgba(255,235,185,0.09)';
-      ctx.fillRect(385, 291, 26, 2);
+      ctx.fillRect(380, 287, 36, 8);
+      ctx.fillStyle = 'rgba(255,235,185,0.11)';
+      ctx.fillRect(381, 288, 34, 2.5);
       ctx.fillStyle = '#15130f';
-      ctx.fillRect(382, 306, 32, 3);
+      ctx.fillRect(378, 308, 40, 4);
       // Foreground rubble / mossy stone (near-field layering, bottom of focal frame; gives depth sorting, "floor edge" pop in front of protagonists, makes chamber feel enclosed and hand-authored)
       ctx.fillStyle = '#1c1914';
       ctx.fillRect(292, 368, 44, 9);
@@ -2777,24 +2792,25 @@
       ctx.fillRect(292, 375, 44, 2);
       // Pass 52 (Snow Dragon): two additional corner wall masses (NW far left, SE lower right) to create unmistakable enclosing chamber silhouette and readable boundaries at first glance per 9ae887d review ("create readable room boundaries and wall/corner masses").
       // Tall vertical extrusions with cap stone + bevel catch + ground shadow give the room clear architectural "walls rising around the diamond floor" so the playable space reads as a deliberate handcrafted ruin hall, not open noisy arena. Complements the focal-only dense pavers (periphery now calm) and makes hero/dragon/enemies pop as the clear protagonists inside a composed chamber.
+      // Pass 58: chunkier corner masses for stronger room silhouette read at first glance (wider shafts + caps read as solid ruin architecture enclosing the overhead combat pocket).
       // NW corner tower (frames left of scene, occludes periphery for depth, gives solid left wall mass immediately visible on cold-start)
       ctx.fillStyle = '#25211c';
-      ctx.fillRect(92, 88, 18, 52);
+      ctx.fillRect(88, 85, 26, 58);
       ctx.fillStyle = '#363024';
-      ctx.fillRect(89, 84, 24, 8);
-      ctx.fillStyle = 'rgba(255,242,205,0.09)';
-      ctx.fillRect(91, 86, 20, 3);
+      ctx.fillRect(84, 80, 34, 10);
+      ctx.fillStyle = 'rgba(255,242,205,0.11)';
+      ctx.fillRect(85, 81, 32, 3.5);
       ctx.fillStyle = '#14120f';
-      ctx.fillRect(92, 138, 18, 4);
+      ctx.fillRect(88, 143, 26, 5);
       // SE corner buttress (right lower boundary, balances the L/R framing, makes south/east walls read as enclosing architecture around the focal pocket)
       ctx.fillStyle = '#25211c';
-      ctx.fillRect(1120, 680, 22, 38);
+      ctx.fillRect(1114, 676, 32, 46);
       ctx.fillStyle = '#363024';
-      ctx.fillRect(1117, 676, 28, 7);
-      ctx.fillStyle = 'rgba(255,242,205,0.08)';
-      ctx.fillRect(1119, 678, 24, 2.5);
+      ctx.fillRect(1110, 671, 40, 10);
+      ctx.fillStyle = 'rgba(255,242,205,0.10)';
+      ctx.fillRect(1111, 672, 38, 3.5);
       ctx.fillStyle = '#14120f';
-      ctx.fillRect(1120, 716, 22, 3);
+      ctx.fillRect(1114, 722, 32, 5);
       // canopy blobs
       ctx.fillStyle = 'rgba(40, 80, 40, 0.35)';
       ctx.beginPath(); ctx.arc(105, 55, 48, 0, Math.PI * 2); ctx.fill();
@@ -3821,7 +3837,7 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 68, player1.y + 22, selectedDragon); // Pass 53: more lateral/back offset under iso projection so P1 knight silhouette remains immediately distinct and not visually swallowed by dragon body in opening focal frame (addresses tallhamn review "dragon still visually swallows the hero")
+    dragon = createDragon(player1.x - 82, player1.y + 18, selectedDragon); // Pass 58: extra lateral offset + slight y for clearer P1 primacy; dragon supports composition without covering Ember silhouette at default first frame (tallhamn "dragon still visually swallows the hero" + "P1 must be immediately readable as the controlled character separate from Cinder")
 
     loadRoom(0);
 
