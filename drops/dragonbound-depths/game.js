@@ -160,6 +160,133 @@
     ctx.strokeRect(36, 36, w - 72, h - 72);
   }
 
+  // Pass 19: victory triumph illustration — small handcrafted canvas art for summary screen.
+  // Shows hero + bonded dragon victorious over the defeated Ash Maw, with glowing relics, ash motes, warm focal light.
+  // Makes the win moment screenshot-worthy and emotionally resonant (not just text panel).
+  function drawVictoryArt(canvas) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const w = canvas.width, h = canvas.height;
+    // Dark maw-ash gradient bg (victory over darkness, warm embers)
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#0f121c');
+    bg.addColorStop(0.55, '#1a1620');
+    bg.addColorStop(1, '#241a18');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle cracked floor / arena remnant
+    ctx.fillStyle = 'rgba(60, 48, 42, 0.6)';
+    ctx.fillRect(30, h - 32, w - 60, 28);
+    ctx.strokeStyle = 'rgba(120, 90, 70, 0.35)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.moveTo(40 + i * 78, h - 31);
+      ctx.lineTo(55 + i * 72, h - 8);
+      ctx.stroke();
+    }
+
+    // Fallen boss silhouette (cracked horns, cooling lava vents, slumped)
+    ctx.fillStyle = '#2a2228';
+    ctx.beginPath();
+    ctx.moveTo(58, h - 28); // left base
+    ctx.quadraticCurveTo(92, h - 52, 138, h - 30);
+    ctx.quadraticCurveTo(168, h - 48, 198, h - 27);
+    ctx.lineTo(198, h - 8);
+    ctx.lineTo(58, h - 8);
+    ctx.fill();
+    // Horns (broken, dramatic)
+    ctx.strokeStyle = '#3f353c';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath(); ctx.moveTo(88, h - 46); ctx.lineTo(74, h - 72); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(122, h - 50); ctx.lineTo(138, h - 68); ctx.stroke();
+    // Lava vents (cooling, dim)
+    ctx.fillStyle = 'rgba(200, 90, 40, 0.25)';
+    ctx.fillRect(102, h - 38, 14, 5);
+    ctx.fillRect(152, h - 35, 10, 4);
+
+    // Central glow / relic light from victory (focal warm pool)
+    const glow = ctx.createRadialGradient(210, 52, 8, 210, 58, 72);
+    glow.addColorStop(0, 'rgba(255, 210, 140, 0.55)');
+    glow.addColorStop(0.4, 'rgba(255, 170, 90, 0.22)');
+    glow.addColorStop(1, 'rgba(80, 50, 30, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(140, 12, 140, 92);
+
+    // Hero (Ember Knight triumphant, sword raised, cape flow)
+    const hx = 178, hy = 58;
+    ctx.fillStyle = '#2f2520';
+    ctx.fillRect(hx - 7, hy + 4, 15, 22); // body + cloak
+    ctx.fillStyle = '#ff6b4a';
+    ctx.beginPath(); ctx.arc(hx, hy - 6, 8, 0, Math.PI * 2); ctx.fill(); // helm
+    // raised sword
+    ctx.strokeStyle = '#e8d8a0';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(hx + 3, hy + 2); ctx.lineTo(hx + 22, hy - 28); ctx.stroke();
+    ctx.fillStyle = '#ff8a4a';
+    ctx.beginPath(); ctx.arc(hx + 22, hy - 29, 3.5, 0, Math.PI * 2); ctx.fill();
+    // cape flourish
+    ctx.fillStyle = 'rgba(60, 40, 35, 0.7)';
+    ctx.beginPath(); ctx.moveTo(hx - 6, hy + 6); ctx.quadraticCurveTo(hx - 18, hy + 18, hx - 9, hy + 28); ctx.fill();
+
+    // Dragon companion (Cinder-style, wings half-spread in triumph, head high, embers)
+    const dx = 252, dy = 54;
+    ctx.fillStyle = '#2a2320';
+    // body
+    ctx.beginPath(); ctx.ellipse(dx, dy + 6, 18, 11, -0.2, 0, Math.PI * 2); ctx.fill();
+    // head
+    ctx.fillStyle = '#ff8a4a';
+    ctx.beginPath(); ctx.arc(dx + 18, dy - 3, 7.5, 0, Math.PI * 2); ctx.fill();
+    // eye
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(dx + 21, dy - 4, 1.8, 0, Math.PI * 2); ctx.fill();
+    // neck crest
+    ctx.fillStyle = '#c85a2a';
+    ctx.beginPath(); ctx.moveTo(dx + 12, dy - 2); ctx.lineTo(dx + 6, dy - 14); ctx.lineTo(dx + 15, dy - 1); ctx.fill();
+    // legs grounded
+    ctx.fillStyle = '#3a2f28';
+    ctx.fillRect(dx - 8, dy + 14, 4, 7);
+    ctx.fillRect(dx + 4, dy + 13, 4, 8);
+    // tail curled proud
+    ctx.strokeStyle = '#3a2f28';
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(dx - 14, dy + 4); ctx.quadraticCurveTo(dx - 28, dy + 2, dx - 32, dy + 14); ctx.stroke();
+    // wings (triumph spread hint)
+    ctx.strokeStyle = '#4a3830';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(dx - 2, dy - 4); ctx.quadraticCurveTo(dx - 14, dy - 22, dx + 2, dy - 18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(dx + 6, dy - 2); ctx.quadraticCurveTo(dx - 4, dy - 26, dx + 14, dy - 16); ctx.stroke();
+    // breath/ember sparks
+    ctx.fillStyle = 'rgba(255, 150, 60, 0.7)';
+    for (let i = 0; i < 5; i++) {
+      const px = dx + 26 + i * 3.5 + Math.sin(i) * 2;
+      const py = dy - 6 + (i % 2) * 4;
+      ctx.beginPath(); ctx.arc(px, py, 1.3 + (i % 2) * 0.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Floating relics (3 small orbs from choices, glowing)
+    const relicY = 34;
+    [168, 198, 230].forEach((rx, i) => {
+      ctx.fillStyle = i === 0 ? '#ff8a4a' : (i === 1 ? '#8fd4ff' : '#b3e8a0');
+      ctx.beginPath(); ctx.arc(rx, relicY, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,240,0.6)';
+      ctx.beginPath(); ctx.arc(rx - 0.8, relicY - 0.8, 1.1, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Atmospheric gold motes + embers (victory particles)
+    ctx.fillStyle = 'rgba(255, 200, 120, 0.65)';
+    for (let i = 0; i < 14; i++) {
+      const mx = 48 + (i * 23 + (i % 3) * 7) % (w - 80);
+      const my = 18 + Math.sin(i * 0.7) * 18 + (i % 4) * 4;
+      ctx.beginPath(); ctx.arc(mx, my, 0.9 + (i % 3) * 0.35, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Subtle border glow
+    ctx.strokeStyle = 'rgba(212, 175, 119, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(6, 6, w - 12, h - 12);
+  }
+
   function drawHeroPreview(ctx, hero, w, h) {
     ctx.fillStyle = '#0d1320';
     ctx.fillRect(0, 0, w, h);
@@ -280,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17: enemy visual authorship (richer character silhouettes + motion for all 6 types + boss phase accents) to match hero/dragon/room quality and deliver "clearer enemy identity".
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -309,10 +436,10 @@
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
         ],
         spawns: [
-          {x: 240, y: 260, type: 'skitter'},
-          {x: 440, y: 420, type: 'skitter'},
-          {x: 880, y: 310, type: 'archer'},
-          {x: 780, y: 540, type: 'skitter'}
+          {x: 280, y: 168, type: 'skitter'},
+          {x: 520, y: 470, type: 'skitter'},
+          {x: 920, y: 235, type: 'archer'},
+          {x: 810, y: 555, type: 'skitter'}
         ]
       },
       {
@@ -2769,6 +2896,8 @@
 
     document.getElementById('title-screen').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
+    const vcanS = document.getElementById('victory-canvas');
+    if (vcanS) vcanS.style.display = 'none';
 
     canvas = document.getElementById('game-canvas');
     setupCanvas(); // HiDPI backing + DPR transform for sharp authored visuals
@@ -2783,15 +2912,23 @@
     chainCounter = 0;
     runStats = { kills: 0, rooms: 0, relics: [], startTime: Date.now() };
 
-    player1 = createPlayer(180, 260, false, selectedHero);
+    // Pass 19: safer, more central spawn for first room (avoids left-edge off-camera + first enemy too close per prior monitor note). Player+dragon enter with strong composition, immediate readable framing.
+    player1 = createPlayer(360, 340, false, selectedHero);
     if (p2Enabled) {
-      player2 = createPlayer(230, 310, true, selectedHero);
+      player2 = createPlayer(410, 390, true, selectedHero);
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 52, player1.y - 36, selectedDragon);
+    dragon = createDragon(player1.x - 58, player1.y + 6, selectedDragon);
 
     loadRoom(0);
+
+    // Pass 19: immediate camera framing BEFORE first draw so player/dragon/dragon are perfectly visible and centered on entry frame (no center-room then snap).
+    camera.x = player1.x + (player2 ? 18 : -12);
+    camera.y = player1.y - 22;
+    camera.zoom = p2Enabled ? 1.02 : 1.18;
+    updateCamera(0);
+    updateCamera(0); // double-apply for stable entry framing + bounds
 
     gameState = 'playing';
     lastTime = performance.now();
@@ -2806,6 +2943,8 @@
       gameState = 'paused';
       document.getElementById('overlay').style.display = 'flex';
       document.getElementById('overlay-title').textContent = 'Paused';
+      const vcanP = document.getElementById('victory-canvas');
+      if (vcanP) vcanP.style.display = 'none';
       document.getElementById('overlay-body').innerHTML = 'Press Esc to resume or R+Shift to restart.';
       document.getElementById('overlay-actions').innerHTML = `
         <button onclick="resumeGame()">Resume</button>
@@ -2839,6 +2978,8 @@
     const time = Math.floor((Date.now() - runStats.startTime) / 1000);
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('overlay-title').textContent = 'The Depths Claimed You';
+    const vcanD = document.getElementById('victory-canvas');
+    if (vcanD) vcanD.style.display = 'none';
     document.getElementById('overlay-body').innerHTML = `
       Rooms reached: <b>${runStats.rooms}</b> &nbsp; • &nbsp; Kills: <b>${runStats.kills}</b> &nbsp; • &nbsp; Time: <b>${time}s</b><br>
       Relics found: ${runStats.relics.length ? runStats.relics.join(', ') : 'none'}
@@ -2857,6 +2998,12 @@
     const time = Math.floor((Date.now() - runStats.startTime) / 1000);
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('overlay-title').textContent = 'The Maw Falls — Victory';
+    const vcan = document.getElementById('victory-canvas');
+    if (vcan) {
+      vcan.style.display = 'block';
+      // draw after a tick so layout ready (canvas in panel)
+      setTimeout(() => { try { drawVictoryArt(vcan); } catch(e){} }, 12);
+    }
     document.getElementById('overlay-body').innerHTML = `
       You and your dragon companion have cleared the Depths.<br>
       Rooms: <b>${runStats.rooms}</b> &nbsp; Kills: <b>${runStats.kills}</b> &nbsp; Time: <b>${time}s</b><br>

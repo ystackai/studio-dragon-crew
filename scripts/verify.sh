@@ -70,17 +70,19 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 16 higher-res canvas + tighter framing for visual presence (1040x670 + r20 + zoom 1.18)" "grep -q 'Pass 16' $DROP/game.js && grep -q '1040' $DROP/game.js && grep -q '1.18' $DROP/game.js"
   check_shell "Dragonbound Pass 17 enemy visual authorship (rich character silhouettes for skitter/archer/brute/wisp/burrow/drake + boss)" "grep -q 'Pass 17' $DROP/game.js && grep -q 'skitter' $DROP/game.js && grep -q 'wflap' $DROP/game.js"
   check_shell "Dragonbound Pass 18 shrine visual authorship + responsive interaction (pedestal, gem, near glow/sparkles for decision moments)" "grep -q 'Pass 18' $DROP/game.js && grep -q 'shrine pedestal' $DROP/game.js && grep -q 'responsive near-player' $DROP/game.js"
+  check_shell "Dragonbound Pass 19 immediate framing + spawn safety (central entry, no off-left) + victory triumph canvas art" "grep -q 'Pass 19' $DROP/game.js && grep -q 'victory-canvas' $DROP/index.html && grep -q 'drawVictoryArt' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
   echo
   echo "Manual Dragonbound QA checklist:"
   echo "  1. Open $DROP/index.html through the FactoryX preview entrypoint"
-  echo "  2. Select different heroes + dragons, toggle P2, start the run"
+  echo "  2. Select different heroes + dragons, toggle P2, start the run — verify immediate visible framing on entry (no off-left camera)"
   echo "  3. Verify WASD + Arrows, Space/Enter, Q/U, E/O controls"
   echo "  4. Clear multiple rooms, collect relics, reach the boss"
   echo "  5. Confirm dragons visibly follow/help, HUD is readable, and no console errors appear"
   echo "  6. Check 1040px desktop (crisp authored art) and 390px mobile-width layouts"
+  echo "  7. Win a run — see the new victory canvas triumph illustration in summary overlay"
   echo
 }
 
