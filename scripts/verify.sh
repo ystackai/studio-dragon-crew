@@ -66,6 +66,7 @@ verify_dragonbound() {
   check_shell "Dragonbound core game systems present" "grep -q 'function createPlayer' $DROP/game.js && grep -q 'function updateDragon' $DROP/game.js && grep -q 'function loadRoom' $DROP/game.js && grep -q 'createBoss' $DROP/game.js && grep -q 'offerRelicChoice' $DROP/game.js && grep -q 'p2Enabled' $DROP/game.js"
   check_shell "Dragonbound visual authorship hooks present" "grep -q 'drawTitleArt' $DROP/game.js && grep -q 'drawRoomBackground' $DROP/game.js && grep -q 'drawDragon' $DROP/game.js"
   check_shell "Dragonbound combat feedback hooks present" "grep -q 'telegraph' $DROP/game.js && grep -q 'particles' $DROP/game.js && grep -q 'damageEnemy' $DROP/game.js"
+  check_shell "Dragonbound Pass 15 focal+impact polish present (focal in camera + world shake)" "grep -q 'Pass 15' $DROP/game.js && grep -q 'world shake for combat impact' $DROP/game.js && grep -q 'focal key lights' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
