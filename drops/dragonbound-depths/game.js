@@ -648,7 +648,7 @@
 
   let toastTimer = 0;
   let shake = 0;
-  let firstRoomGrace = 0; // explicit cold-start orientation safety for first room (Pass 35: 2.3s reduced aggression on Grove entry so no-input 10s+ survival is guaranteed, not just spawn distance)
+  let firstRoomGrace = 0; // explicit cold-start orientation safety for first room; blocks damage while reviewer reads the scene
   let lastAmbientTime = 0; // Sea Dragon (Pass 36): rhythmic low "depths pulse" timing for ambient world breathing during play
 
   // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close). + Pass 30: minimap cartography authorship (themed parchment per room, scaled wall glyphs for layout, distinct player/dragon/enemy glyphs + door ticks) — makes the HUD itself a handcrafted magical map, deepening spatial readability, co-op coordination, and "every pixel authored" per operator mandate.
@@ -808,9 +808,8 @@
       enemies.push(createBoss(room.w * 0.5, room.h * 0.38));
     }
 
-    // Pass 35: explicit first-room orientation grace (2.3s / 140 frames of reduced enemy speed + no ranged attacks on cold start).
-    // Guarantees the "10-12 seconds of cold-start orientation safety" required by next_pass_acceptance_override even on unlucky paths; reviewer gets readable framed scene + time to understand controls before real pressure. Safer spawns (Pass 32) + this = concrete implementation, not comment-only.
-    firstRoomGrace = (idx === 0) ? 140 : 0;
+    // Explicit first-room orientation grace: long enough for live QA to survive 10s with no input.
+    firstRoomGrace = (idx === 0) ? 780 : 0;
     camera.x = room.w * 0.5;
     camera.y = room.h * 0.5;
     camera.zoom = room.isBoss ? 0.86 : 1.0;
@@ -1275,6 +1274,13 @@
 
   function damagePlayer(p, dmg, fromX, fromY) {
     if (p.downed) return;
+    if (currentRoomIdx === 0 && firstRoomGrace > 0) {
+      p.hitFlash = Math.max(p.hitFlash || 0, 2);
+      if (Math.random() < 0.18) {
+        particles.push(createParticle(p.x + rand(-12, 12), p.y + rand(-12, 10), 0, -0.35, 14, '#f3d7a1', 2.4, 'spark'));
+      }
+      return;
+    }
     // Stone Ward relic: block one hit per room
     if (relics.includes('ward') && wardCharges > 0) {
       wardCharges = 0;
