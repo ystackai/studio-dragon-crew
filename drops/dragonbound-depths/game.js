@@ -2468,8 +2468,8 @@
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 48, 0, Math.PI * 2); ctx.fill(); }
     // Pass 22: thin glowing bond rims (luminous outline) — gives each protagonist a distinct magical aura that pops against layered dark rooms and props; pure visual, zero collision/ perf impact
     ctx.globalAlpha = 0.16;
-    ctx.strokeStyle = 'rgba(255, 242, 205, 0.6)';
-    ctx.lineWidth = 2.8;
+    ctx.strokeStyle = 'rgba(255, 242, 205, 0.72)';
+    ctx.lineWidth = 3.2;
     if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 23, 0, Math.PI * 2); ctx.stroke(); }
     if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
@@ -2615,18 +2615,27 @@
       // Result: the floor itself is now unmistakably a structured 3D isometric stone surface in a ruin chamber — not lines on flat. Combined with the existing 3D pillars/plinths/fg rubble already framing the default spawn, P1 (Ember) + dragon (Cinder) + first skitters read as deliberate art-directed ARPG actors standing on authored geometry. Strong local value contrast makes silhouettes pop at first glance without squinting or relying on HUD. Screenshot diff vs prior heads will be immediately obvious and substantial (real geometry, not more lines/props on grid). Pure visual elevation; zero collision, AI, input, camera, or perf impact. Preserves small focal lights (no giant ovals), all safety, 10s+ grace, co-op, 6 rooms + boss, 49/49 verify.
       // Skips drawn under the 5 main authored 3D props so pillars/plinths read as sitting ON the tessellated floor (proper occlusion/depth).
       ctx.save();
+      // Pass 52 (Snow Dragon composition refinement for exact 9ae887d review feedback):
+      // Reduce tile repetition/noise outside the focal area (dense small tiles read wallpaper-like far from P1+dragon).
+      // Full 3D tessellation + bright rims only in central playable chamber (~280px radius around default spawn 360,340).
+      // Periphery uses 1.7x coarser spacing + suppressed fine detail (no catch-rim/grout) so the eye reads structured floor near protagonists, calm receding stone at edges.
+      // This + extra corner wall masses + focal floor value lift makes the chamber boundaries pop as enclosing architecture and the hero/dragon/enemy group read with clear hierarchy against the room.
+      const FOCAL_X = 360, FOCAL_Y = 340, FOCAL_R = 282;
       const tsX = 28.5, tsY = 20.5, thW = 14.2, thH = 8.2, tDrop = 3.6;
       for (let gy = 46; gy < r.h - 50; gy += tsY) {
         const parity = (Math.floor(gy / tsY) & 1) * 14.2;
         for (let gx = 46 + parity; gx < r.w - 46; gx += tsX) {
-          // avoid overpainting under the hand-authored 3D props (main plinth, step, secondary, L/R pillars) so they layer correctly with height
+          // avoid overpainting under the hand-authored 3D props
           if ((gx > 278 && gx < 345 && gy > 252 && gy < 298) ||
               (gx > 198 && gx < 230 && gy > 192 && gy < 258) ||
               (gx > 455 && gx < 495 && gy > 188 && gy < 255) ||
               (gx > 372 && gx < 425 && gy > 282 && gy < 325)) continue;
-          // slight natural stone variation for bespoke non-repeating floor (handcrafted feel)
+          const dx = gx - FOCAL_X, dy = gy - FOCAL_Y;
+          const fd = Math.hypot(dx, dy);
+          const inFocal = fd < FOCAL_R;
+          // outer ring: coarser step simulation via skip (reduces repetition density without losing coverage)
+          if (!inFocal && ((Math.floor(gx / 47) + Math.floor(gy / 33)) & 1)) continue;
           const v = 0.018 * Math.sin((gx + gy * 0.6) * 0.085);
-          // top face — warmer mid for grove ruin stone, brightens under focal light
           ctx.fillStyle = `rgba(42, 49, 62, ${0.88 + v})`;
           ctx.beginPath();
           ctx.moveTo(gx, gy - thH);
@@ -2635,7 +2644,6 @@
           ctx.lineTo(gx - thW, gy);
           ctx.closePath();
           ctx.fill();
-          // NW side face (darker, recedes for volume — classic Diablo 3D tile read)
           ctx.fillStyle = 'rgba(16, 20, 27, 0.96)';
           ctx.beginPath();
           ctx.moveTo(gx - thW, gy);
@@ -2644,7 +2652,6 @@
           ctx.lineTo(gx - thW - 0.6, gy + tDrop * 0.55);
           ctx.closePath();
           ctx.fill();
-          // SE side face (slightly varied shade for facet interest)
           ctx.fillStyle = 'rgba(13, 17, 23, 0.94)';
           ctx.beginPath();
           ctx.moveTo(gx, gy + thH);
@@ -2653,23 +2660,36 @@
           ctx.lineTo(gx, gy + thH + tDrop);
           ctx.closePath();
           ctx.fill();
-          // raised edge catch-light rim (gives the "visible raised diamond tiles" pop the operator demanded, especially in the lit focal pocket around default P1+dragon)
-          ctx.strokeStyle = 'rgba(255, 248, 205, 0.07)';
-          ctx.lineWidth = 0.85;
-          ctx.beginPath();
-          ctx.moveTo(gx - thW + 1.2, gy - 0.8);
-          ctx.lineTo(gx + thW - 1.2, gy - 0.8);
-          ctx.stroke();
-          // fine grout separation (reinforces the tessellation without flat-grid dominance)
-          ctx.strokeStyle = 'rgba(10, 14, 20, 0.22)';
-          ctx.lineWidth = 0.55;
-          ctx.beginPath();
-          ctx.moveTo(gx - thW * 0.65, gy + thH * 0.35);
-          ctx.lineTo(gx + thW * 0.65, gy - thH * 0.35);
-          ctx.stroke();
+          if (inFocal) {
+            // full raised edge + fine grout only near focal/play area — kills peripheral wallpaper noise while preserving 3D read where it matters
+            ctx.strokeStyle = 'rgba(255, 248, 205, 0.085)';
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.moveTo(gx - thW + 1.2, gy - 0.8);
+            ctx.lineTo(gx + thW - 1.2, gy - 0.8);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(10, 14, 20, 0.24)';
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(gx - thW * 0.65, gy + thH * 0.35);
+            ctx.lineTo(gx + thW * 0.65, gy - thH * 0.35);
+            ctx.stroke();
+          }
         }
       }
       ctx.lineWidth = 1.0;
+      ctx.restore();
+
+      // Pass 52 (Snow Dragon): subtle value-shape lift on the playable floor under the exact focal pocket (brighter diamond tiles immediately around P1+dragon+first foes).
+      // Makes the hero/dragon/enemy group pop clearly against the now-structured receding chamber per 9ae887d review ("brighten/value-shape the playable floor and make the hero/dragon/enemy group pop clearly against the chamber").
+      // Tiny radial only (no giant ovals), layered over the 3D pavers so the central combat space reads as the intentional lit stage inside the authored ruin hall.
+      ctx.save();
+      ctx.globalAlpha = 0.11;
+      const fl = ctx.createRadialGradient(365, 318, 48, 365, 318, 205);
+      fl.addColorStop(0, '#c8d8a8');
+      fl.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = fl;
+      ctx.beginPath(); ctx.arc(365, 318, 205, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
       // focal pocket light (Pass 46: ... now paints over the new 3D tessellated floor for even stronger "lit stage on real geometry" read)
@@ -2749,6 +2769,26 @@
       ctx.fillRect(295, 367, 38, 2);
       ctx.fillStyle = '#12100d';
       ctx.fillRect(292, 375, 44, 2);
+      // Pass 52 (Snow Dragon): two additional corner wall masses (NW far left, SE lower right) to create unmistakable enclosing chamber silhouette and readable boundaries at first glance per 9ae887d review ("create readable room boundaries and wall/corner masses").
+      // Tall vertical extrusions with cap stone + bevel catch + ground shadow give the room clear architectural "walls rising around the diamond floor" so the playable space reads as a deliberate handcrafted ruin hall, not open noisy arena. Complements the focal-only dense pavers (periphery now calm) and makes hero/dragon/enemies pop as the clear protagonists inside a composed chamber.
+      // NW corner tower (frames left of scene, occludes periphery for depth, gives solid left wall mass immediately visible on cold-start)
+      ctx.fillStyle = '#25211c';
+      ctx.fillRect(92, 88, 18, 52);
+      ctx.fillStyle = '#363024';
+      ctx.fillRect(89, 84, 24, 8);
+      ctx.fillStyle = 'rgba(255,242,205,0.09)';
+      ctx.fillRect(91, 86, 20, 3);
+      ctx.fillStyle = '#14120f';
+      ctx.fillRect(92, 138, 18, 4);
+      // SE corner buttress (right lower boundary, balances the L/R framing, makes south/east walls read as enclosing architecture around the focal pocket)
+      ctx.fillStyle = '#25211c';
+      ctx.fillRect(1120, 680, 22, 38);
+      ctx.fillStyle = '#363024';
+      ctx.fillRect(1117, 676, 28, 7);
+      ctx.fillStyle = 'rgba(255,242,205,0.08)';
+      ctx.fillRect(1119, 678, 24, 2.5);
+      ctx.fillStyle = '#14120f';
+      ctx.fillRect(1120, 716, 22, 3);
       // canopy blobs
       ctx.fillStyle = 'rgba(40, 80, 40, 0.35)';
       ctx.beginPath(); ctx.arc(105, 55, 48, 0, Math.PI * 2); ctx.fill();
@@ -3100,8 +3140,8 @@
 
     // Pass 43: strong silhouette outline for protagonist legibility at screenshot glance (addresses operator_diablo_isometric_review_blocker "Hero, NPC dragon companion, and first enemy pack must be visually legible at screenshot glance without relying on minimap/HUD labels"). Thin dark rim around main body makes P1 pop as a distinct authored shape against the new 3D diamond floor + focal pocket + wall cues, even at distance or in co-op framing. Zero gameplay/collision change (radius untouched).
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,0,0,0.72)';
-    ctx.lineWidth = 2.8;
+    ctx.strokeStyle = 'rgba(0,0,0,0.82)';
+    ctx.lineWidth = 3.1;
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, r * 0.95, r * 1.18, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
     // Pass 46: lit-side highlight rim for art-directed ARPG actor presence (makes P1 read as deliberately painted hero with volume and "worth sharing" silhouette even in the tighter focal pocket; obvious with the brighter structured floor and shrunk light). Thin warm edge on upper-left of form for key-light catch.
@@ -3290,8 +3330,8 @@
 
     // Pass 43: dragon silhouette outline for immediate visual distinction + legibility (P1 visually distinct from dragon in opening focal area per next_pass_acceptance_override + review "P1 visually distinct from the dragon"). Strong dark rim around the full body+head mass makes the NPC companion read as a separate expressive creature at first glance, even small on screen or in co-op split framing. Pure draw, no state/collision change.
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,0,0,0.65)';
-    ctx.lineWidth = 2.4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.78)';
+    ctx.lineWidth = 2.7;
     ctx.beginPath(); ctx.ellipse(-1, 1, 22 * s, 13 * s, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(17 * s, -1.5, 10.5 * s, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
