@@ -2510,11 +2510,24 @@
         const vx = 85 + v * 11 + (v % 2) * 30;
         ctx.beginPath(); ctx.moveTo(vx, 95); ctx.quadraticCurveTo(vx - 4, 160 + Math.sin(t + v) * 6, vx + 3, 230); ctx.stroke();
       }
-      // soft light shafts from canopy breaks (focal brightening)
-      ctx.fillStyle = 'rgba(180, 210, 160, 0.07)';
-      ctx.beginPath(); ctx.moveTo(180, 20); ctx.lineTo(310, 380); ctx.lineTo(340, 380); ctx.lineTo(210, 20); ctx.fill();
-      ctx.fillStyle = 'rgba(160, 200, 140, 0.05)';
-      ctx.beginPath(); ctx.moveTo(880, 30); ctx.lineTo(820, 420); ctx.lineTo(850, 420); ctx.lineTo(910, 30); ctx.fill();
+      // Pass 34: richer volumetric god rays + slow animated dust motes inside shafts (deeper magical lighting + layered depth for grove cold-start frame).
+      // Default Ember+Cinder entry now has visible light beams with floating specks that make the first viewport feel like a handcrafted painted fantasy ruin (stronger composition, atmospheric authorship per Snow Dragon + operator visual review "richer room lighting"; zero gameplay/collision/perf cost).
+      const rayPulse = 0.52 + Math.sin(t * 1.35) * 0.28;
+      ctx.fillStyle = `rgba(192, 228, 172, ${0.092 * rayPulse})`;
+      ctx.beginPath(); ctx.moveTo(175, 12); ctx.lineTo(308, 398); ctx.lineTo(338, 398); ctx.lineTo(205, 12); ctx.fill();
+      ctx.fillStyle = `rgba(168, 208, 142, ${0.058 * rayPulse})`;
+      ctx.beginPath(); ctx.moveTo(868, 22); ctx.lineTo(812, 438); ctx.lineTo(842, 438); ctx.lineTo(898, 22); ctx.fill();
+      // third crossing ray for balanced focal depth across the playable space
+      ctx.fillStyle = `rgba(205, 238, 185, ${0.038 * rayPulse})`;
+      ctx.beginPath(); ctx.moveTo(415, 8); ctx.lineTo(478, 305); ctx.lineTo(503, 305); ctx.lineTo(440, 8); ctx.fill();
+      // volumetric dust specks drifting inside main rays (slow, organic life in the light — classic ARPG atmosphere)
+      ctx.fillStyle = 'rgba(230, 250, 205, 0.26)';
+      for (let d = 0; d < 6; d++) {
+        const dp = (t * 0.38 + d * 0.7) % 1.05;
+        const rx = 192 + dp * 98 + (d % 2) * 6;
+        const ry = 38 + dp * 285;
+        ctx.beginPath(); ctx.arc(rx, ry, 0.85 + Math.sin(t * 2.1 + d) * 0.28, 0, Math.PI * 2); ctx.fill();
+      }
       // glowing mushrooms (magical touch)
       ctx.fillStyle = 'rgba(140, 220, 120, 0.55)';
       ctx.beginPath(); ctx.arc(280, 310, 6, 0, Math.PI * 2); ctx.fill();
