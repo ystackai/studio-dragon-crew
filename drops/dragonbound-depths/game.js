@@ -602,7 +602,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close).
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close). + Pass 30: minimap cartography authorship (themed parchment per room, scaled wall glyphs for layout, distinct player/dragon/enemy glyphs + door ticks) — makes the HUD itself a handcrafted magical map, deepening spatial readability, co-op coordination, and "every pixel authored" per operator mandate.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -3061,29 +3061,96 @@
     const p2stat = document.getElementById('p2-status');
     if (p2stat) p2stat.style.display = (p2Enabled && player2) ? 'flex' : 'none';
 
-    // minimap simple
+    // minimap — Pass 30: authored magical cartography (themed parchment + wall glyphs + distinct entity markers)
+    // Gives spatial sense of the handcrafted room shapes, makes HUD feel like part of the fantasy world, not generic overlay.
     const mini = document.getElementById('minimap');
     if (mini && room) {
       mini.innerHTML = '';
       const mctx = document.createElement('canvas');
       mctx.width = 106; mctx.height = 66;
       const m = mctx.getContext('2d');
-      m.fillStyle = '#0d1320';
+
+      // Themed parchment bg per room theme for environmental authorship in HUD
+      const theme = room.theme || 'grove';
+      const mapBg = theme === 'grove' ? '#121f16' :
+                    theme === 'crystal' ? '#0f1a24' :
+                    theme === 'sanctum' ? '#18141f' :
+                    theme === 'fissure' ? '#21140d' :
+                    theme === 'crypt' ? '#1c120d' : '#160f12';
+      m.fillStyle = mapBg;
       m.fillRect(0, 0, 106, 66);
+      // soft inner parchment rim
+      m.strokeStyle = 'rgba(212,175,119,0.22)';
+      m.lineWidth = 2;
+      m.strokeRect(3, 3, 100, 60);
+
+      // outer cartouche border (magical map frame)
       m.strokeStyle = '#3a455c';
       m.lineWidth = 1;
-      m.strokeRect(2, 2, 102, 62);
+      m.strokeRect(1, 1, 104, 64);
 
-      // scale
-      const sx = 102 / room.w, sy = 62 / room.h;
-      m.fillStyle = '#d4af77';
-      [player1, player2].filter(Boolean).forEach(pl => {
-        m.fillRect(2 + pl.x * sx - 1.5, 2 + pl.y * sy - 1.5, 3, 3);
+      // scale for content
+      const sx = 100 / room.w, sy = 60 / room.h;
+      const ox = 3, oy = 3;
+
+      // Draw walls as dark glyphs for spatial layout readability (helps co-op coordination)
+      m.fillStyle = 'rgba(6,8,14,0.85)';
+      (room.walls || []).forEach(w => {
+        const wx = ox + w.x * sx, wy = oy + w.y * sy;
+        m.fillRect(wx, wy, Math.max(1.6, w.w * sx), Math.max(1.6, w.h * sy));
       });
-      m.fillStyle = '#ff6b4a55';
+
+      // Tiny door markers (bright ticks on edges) — shows progression paths
+      m.strokeStyle = '#d4af77';
+      m.lineWidth = 1.5;
+      (room.doors || []).forEach(d => {
+        if (d.dir === 'north') { m.beginPath(); m.moveTo(ox + d.x * sx, oy + 1); m.lineTo(ox + (d.x + d.w) * sx, oy + 1); m.stroke(); }
+        if (d.dir === 'south') { m.beginPath(); m.moveTo(ox + d.x * sx, oy + 59); m.lineTo(ox + (d.x + d.w) * sx, oy + 59); m.stroke(); }
+        if (d.dir === 'west')  { m.beginPath(); m.moveTo(ox + 1, oy + d.y * sy); m.lineTo(ox + 1, oy + (d.y + d.h) * sy); m.stroke(); }
+        if (d.dir === 'east')  { m.beginPath(); m.moveTo(ox + 99, oy + d.y * sy); m.lineTo(ox + 99, oy + (d.y + d.h) * sy); m.stroke(); }
+      });
+
+      // Player markers (larger, with hero color tint for identity)
+      const pColor = (player1 && player1.color) || '#f0d9b0';
+      [player1, player2].filter(Boolean).forEach((pl, i) => {
+        const px = ox + pl.x * sx, py = oy + pl.y * sy;
+        // soft halo
+        m.fillStyle = i === 0 ? 'rgba(212,175,119,0.35)' : 'rgba(127,212,255,0.25)';
+        m.beginPath(); m.arc(px, py, 4.2, 0, 6.28); m.fill();
+        // core
+        m.fillStyle = pColor;
+        m.beginPath(); m.arc(px, py, 2.1, 0, 6.28); m.fill();
+        m.strokeStyle = '#fff';
+        m.lineWidth = 0.6;
+        m.stroke();
+      });
+
+      // Dragon companion marker (colored by bond, offset slightly for "following" read)
+      if (typeof dragon !== 'undefined' && dragon) {
+        const dx = ox + dragon.x * sx, dy = oy + dragon.y * sy;
+        m.fillStyle = dragon.color || '#b3e8a0';
+        m.beginPath();
+        m.moveTo(dx, dy - 2.4); m.lineTo(dx - 1.8, dy + 1.6); m.lineTo(dx + 1.8, dy + 1.6); m.closePath(); m.fill();
+        m.strokeStyle = 'rgba(255,255,255,0.7)';
+        m.lineWidth = 0.5;
+        m.stroke();
+      }
+
+      // Enemies with type-specific color for quick threat ID on map
       enemies.forEach(en => {
-        if (en.hp > 0) m.fillRect(2 + en.x * sx - 1, 2 + en.y * sy - 1, 2, 2);
+        if (!en || en.hp <= 0) return;
+        const ex = ox + en.x * sx, ey = oy + en.y * sy;
+        let ec = '#c46b5a';
+        if (en.type === 'archer') ec = '#8a9a6e';
+        else if (en.type === 'brute') ec = '#6b5a4a';
+        else if (en.type === 'wisp') ec = '#7aa8c9';
+        else if (en.type === 'burrow') ec = '#5c4633';
+        else if (en.type === 'drake') ec = '#a36b5a';
+        else if (en.isBoss) ec = '#ff3a2a';
+        m.fillStyle = ec;
+        m.fillRect(ex - 1.1, ey - 1.1, 2.2, 2.2);
       });
+
       mini.appendChild(mctx);
     }
   }
