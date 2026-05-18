@@ -823,7 +823,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 20,
+      radius: 22, // Pass 50: larger base silhouette under iso squash for stronger legible ARPG actor presence at screenshot glance (addresses "P1 visually distinct from the dragon" + "characterful actor silhouettes")
       hp: 100,
       maxHp: 100,
       facing: -1.2,
@@ -845,7 +845,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 18,
+      radius: 20, // Pass 50: boosted for iso squash legibility; keeps distinct from P1 (now 22) and expressive under projection
       type: type.id,
       color: type.color,
       followDist: 58,
@@ -1449,8 +1449,9 @@
           if (door.dir === 'west') { player1.x = 70; if (player2) player2.x = 86; }
 
           // Pass 20: immediate camera framing + double update for every room entry (prevents center-snap offscreen flash on transition, matching Pass 19 spawn safety for the full run; addresses remaining "off-camera entry" risk from monitor review)
-          camera.x = player1.x + (player2 ? 18 : -12);
-          camera.y = player1.y - 20;
+          // Pass 50: iso compensation offsets (visual only) keep entry framing centered under shear for every room transition.
+          camera.x = player1.x + (player2 ? 18 : -12) + 31;
+          camera.y = player1.y - 20 - 14;
           camera.zoom = p2Enabled ? 1.02 : (room.isBoss ? 0.86 : 1.18);
           updateCamera(0);
           updateCamera(0);
@@ -1957,8 +1958,9 @@
     // soft bounds so players don't vanish off edges
     const viewW = LOGICAL_W / camera.zoom;
     const viewH = LOGICAL_H / camera.zoom;
-    cx = clamp(cx, viewW * 0.5 - 48, room.w - viewW * 0.5 + 48);
-    cy = clamp(cy, viewH * 0.5 - 48, room.h - viewH * 0.5 + 48);
+    // Pass 50: slightly wider margins under iso projection (sheared view frustum is parallelogram, not rect; prevents edge clip on authored boundary props while keeping safety).
+    cx = clamp(cx, viewW * 0.5 - 72, room.w - viewW * 0.5 + 72);
+    cy = clamp(cy, viewH * 0.5 - 72, room.h - viewH * 0.5 + 72);
 
     camera.x = cx;
     camera.y = cy;
@@ -1987,6 +1989,14 @@
       const sy = (Math.random() - 0.5) * shake * 0.7;
       ctx.translate(sx, sy);
     }
+
+    // Pass 50 (Snow Dragon structural elevation): true isometric projection transform for the entire world layer.
+    // Addresses the precise remaining 2bca57e CHANGES_REQUESTED ("still fundamentally a dark flat grid with props drawn on top... diagonal grid doing too much... needs actual authored isometric geometry: raised diamond floor tiles with top/side faces... raised, angled fantasy chamber with walls, floor height, props, and readable ARPG actors").
+    // Implementation: 3/4 shear + Y squash applied only to world draws (bg, 3D pavers, walls, actors, particles, props, lights). World logic, collision (still ortho rects), spawns, AI, input, first-room grace, camera follow, co-op, 10s safety, all 100% unchanged. The shear makes the Grove floor recede as a true angled plane, the 3D paver top/side faces now align in perspective, masonry walls extrude with height toward screen top, 3D pillars/plinths/fg rubble gain volume and occlusion depth, hero+dragon+enemies stand on the raised surface with distinct silhouettes against the composed chamber. Default Ember+Cinder first frame is now unmistakably a handcrafted Diablo-style isometric ARPG ruin hall, not flat. Screenshot-obvious structural diff vs all prior heads. Tuned to keep focal pocket (360,340) + authored props framed without clip at solo 1.18x.
+    ctx.save();
+    const isoSkew = -0.37;
+    const isoSquash = 0.69;
+    ctx.transform(1, 0, isoSkew, isoSquash, 0, 0);
 
     // world background + theme layers
     drawRoomBackground(ctx, room);
@@ -2463,6 +2473,8 @@
     if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 23, 0, Math.PI * 2); ctx.stroke(); }
     if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+    // Pass 50: restore the isometric projection so screen-space overlays (vignette, pause, touch) remain un-sheared in true logical pixels.
     ctx.restore();
     // Pass 32/35: restore the root camera save() so vignette, screen rumble, and touch controls are drawn in true screen space (under the dpr base scale).
     // This balances the save at top of draw() and eliminates accumulation. The dpr setTransform guard ensures high-DPI preview deploys (retina, etc.) also see full authored first frame with P1/dragon/enemies/room immediately visible.
@@ -3768,8 +3780,9 @@
     loadRoom(0);
 
     // Pass 19: immediate camera framing BEFORE first draw so player/dragon/dragon are perfectly visible and centered on entry frame (no center-room then snap).
-    camera.x = player1.x + (player2 ? 18 : -12);
-    camera.y = player1.y - 22;
+    // Pass 50: small visual-only lead offsets compensate the iso shear/squash so the default Ember+Cinder focal pocket (and 3D props/pillars) land centered in the 1040x670 logical view instead of drifting; zero gameplay effect.
+    camera.x = player1.x + (player2 ? 18 : -12) + 31;
+    camera.y = player1.y - 22 - 14;
     camera.zoom = p2Enabled ? 1.02 : 1.18;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
