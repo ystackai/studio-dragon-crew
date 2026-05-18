@@ -429,7 +429,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 14,
+      radius: 18,
       hp: 100,
       maxHp: 100,
       facing: -1.2,
@@ -1908,45 +1908,182 @@
   function drawPlayer(ctx, p, hero) {
     if (!p) return;
     const flash = p.hitFlash > 0;
+    const r = p.radius; // now 18 for presence
+    const hid = p.heroId || (hero && hero.id) || 'ember';
+    const isEmber = hid === 'ember';
+    const isFrost = hid === 'frost';
+    const isTide = hid === 'tide';
+    const col = flash ? '#fff' : (p.downed ? '#4a3a38' : (hero ? hero.color : p.color));
+    const acc = hero ? hero.accent : '#ffd7a0';
+    const vx = p.vx || 0, vy = p.vy || 0;
+    const spd = Math.hypot(vx, vy);
+    const dash = (p.dashTime || 0) > 0;
+    const atk = (p.lastAttack || 0) > 6;
+
     ctx.save();
-    if (flash) ctx.globalAlpha = 0.4 + Math.random() * 0.3;
+    if (flash) ctx.globalAlpha = 0.38 + Math.random() * 0.32;
 
-    const r = p.radius;
-    // body
-    ctx.fillStyle = flash ? '#fff' : (p.downed ? '#4a3a38' : hero.color);
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-
-    // helm / hood detail
-    ctx.fillStyle = p.downed ? '#2f2522' : '#1a2233';
-    ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 2, p.y - Math.sin(p.facing) * 2, r * 0.78, 0, Math.PI * 2); ctx.fill();
-
-    // weapon / staff hint
-    ctx.strokeStyle = p.downed ? '#3a2f28' : hero.accent;
-    ctx.lineWidth = 3;
+    // soft ground shadow for weight and readability (bigger on fast move)
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
     ctx.beginPath();
-    ctx.moveTo(p.x + Math.cos(p.facing) * 9, p.y + Math.sin(p.facing) * 9);
-    ctx.lineTo(p.x + Math.cos(p.facing) * 23, p.y + Math.sin(p.facing) * 23);
-    ctx.stroke();
-
-    // downed indicator
-    if (p.downed) {
-      ctx.fillStyle = 'rgba(200, 80, 60, 0.6)';
-      ctx.fillRect(p.x - 12, p.y + 18, 24, 4);
+    ctx.ellipse(p.x, p.y + r * 0.72, r * 0.72, r * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (spd > 1.5) {
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.beginPath();
+      ctx.ellipse(p.x - vx * 0.12, p.y + r * 0.82, r * 0.9, r * 0.26, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // P label
-    ctx.fillStyle = '#fff8';
-    ctx.font = 'bold 9px system-ui';
-    ctx.fillText(p.isP2 ? 'P2' : 'P1', p.x - 5, p.y - r - 4);
+    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (larger, distinct, handcrafted) =====
+    if (isEmber) {
+      // Ember Knight: heavy stance, flame-edged blade, flowing cape, plumed helm
+      // torso + legs (wide heroic)
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y + 3, r * 0.82, r * 1.05, 0, 0, Math.PI * 2); ctx.fill();
+      // leg stance (dynamic with speed)
+      ctx.fillStyle = '#2a2520';
+      const legS = r * 0.28;
+      ctx.beginPath(); ctx.ellipse(p.x - 5 - vx * 0.1, p.y + r * 0.65, legS, legS * 1.3 + (spd > 1.2 ? 2 : 0), -0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(p.x + 6 + vx * 0.08, p.y + r * 0.68, legS * 0.9, legS * 1.25, 0.4, 0, Math.PI * 2); ctx.fill();
+      // armor plates
+      ctx.fillStyle = '#3a2a22';
+      ctx.fillRect(p.x - r * 0.55, p.y - 4, r * 1.1, 11);
+      ctx.fillStyle = '#4a3a2f';
+      ctx.beginPath(); ctx.arc(p.x, p.y + 2, r * 0.6, 0, Math.PI * 2); ctx.fill();
+      // cape (flowing, longer on dash)
+      ctx.fillStyle = p.downed ? '#2a2522' : '#2f1f18';
+      const capeLen = dash ? 26 : 19;
+      ctx.beginPath();
+      ctx.moveTo(p.x - 7, p.y + 2);
+      ctx.quadraticCurveTo(p.x - 14 - vx * 0.3, p.y + 12, p.x - 9 - vx * 0.5, p.y + capeLen);
+      ctx.lineTo(p.x + 8 + vx * 0.4, p.y + capeLen - 1);
+      ctx.quadraticCurveTo(p.x + 13 + vx * 0.25, p.y + 11, p.x + 7, p.y + 2);
+      ctx.fill();
+      // plumed knight helm (strong silhouette)
+      ctx.fillStyle = p.downed ? '#2f2522' : '#1f2838';
+      ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 3, p.y - Math.sin(p.facing) * 3, r * 0.82, 0, Math.PI * 2); ctx.fill();
+      // plume crest
+      ctx.fillStyle = '#c23a2a';
+      ctx.beginPath(); ctx.moveTo(p.x - 4, p.y - r * 0.9); ctx.quadraticCurveTo(p.x + 1, p.y - r * 1.35, p.x + 7, p.y - r * 0.85); ctx.fill();
+      // visor glow
+      ctx.fillStyle = flash ? '#fff' : '#ff9a5a';
+      ctx.fillRect(p.x + Math.cos(p.facing) * 6 - 4, p.y - 3, 8, 3);
+      // flame sword (thick, with inner edge)
+      ctx.strokeStyle = p.downed ? '#3a2f28' : '#ff6b3a';
+      ctx.lineWidth = 4.5;
+      const wx = p.x + Math.cos(p.facing) * (r + 4);
+      const wy = p.y + Math.sin(p.facing) * (r + 4);
+      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 7, p.y + Math.sin(p.facing) * 7);
+      ctx.lineTo(wx + Math.cos(p.facing) * 14, wy + Math.sin(p.facing) * 14); ctx.stroke();
+      ctx.strokeStyle = '#ffd36a'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 8, p.y + Math.sin(p.facing) * 8);
+      ctx.lineTo(wx + Math.cos(p.facing) * 13, wy + Math.sin(p.facing) * 13); ctx.stroke();
+      // crossguard
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(wx - Math.cos(p.facing + 1.57) * 5, wy - Math.sin(p.facing + 1.57) * 5);
+      ctx.lineTo(wx + Math.cos(p.facing + 1.57) * 5, wy + Math.sin(p.facing + 1.57) * 5); ctx.stroke();
+      // flame tip when attacking
+      if (atk || dash) {
+        ctx.fillStyle = 'rgba(255,140,60,0.7)';
+        ctx.beginPath(); ctx.arc(wx + Math.cos(p.facing) * 17, wy + Math.sin(p.facing) * 17, 4.5, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (isFrost) {
+      // Frost Witch: slender, crystalline staff, veil hood, ice rim
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, r * 0.7, r * 1.1, 0, 0, Math.PI * 2); ctx.fill();
+      // flowing robes
+      ctx.fillStyle = p.downed ? '#2a323f' : '#1f2a3a';
+      ctx.beginPath();
+      ctx.moveTo(p.x - 6, p.y + 4); ctx.quadraticCurveTo(p.x - 11, p.y + 18, p.x - 4, p.y + r * 1.15);
+      ctx.lineTo(p.x + 5, p.y + r * 1.15); ctx.quadraticCurveTo(p.x + 12, p.y + 17, p.x + 7, p.y + 4);
+      ctx.fill();
+      // hood + veil (pointed witch silhouette)
+      ctx.fillStyle = p.downed ? '#2f2522' : '#162033';
+      ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 1, p.y - Math.sin(p.facing) * 4, r * 0.85, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x - 2, p.y - r * 0.7); ctx.lineTo(p.x + 3, p.y - r * 1.25); ctx.lineTo(p.x + 8, p.y - r * 0.65); ctx.fill();
+      // ice crystal staff (taller, glowing)
+      ctx.strokeStyle = p.downed ? '#3a2f28' : '#7fd4ff';
+      ctx.lineWidth = 2.8;
+      const sx = p.x + Math.cos(p.facing) * (r + 2);
+      const sy = p.y + Math.sin(p.facing) * (r + 2) - 3;
+      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 6, p.y + Math.sin(p.facing) * 5);
+      ctx.lineTo(sx + Math.cos(p.facing) * 18, sy + Math.sin(p.facing) * 18); ctx.stroke();
+      // crystal orb
+      ctx.fillStyle = flash ? '#fff' : '#c8f0ff';
+      ctx.beginPath(); ctx.arc(sx + Math.cos(p.facing) * 19, sy + Math.sin(p.facing) * 19, 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(180,230,255,0.6)';
+      ctx.beginPath(); ctx.arc(sx + Math.cos(p.facing) * 19, sy + Math.sin(p.facing) * 19, 2.1, 0, Math.PI * 2); ctx.fill();
+      // frost rim on body when special ready or hit
+      if (!p.downed) {
+        ctx.strokeStyle = 'rgba(170, 225, 255, 0.45)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.95, 0, Math.PI * 2); ctx.stroke();
+      }
+    } else {
+      // Tide Ranger: agile, spear + ribbon, hood + light armor, quiver hint
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y + 1, r * 0.68, r * 1.0, 0, 0, Math.PI * 2); ctx.fill();
+      // light armor + belt
+      ctx.fillStyle = '#1a3a2f';
+      ctx.fillRect(p.x - r * 0.5, p.y - 1, r * 1.0, 8);
+      // hood (ranger, lower profile)
+      ctx.fillStyle = p.downed ? '#2f2522' : '#162a22';
+      ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 2, p.y - Math.sin(p.facing) * 3, r * 0.78, 0, Math.PI * 2); ctx.fill();
+      // short cloak
+      ctx.fillStyle = '#1f3a2f';
+      ctx.beginPath();
+      ctx.moveTo(p.x - 5, p.y + 3); ctx.lineTo(p.x - 8 - vx * 0.2, p.y + 15); ctx.lineTo(p.x + 9 + vx * 0.15, p.y + 14); ctx.lineTo(p.x + 6, p.y + 3); ctx.fill();
+      // long piercing spear (ribbon on shaft)
+      ctx.strokeStyle = p.downed ? '#3a2f28' : '#6ee7b7';
+      ctx.lineWidth = 2.2;
+      const tx = p.x + Math.cos(p.facing) * (r + 3);
+      const ty = p.y + Math.sin(p.facing) * (r + 3);
+      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 5, p.y + Math.sin(p.facing) * 5);
+      ctx.lineTo(tx + Math.cos(p.facing) * 20, ty + Math.sin(p.facing) * 20); ctx.stroke();
+      // spearhead
+      ctx.fillStyle = '#a8d8c0';
+      ctx.beginPath(); ctx.moveTo(tx + Math.cos(p.facing) * 20, ty + Math.sin(p.facing) * 20);
+      ctx.lineTo(tx + Math.cos(p.facing) * 27 + Math.cos(p.facing + 1.2) * 3, ty + Math.sin(p.facing) * 27 + Math.sin(p.facing + 1.2) * 3);
+      ctx.lineTo(tx + Math.cos(p.facing) * 27 + Math.cos(p.facing - 1.2) * 3, ty + Math.sin(p.facing) * 27 + Math.sin(p.facing - 1.2) * 3);
+      ctx.fill();
+      // ribbon flutter
+      ctx.strokeStyle = 'rgba(110, 230, 170, 0.65)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(tx + Math.cos(p.facing) * 8, ty + Math.sin(p.facing) * 8);
+      ctx.quadraticCurveTo(tx + Math.cos(p.facing) * 11 + Math.cos(p.facing + 1.57) * (3 + spd * 0.4), ty + Math.sin(p.facing) * 11 + Math.sin(p.facing + 1.57) * (3 + spd * 0.4),
+                           tx + Math.cos(p.facing) * 14, ty + Math.sin(p.facing) * 14); ctx.stroke();
+    }
+
+    // downed state bar (more visible)
+    if (p.downed) {
+      ctx.fillStyle = 'rgba(180, 60, 50, 0.7)';
+      ctx.fillRect(p.x - 14, p.y + r * 0.85, 28, 3.5);
+      ctx.fillStyle = 'rgba(255,220,200,0.5)';
+      ctx.fillRect(p.x - 13, p.y + r * 0.87, 26 * (p.reviveTimer / 90 || 0), 1.5);
+    }
+
+    // integrated P badge (readable, not tiny text)
+    const badgeX = p.x - r * 0.85;
+    const badgeY = p.y - r * 1.05;
+    ctx.fillStyle = p.isP2 ? 'rgba(127,212,255,0.9)' : 'rgba(255,138,90,0.9)';
+    ctx.beginPath(); ctx.arc(badgeX, badgeY, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0a0f1a';
+    ctx.font = 'bold 7px system-ui';
+    ctx.fillText(p.isP2 ? '2' : '1', badgeX - 1.5, badgeY + 2.2);
 
     ctx.restore();
 
-    // hp bar above
-    const hpPct = p.hp / p.maxHp;
-    ctx.fillStyle = '#1a2233';
-    ctx.fillRect(p.x - 16, p.y - r - 12, 32, 5);
+    // HP bar (tighter, with subtle border for polish)
+    const hpPct = Math.max(0, p.hp / p.maxHp);
+    ctx.fillStyle = 'rgba(10,15,26,0.85)';
+    ctx.fillRect(p.x - 18, p.y - r - 14, 36, 6);
     ctx.fillStyle = p.isP2 ? '#7fd4ff' : '#ff8a5a';
-    ctx.fillRect(p.x - 15, p.y - r - 11, 30 * hpPct, 3);
+    ctx.fillRect(p.x - 17, p.y - r - 13, 34 * hpPct, 4);
+    if (hpPct < 0.35) {
+      ctx.fillStyle = 'rgba(255,80,60,0.6)';
+      ctx.fillRect(p.x - 17, p.y - r - 13, 34 * hpPct, 4);
+    }
   }
 
   function drawDragon(ctx, d) {

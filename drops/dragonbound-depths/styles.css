@@ -203,9 +203,9 @@ h1 {
 /* GAME */
 #game-container {
   position: relative;
-  width: min(960px, 98vw);
-  height: min(620px, calc(98vw * 0.645));
-  max-height: 92vh;
+  width: min(1040px, 98vw);
+  height: min(670px, calc(98vw * 0.644));
+  max-height: 94vh;
   border: 1px solid rgba(212, 175, 119, 0.2);
   border-radius: 8px;
   overflow: hidden;
