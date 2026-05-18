@@ -1038,10 +1038,14 @@
         showToast('Room clear — doors open');
       }
       if (currentRoomIdx < rooms.length - 1 && Math.random() < 0.85) {
-        // spawn a shrine for choice
+        // spawn a shrine for choice (Pass 18: emerge particles for magical reveal)
         const sx = room.w * 0.5 + rand(-80, 80);
         const sy = room.h * 0.5 + rand(-60, 60);
         shrines.push({ x: sx, y: sy, isShrine: true, life: 9999 });
+        for (let i = 0; i < 18; i++) {
+          const aa = (i / 18) * 6.28 + rand(-0.32, 0.32);
+          particles.push(createParticle(sx + Math.cos(aa) * 9, sy + 9, Math.cos(aa) * 1.15, -1.35 + rand(-0.45, 0.35), 19 + rand(3, 13), '#d4af77', 2.4, 'spark'));
+        }
       } else if (!room.isBoss) {
         // guaranteed pickup
         pickups.push(createPickup(room.w * 0.5, room.h * 0.42, 'relic'));
@@ -1600,14 +1604,56 @@
     });
 
     // shrines / traps / patches
+    // Pass 18: authored shrine pedestals with responsive interaction (pulsing gem, rotating runes, near-player sparkles + brighter aura)
+    // Makes "little decision moments" at room clears feel like real magical authored events, not dots. Fits art mandate for environmental polish.
     shrines.forEach(s => {
       if (s.isShrine) {
-        ctx.fillStyle = '#3a2a5a';
-        ctx.beginPath(); ctx.arc(s.x, s.y, 18, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#d4af77';
-        ctx.beginPath(); ctx.arc(s.x, s.y, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(212,175,119,0.3)';
-        ctx.beginPath(); ctx.arc(s.x, s.y, 28, 0, Math.PI * 2); ctx.fill();
+        const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0022;
+        const bob = Math.sin(t * 1.25 + s.x * 0.009) * 3.8;
+        // responsive near-player check for decision cue (stronger glow + sparkles when approach)
+        let minD = 999;
+        if (player1 && !player1.downed) minD = Math.min(minD, dist(player1.x, player1.y, s.x, s.y));
+        if (player2 && !player2.downed) minD = Math.min(minD, dist(player2.x, player2.y, s.x, s.y));
+        const near = minD < 78;
+        // layered stone pedestal (depth, handcrafted)
+        ctx.fillStyle = '#24201d';
+        ctx.beginPath(); ctx.ellipse(s.x, s.y + 10, 20, 8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#342d28';
+        ctx.beginPath(); ctx.arc(s.x, s.y + 3, 15.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#2a2522';
+        ctx.beginPath(); ctx.arc(s.x, s.y + 1, 12, 0, Math.PI * 2); ctx.fill();
+        // subtle rotating carved rune ring
+        ctx.strokeStyle = near ? 'rgba(220, 185, 125, 0.72)' : 'rgba(185, 155, 105, 0.38)';
+        ctx.lineWidth = near ? 2.1 : 1.35;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y + 2, 13.5, t * 0.55, t * 0.55 + 5.9);
+        ctx.stroke();
+        // hovering faceted relic gem (bobs, brightens on approach)
+        const gx = s.x, gy = s.y - 12 + bob;
+        ctx.fillStyle = near ? '#ffe8a8' : '#d4af77';
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 5.2); ctx.lineTo(gx + 4.2, gy - 1.8);
+        ctx.lineTo(gx + 3.1, gy + 3.4); ctx.lineTo(gx, gy + 5.4);
+        ctx.lineTo(gx - 3.1, gy + 3.4); ctx.lineTo(gx - 4.2, gy - 1.8);
+        ctx.closePath(); ctx.fill();
+        // gem inner light
+        ctx.fillStyle = 'rgba(255, 235, 175, 0.85)';
+        ctx.beginPath(); ctx.arc(gx - 0.4, gy - 0.3, 2.4, 0, Math.PI * 2); ctx.fill();
+        // responsive outer aura (brighter + larger when player near — clear "interact here" authorship)
+        const auraR = 27 + (near ? 7 : 0) + Math.sin(t * 2.9) * 1.8;
+        ctx.fillStyle = near ? 'rgba(215, 178, 105, 0.32)' : 'rgba(212, 175, 119, 0.15)';
+        ctx.beginPath(); ctx.arc(s.x, s.y + 1, auraR, 0, Math.PI * 2); ctx.fill();
+        // interaction sparkles (tiny glints only when close — makes decision feel alive)
+        if (near) {
+          ctx.fillStyle = 'rgba(255, 242, 190, 0.95)';
+          for (let k = 0; k < 4; k++) {
+            const a = (t * 3.9 + k * 1.65) % 6.28;
+            const rr = 20 + (k % 2) * 1.5;
+            const sx2 = s.x + Math.cos(a) * rr;
+            const sy2 = s.y + Math.sin(a * 1.2) * 3.5 + 1;
+            ctx.fillRect(sx2 - 0.7, sy2 - 0.7, 1.45, 1.45);
+          }
+        }
       } else if (s.slow) {
         ctx.strokeStyle = 'rgba(110, 230, 170, 0.35)';
         ctx.lineWidth = 3;

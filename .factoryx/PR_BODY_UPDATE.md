@@ -29,17 +29,18 @@ Key requirements met and exceeded:
   - Dragons: radius 18, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
   - Rooms: 6 connected areas (grove/forest, crystal, sanctum, fissure/lava, ember crypt, boss maw) with layered textures + strong authored props + light shafts/god rays + fine grain + atmospheric motes per theme.
   - Enemies (Pass 17): all 6 types + boss with rich character silhouettes with motion (skitter 6-leg mandibles, archer hooded bow-tension, brute horned spiked shield, wisp orbiting orbs+veil, burrow claws+eyes, drake flapping wings+tail; boss phase-2 lava vents) — no generic shapes, clear identity at glance.
+  - Shrines (Pass 18): layered stone pedestals, rotating runes, bobbing faceted gems, responsive player-near glow/sparkles + emerge particles — decision moments now handcrafted and alive.
   - Effects: type-specific glowing particles (fire/ice/wind), projectile trails/glows, focal hero/dragon bloom lights, world camera shake on impact, richer feedback.
   - Desktop canvas 1040x670 logical (Pass 16: crisp 1:1 render + r20 heroes + 1.18x solo zoom for commanding, screenshot-ready presence); 390px mobile graceful. The playable viewport is a real handcrafted magical-fantasy art piece.
 - **Controls + UX:** Full keyboard parity (P1 WASD/Space/Q/E, P2 Arrows/Enter/U/O), solo touch virtual stick + action pads, pause/mute/restart, overlays, no console errors.
 - **Audio:** WebAudio (attacks, hits, abilities, clears, boss, ambient) with mute persist.
-- **Verification:** 26/26 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15+16+17 enemy authorship). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work.
+- **Verification:** 27/27 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15-18). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work. Shrine approach now visibly responsive and authored.
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
-## Verification (./scripts/verify.sh — 23/23 clean + manual)
+## Verification (./scripts/verify.sh — 27/27 clean + manual)
 ```
 ./scripts/verify.sh
-... 26/26 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 16 framing + Pass 17 enemy authorship, preview entrypoint
+... 27/27 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 16-18 shrine+enemy authorship, preview entrypoint
 ```
 Manual play (browser):
 - Load preview/index.html (or direct drop) → title → pick hero + dragon + optional P2 → ENTER.
@@ -58,6 +59,7 @@ Manual play (browser):
 - Pass 14: Preview redirect to game root.
 - Pass 16: Higher-res canvas (1040×670 logical matching CSS), larger crisp heroes/dragons (r20/18), tighter protagonist-centric camera framing (solo 1.18) — final visual authorship polish making the playable viewport unmistakably handcrafted and focal.
 - Pass 17: Enemy visual authorship — all 6 enemy types + boss now have rich bespoke silhouettes with motion/character (skitter 6-leg mandibles, archer hooded bow-tension, brute horned shield, wisp orbiting orbs+veil, burrow claws+eyes, drake flapping wings+tail; boss phase-2 vents). Completes "clearer enemy identity" and matches hero/dragon detail; no generic shapes remain.
+- Pass 18: Shrine visual authorship — room-clear shrines now layered stone pedestals with rotating runes, bobbing faceted relic gems, and responsive player-proximity effects (brighter gem, larger pulsing aura, orbiting sparkles) + emerge particle bursts. Makes every relic choice a magical authored moment. Directly addresses prior visual review + WORKLOG environmental polish note. 27/27 verify.
 
 ## Known / Limitations (transparent)
 - Pure static client-side (localStorage for best/mute; perfect for FactoryX previews).
@@ -72,7 +74,7 @@ Manual play (browser):
 - ✓ Heroes/dragons materially change (melee vs ranged, fire/ice/wind abilities, companion passives/actives).
 - ✓ 6 connected areas + progression + boss (not one arena).
 - ✓ Combat readable (telegraphs, flashes, particles, hit reactions, ability feedback).
-- ✓ Preview opens game directly. Verification matches reality. 23/23 green.
+- ✓ Preview opens game directly. Verification matches reality. 27/27 green.
 - **Art mandate:** No generic canvas, no placeholder shapes, no lifeless pet. Handcrafted silhouettes, layered environments, expressive effects, focal composition — screenshot-worthy magical fantasy slice with Dragon Crew taste. Operator visual review feedback addressed in dedicated passes; kept polishing past "green checks".
 
 ## Release Notes (for PR / studio)
