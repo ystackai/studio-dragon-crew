@@ -206,10 +206,14 @@ h1 {
   width: min(1040px, 98vw);
   height: min(670px, calc(98vw * 0.644));
   max-height: 94vh;
-  border: 1px solid rgba(212, 175, 119, 0.2);
+  border: 1px solid rgba(212, 175, 119, 0.28);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+  /* Pass 24: subtle warm ember inner glow + inset gold rim for desktop "framed magical painting / viewport" presence. Makes the entire playable canvas feel like a handcrafted art piece / window into the depths (stronger focal authorship per operator mandate). Mobile unaffected (media query overrides). */
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 119, 0.09) inset,
+    0 0 22px rgba(255, 155, 80, 0.085),
+    0 40px 120px rgba(0, 0, 0, 0.7);
   background: #0a0f1a;
   aspect-ratio: 960 / 620;
 }

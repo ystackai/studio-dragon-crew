@@ -407,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -1385,6 +1385,21 @@
       moveEntity(en, roomW, roomH, dt);
     });
 
+    // Pass 24: phase 2 boss vent embers — occasional living ash/embers drifting from the enraged maw's vents for atmospheric escalation and deeper final-arena authorship (the boss arena now "breathes" with danger even between attacks). Pure draw/particle, zero gameplay/collision/perf impact (rand gate ~28%).
+    if (enemies.some(e => e.type === 'boss' && e.phase === 2) && Math.random() < 0.28) {
+      const b = enemies.find(e => e.type === 'boss');
+      if (b) {
+        // left vent
+        const vx = (b.x + 8) + (Math.random()-0.5)*6;
+        const vy = (b.y + 9) + (Math.random()-0.5)*4;
+        particles.push(createParticle(vx, vy, (Math.random()-0.5)*0.6, -0.9 - Math.random()*0.6, rand(16,26), '#ff9a5a', rand(1.8,3.2), 'fire'));
+        // right vent (60% chance for double)
+        if (Math.random() < 0.6) {
+          particles.push(createParticle(b.x + 32 + (Math.random()-0.5)*4, b.y + 2 + (Math.random()-0.5)*3, (Math.random()-0.5)*0.5, -0.7 - Math.random()*0.5, rand(14,22), '#ff8a4a', rand(1.6,2.8), 'fire'));
+        }
+      }
+    }
+
     // projectiles
     projectiles.forEach(pr => {
       if (pr.hit) return;
@@ -1627,6 +1642,19 @@
       boss.enraged = true;
       boss.radius = 28;
       showToast('The Maw enrages!');
+      // Pass 24: dramatic enrage vent burst — lava embers erupt from the maw's vents for visual escalation and "this is the real boss fight now" authorship payoff (screenshot the phase change). Pure visual + shake, no behavior/collision change.
+      if (typeof particles !== 'undefined') {
+        for (let i = 0; i < 16; i++) {
+          const a = rand(0, 6.28);
+          const r = 18 + rand(0, 10);
+          particles.push(createParticle(
+            boss.x + Math.cos(a) * r, boss.y + Math.sin(a) * r * 0.7,
+            Math.cos(a) * rand(0.8, 2.2), Math.sin(a) * rand(-1.4, -0.2) - 0.6,
+            rand(22, 38), '#ff8a4a', rand(2.5, 4.5), 'fire'
+          ));
+        }
+      }
+      shake = Math.max(shake, 6);
     }
 
     // contact
@@ -1824,11 +1852,17 @@
         ctx.beginPath(); ctx.arc(en.x + 24, en.y - 4, 4.8, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.beginPath(); ctx.arc(en.x + 26, en.y - 5, 1.9, 0, Math.PI * 2); ctx.fill();
-        // phase 2 lava vents on skull
+        // phase 2 lava vents on skull (Pass 24: pulsing + outer glow for living enraged menace; time-synced flicker gives the vents "breath" and stronger phase-2 visual tell without any perf cost)
         if (en.phase === 2) {
-          ctx.fillStyle = 'rgba(255,90,40,0.9)';
-          ctx.beginPath(); ctx.arc(en.x + 8, en.y + 9, 2.8, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.arc(en.x + 32, en.y + 2, 2.2, 0, Math.PI * 2); ctx.fill();
+          const t = Math.sin(Date.now() / 110) * 0.5 + 1.1;
+          const t2 = Math.sin(Date.now() / 140 + 1.3) * 0.4 + 1.05;
+          ctx.fillStyle = 'rgba(255,90,40,0.95)';
+          ctx.beginPath(); ctx.arc(en.x + 8, en.y + 9, 2.8 * t, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(en.x + 32, en.y + 2, 2.2 * t2, 0, Math.PI * 2); ctx.fill();
+          // faint outer lava glow
+          ctx.fillStyle = 'rgba(255,120,40,0.22)';
+          ctx.beginPath(); ctx.arc(en.x + 8, en.y + 9, 6.5 * t, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(en.x + 32, en.y + 2, 5.5 * t2, 0, Math.PI * 2); ctx.fill();
         }
         // health rim
         ctx.strokeStyle = '#ff6b4a';
