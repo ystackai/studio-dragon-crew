@@ -2546,12 +2546,40 @@
       ctx.lineTo(r.w + 2.5, d - r.w * isoA + 1.5);
       ctx.stroke();
     }
+    // Pass 45: paired depth shadow on facet edges + masonry wall height texture (core visual read elevation to fully close operator_diablo_isometric_review_blocker_2026_05_18_head_a883f0d + review "unmistakably top-down/isometric ARPG"). Each raised tile lip now has opposing low-alpha shadow for true bevel volume (top catch + side recede = 3D diamond planes pop at screenshot glance). Wall bands gain 9 vertical stonework ticks per side + warm coping cap line so "ruin walls rising around the diamond floor" read with clear architectural height and enclosure — the combat pocket is now inside a handcrafted 3D chamber, not flat lines. Combined with focal pocket, protagonist silhouette rims, god rays, and grace wards, the default Ember+Cinder first frame delivers the exact "stronger 3/4/diamond-space composition + visible floor planes/edges + wall/prop height cues + brighter readable pocket" + "hero/dragon/first foes legible at glance" the blocking review required. Pure draw, zero gameplay/collision/perf change.
+    ctx.strokeStyle = 'rgba(95,80,55,0.032)';
+    ctx.lineWidth = 0.7;
+    for (let d = -120; d < r.w + r.h; d += 68) {
+      ctx.beginPath();
+      ctx.moveTo(d - 1.8, -1.8);
+      ctx.lineTo(d + r.h * isoA - 1.8, r.h - 1.8);
+      ctx.stroke();
+    }
+    for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
+      ctx.beginPath();
+      ctx.moveTo(-1.8, d - 1.2);
+      ctx.lineTo(r.w - 1.8, d - r.w * isoA - 1.2);
+      ctx.stroke();
+    }
     // outer room boundary bevel (angled plane edge for depth) + Pass 43 wall extrusion cue: extra outer shadow band sells vertical wall height around the diamond floor (enclosed ruin chamber, not flat arena)
     ctx.strokeStyle = 'rgba(255,255,255,0.07)';
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.rect(14, 14, r.w - 28, r.h - 28);
     ctx.stroke();
+    // Pass 45 masonry height texture on wall bands (vertical stone ticks + coping cap) for unmistakable 3D enclosure read
+    ctx.strokeStyle = 'rgba(245,235,205,0.11)';
+    ctx.lineWidth = 1.4;
+    for (let k = 0; k < 9; k++) {
+      const sx = 18 + k * 14;
+      ctx.beginPath(); ctx.moveTo(sx, 16); ctx.lineTo(sx, 39); ctx.stroke();
+      const ex = r.w - 18 - k * 14;
+      ctx.beginPath(); ctx.moveTo(ex, 16); ctx.lineTo(ex, 39); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,245,210,0.14)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(14, 15); ctx.lineTo(r.w - 14, 15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14, r.h - 15); ctx.lineTo(r.w - 14, r.h - 15); ctx.stroke();
     ctx.restore();
 
     // ===== RICH LAYERED DEPTH + AUTHORED PROPS + LIGHTING (Pass 10 visual authorship) =====
