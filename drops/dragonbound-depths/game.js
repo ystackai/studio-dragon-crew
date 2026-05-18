@@ -3360,6 +3360,8 @@
     // Pass 29: dragon idle tail flick + wing micro-twitch for richer living companion personality when still (curious slow flicks and resting shifts — final capstone on creature authorship, "dragon feels alive" spec + operator "expressive effects" + "moments worth sharing" even in quiet shrine pauses). Pure draw, zero cost.
     const idleTail = idle * (Math.sin(t / 980) * 1.8 + Math.sin(t / 1610) * 0.7);
     const idleWing = idle * Math.sin(t / 760) * 0.28;
+    // Pass 64 (pre-deadline micro authorship pairing cape sway): subtle idle breathing pulse on dragon body when stationary — flank gently rises/falls in god-ray light of opening Grove frame, making the bonded companion feel like a living creature sharing the quiet moment with P1. Pairs hero's cape hem life (63) + existing head/gaze/tail/wing idles (28/29) for richer "worth sharing" still-frame creature authorship per Snow/Fire lens and operator art mandate. Draw-only, <2.2% amplitude, reuses t/idle, zero risk to any gate or perf. Visible immediately on cold-start default Ember+Cinder no-input as soft rhythmic life in the composed set piece.
+    const breath = idle * Math.sin(t / 1280) * 0.022;
     const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35 + idleWing;
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
     const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
@@ -3392,11 +3394,11 @@
     // main body mass (Pass 62 final elongation: 16.5s width vs prior rounder 19s — makes Cinder read unmistakably as long-necked dragon companion with body/tail profile, not circular blob over P1; directly targets 5ee5cfa "Cinder reads as a large orange blob rather than a distinct NPC dragon companion with head/neck/wings/tail/pose")
     ctx.fillStyle = bodyCol;
     ctx.beginPath();
-    ctx.ellipse(0, 1, 16.5 * s, 10.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 1 - breath * 1.8, 16.5 * s, 10.5 * s * (1 + breath), 0, 0, Math.PI * 2);
     ctx.fill();
-    // belly highlight
+    // belly highlight (also breathes for organic flank life)
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath(); ctx.ellipse(-1, 3, 11.5 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-1, 3 - breath * 1.2, 11.5 * s, 5.5 * s * (1 + breath * 0.7), 0, 0, Math.PI * 2); ctx.fill();
 
     // Pass 61 (tallhamn actor gate final lift): explicit short neck connector for unmistakable "head/neck/wing/tail" dragon companion anatomy read at first glance. The head now clearly extends from a distinct neck mass rather than floating on body blob; combined with horns/crest, flapping wing, clawed legs, and long expressive tail, Cinder (and variants) read as a living bonded NPC dragon, not a circular pet. Zero perf/collision change; directly satisfies "Cinder must read as an actual dragon companion with head/neck/wing/tail silhouette and must not cover P1".
     ctx.fillStyle = bodyCol;

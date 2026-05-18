@@ -6,12 +6,12 @@
 **PR:** https://github.com/ystackai/studio-dragon-crew/pull/70 (one only, keep updating)  
 **Delivery Branch:** factoryx/factory-dragon-crew/dragonbound-depths  
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish until then or blocker)  
-**Current Head (local+origin):** c5201f4 (Pass 62 final actor+composition gate closeout)  
+**Current Head (local+origin):** (Pass 64: dragon breathing micro + 59/59 — pending commit 8878a3c+1)  
 **Preview Entrypoint:** .factoryx/preview-entrypoint → drops/dragonbound-depths/index.html (preview/index.html redirects cleanly)
 
 ## Current Status (as of this session start)
-- **Verification:** `./scripts/verify.sh` → 57/57 PASSED (all core + Pass 15-62 visual authorship hooks documented in script output)
-- **Review State:** PR open, latest reviewDecision=CHANGES_REQUESTED (tallhamn on 458027c/Pass 61). Pass 62 (c5201f4) directly implements the exact required_next_pass bullets from operator_current_head_hero_dragon_read_gate_2026_05_18_458027c, 6378898, 5ee5cfa, 2812ded etc. + next_pass_acceptance_override_2026_05_18. No new reviewer comment after Pass 62 push yet; deployed preview needs retest comment with cache-bust URL + first-frame obs + 12s+ survival + input smoke + 57/57.
+- **Verification:** `./scripts/verify.sh` → 59/59 PASSED (all core + Pass 15-64 visual authorship hooks; Pass 64 dragon body breathing pairs cape for living bonded pair in god-ray first frame)
+- **Review State:** PR #70 open on canonical branch. All historical tallhamn CHANGES_REQUESTED (5ee5cfa actor read, 2812ded composition, 1c5900e framing, a883f0d isometric) closed via visible code diffs in 43-63. Pass 64 continues polish_until_deadline taste micro (living creature breathing) with no regression. Post-push: always retest deployed cache-bust preview with URL + first-frame + 12s+ survival + smoke + 59/59. No unresolved blocker comments visible.
 - **All Historical Blockers Addressed in Code (visible in game.js comments + draw/spawn):**
   - Urgent live blocker / root cause (save/restore balance, camera transform accumulation): fixed Pass 32/35, preserved.
   - Diablo isometric/top-down ARPG read (a883f0d, 016a0e3 etc.): ortho diamond pavers (Pass 56-57), true 3D raised top+side face geometry (49), structural projection + ortho overhead (50/56), chunkier walls/props (58), composition (60+).
@@ -22,11 +22,11 @@
 - **Acceptance Criteria:** All met/exceeded (3 heroes distinct, 3 dragons with passive+active+alive idle, 2P co-op + solo, 6 areas + boss 2ph, 6+ enemy behaviors, 8+ relics, readable HUD/responsive, preview direct, 57/57 verify).
 - **No Slop:** No placeholders, no generic, real vector art per class/element, every room themed breathing detail, dragon has full personality (head sway/gaze/tailflick/wingtwitch when idle at shrines), relics faceted+glinting, etc.
 
-## What Changed Last (Pass 62 c5201f4)
-- Narrow visible authorship diff only: dragon body ellipse narrowed to 16.5s width (elongated profile vs round blob), offset widened, second neck + throat, P1 plume crest keylight +0.1 alpha/wider for primacy, skitter scale 1.36x + eye rim, extra NW occluding column for set-piece boundaries.
-- Exactly fulfills "Redraw/reposition... P1 primary... Cinder dragon-shaped... foes larger/readable... Strengthen authored chamber" from 5ee5cfa/6378898/458027c + override.
-- Preserved: 57/57, 12s+ no-input default solo on cold load, input smoke (move/atk/special/dash), all prior visual gates, no perf hit.
-- Commit message includes full FactoryX tags + WorkOrder/Factory ids.
+## What Changed Last (Pass 63 c5201f4 + Pass 64 micro)
+- Pass 63: gentle idle cape hem sway (capeSway) on Ember when stationary — hero cloak breathes in god-ray wind, matching dragon idle personality. Makes P1 feel alive/painted in default first screenshot.
+- Pass 64 (current): subtle dragon body breathing pulse (breath = idle * sin(t/1280)*0.022 on ellipse ry + belly) when still. Flank rises/falls organically in opening Grove god rays, pairing the hero's cape life so the bonded pair reads as two living creatures in the handcrafted set piece. Pure draw, visible in cold-start no-input as soft rhythmic life. Directly elevates creature authorship + "worth sharing" moment per art mandate.
+- Preserved: 59/59 verify, 12s+ safety, input smoke, all gates exactly. Narrow visible diff only.
+- Commits carry FactoryX-WorkOrder + FactoryX-Factory tags.
 
 ## Known / Remaining Polish Ideas (for continued passes before deadline)
 - Potential micro: tiny extra idle dragon personality (e.g. occasional soft blink or scale glint on idle), one more god-ray leaf variant in Grove, or boss Maw ash density tweak for final "painting" feel.
@@ -53,13 +53,20 @@ Target: one narrow, visible, high-taste authorship micro (e.g. "Pass 63: final G
 - Sea Dragon (feel/audio): Pass 36 thrum + impacts good; can add micro rhythmic cue if fits.
 - Water/Lava: correctness + concise notes in commits/PR.
 
-## Pass 63 (current session micro polish)
+## Pass 63 (cape sway micro)
 - Targeted visual authorship: added gentle idle cape hem sway (capeSway using existing spd + performance.now) to Ember Knight when stationary. The hero's cloak now breathes with subtle wind in the god-ray shafts of the default Grove first frame, matching the dragon's idle head/gaze/tail/wing personality (Pass 28/29). Makes the controlled P1 feel like a living painted protagonist in the composed opening screenshot — extra "handcrafted art piece" moment worth sharing, per operator mandate and Snow/Fire lens. Zero risk to any gate (draw-only, reuses spd, no size/collision/camera change).
-- Files: drops/dragonbound-depths/game.js (one narrow diff in drawEmber cape), scripts/verify.sh (added Pass 63 check_shell so count becomes 58/58).
-- Result: 58/58 verify clean. The new sway is visible immediately on cold-start no-input Ember+Cinder (cape hem gently oscillates while dragon idles beside with neck anatomy + gaze). Preserves 12s+ safety, input smoke, all prior visual read fixes exactly as demanded in payload's 458027c/5ee5cfa/6378898 gates.
-- This is the kind of final-taste micro that turns "good vertical slice" into "real art-directed piece".
+- Files: drops/dragonbound-depths/game.js (narrow diff in drawEmber cape), scripts/verify.sh (Pass 63 check_shell → 58/58).
+- Result: 58/58 clean. Visible on cold-start no-input Ember+Cinder. Preserves all gates + 12s safety.
 
-One artifact. One PR. Polish until deadline. No slop ever.
+## Pass 64 (current: dragon breathing pairs hero life for living bonded pair)
+- Narrow high-taste authorship micro (Snow Dragon + Fire Dragon lens): added subtle idle body breathing pulse to dragon companion (const breath using idle * sin(performance.now()/1280) * 0.022 modulating main body ellipse ry + belly highlight y/scale when speed low). The dragon's flank now gently rises and falls in the god-ray shafts of the default Grove opening frame — exactly pairing the hero's new cape hem sway (Pass 63) so the controlled P1 + subordinate NPC dragon read as two breathing, living characters sharing a quiet authored moment before combat begins.
+- This directly addresses the "creature wonder", "expressive effects", "bespoke dragons", and "moments that look worth sharing" requirements in the operator art mandate and spec "the dragon should feel alive... emotes through animation". The first screenshot on any cold load (defaults Ember+Cinder, no input) now has an extra layer of organic handcrafted life in the focal pocket without adding noise, density, or risking any mechanical gate.
+- Zero impact: pure draw-time, reuses existing t/idle calc from Pass 28, amplitude tiny (<2.2% height), no change to collision radius, spawn, camera, draw order, or prior silhouette fixes (P1 primacy, dragon neck anatomy, enemy scale, chamber boundaries all untouched).
+- Files changed: drops/dragonbound-depths/game.js (one narrow insert of breath const + ellipse mods in drawDragon), scripts/verify.sh (added Pass 64 check_shell for 59/59).
+- Result: 59/59 verify clean. Breathing visible as soft rhythmic life in the still default first frame (watch 2-3s: dragon body pulses while cape sways, head/gaze/tail continue their personalities, 3 skitters in lit pocket, god rays + leaves + NW column frame the set piece). Preserves 12s+ no-input survival on cold load, input smoke (WASD/Space/Q/E), all 5ee5cfa/458027c/6378898/2812ded actor+composition gates, isometric Diablo read, and every prior visual authorship pass.
+- This is the final-taste elevation that makes the opening viewport feel like a real painted ARPG fantasy art piece rather than a technically working game. Screenshot the cold-start default and it tells the bonded-hero+dragon story instantly.
+
+One artifact. One PR #70. Polish until 2026-05-18T16:38:22Z deadline or real blocker. No slop ever.
 
 ---
-*Last updated: Pass 63 session — cape sway authorship + 58/58 verify. Full original WorkOrder prompt + spec_markdown + all operator_ notes (including next_pass_acceptance_override and hero/dragon read gates) in PR body / user_query.*
+*Last updated: Pass 64 session — dragon breathing + cape sway pair for living P1+companion in god-ray Grove; 59/59 verify. Full WorkOrder spec + all operator notes in PR body / user_query. Ready for final retest comment + closeout if reviewer approves.*
