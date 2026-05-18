@@ -7,7 +7,7 @@
 **Preview Entrypoint:** .factoryx/preview-entrypoint → drops/dragonbound-depths/index.html  
 **PR:** https://github.com/ystackai/studio-dragon-crew/pull/70 (maintained throughout; #70)  
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish_until_deadline)  
-**Current Head (local):** pending (Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, skitter threat authorship, dragon offset, lighter HUD — visible composed first-room improvement for "real art piece" bar)  
+**Current Head (local):** 43c0df1 (Pass 58 tallhamn art gate closeout pushed; retest comment posted on PR #70 with cb=43c0df1-pass58-art-closeout URL + all required fields)  
 
 ## Status (as of last sync)
 - **Verification:** 55/55 ✓ (./scripts/verify.sh all Dragonbound Pass 15–58 + core + responsive + audio + co-op + 6 rooms + boss + relics + preview entrypoint; Pass 58 check for tallhamn art gate closeout: chunkier architecture + skitter threat silhouettes + focal lift + separation + HUD lightness)
@@ -37,7 +37,7 @@
 - None. Pass 58 + prior (57 pavers, 56 ortho, 53 separation, 37 grace) directly close the tallhamn CHANGES_REQUESTED on 2812ded: dense carpet → chunkier authored architecture; swallowed hero → Ember primary with offset+draw; tiny markers → detailed skitter threats; HUD compete → lighter panels. Default cold-start first frame now reads as luxurious handcrafted Diablo-style overhead ARPG ruin chamber with clear protagonists + threats on lit structured plane. 12s+ no-input safe. All acceptance criteria, review_questions, anti-slop, operator visual gates, "real art piece" mandate satisfied locally + (post-push) deployed. Polish continues to wire 2026-05-18T16:38Z per finish_policy (one artifact/branch/PR).
 
 ## Next Pass
-- **Commit Pass 58 + push + post retest comment on PR #70.** This change (chunkier props + focal lift + skitter threats + separation + HUD lightness + WORKLOG) + `git push origin HEAD:factoryx/factory-dragon-crew/dragonbound-depths`. Add PR comment with exact cache-busted URL (e.g. .../?cb=<hash>-pass58-art-closeout), default Ember Knight + Cinder solo, first-frame obs (chunkier walls + brighter focal stage + distinct P1 knight + menacing skitters on overhead plane, no grid dominance), 12s+ no-input result, input smoke (movement/attack/special/dash stable no loss), verify 55/55, screenshots/notes. Treat as final tallhamn gate closeout. If approved or no further blocker, ready at wire; else one last micro if needed.
+- **Pass 58 pushed (43c0df1) + retest comment posted on PR #70** (exact cb=43c0df1-pass58-art-closeout + first-frame obs, 12s+ survival, smoke, 55/55, all fields per payload/tallhamn). This closes the visual art direction blockers while preserving every mechanical/safety/iso gate. Continue light polish or await review/wire 2026-05-18T16:38Z. One artifact/branch/PR.
 - Commands: git checkout factoryx/...; ./scripts/verify.sh (55/55); node --check drops/dragonbound-depths/game.js; manual cold-start local/deployed ?cb= → confirm composed chamber, P1 primary, threat foes, 12s+ survival.
 
 ## Commands / Verification (for continuity)
