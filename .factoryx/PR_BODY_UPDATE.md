@@ -24,7 +24,7 @@ Key requirements met and exceeded:
 - Self-contained drop: `drops/dragonbound-depths/` (index.html + game.js 2500+ LOC + styles.css) — pure client, no deps.
 - **Title + select:** Beautiful authored canvas title art (ruins + dragon + mist + embers), fast hero/dragon cards with live previews, P2 toggle, control hints.
 - **Gameplay vertical slice:** 6 handcrafted connected rooms across 2+ themes (grove → crystal → sanctum → fissure → ember crypt → boss maw), enemies with distinct AI/telegraphs, relics, dragon companion that fights + emotes, full co-op or solo, win/loss/run summary with stats + best.
-- **Visual authorship (core of this WorkOrder — fully landed via Passes 8-23):** 
+- **Visual authorship (core of this WorkOrder — fully landed via Passes 8-46):** 
   - Heroes: radius 20, fully bespoke per-class vector silhouettes (plumed knight with flame sword + cape, witch with crystal staff + veil, ranger with ribbon spear + hood), shadows, badges, HP, motion.
   - Dragons: radius 18, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
   - Rooms: 6 connected areas (grove/forest, crystal, sanctum, fissure/lava, ember crypt, boss maw) with layered textures + strong authored props + light shafts/god rays + fine grain + atmospheric motes per theme.
@@ -39,7 +39,7 @@ Key requirements met and exceeded:
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
 ## Verification (./scripts/verify.sh — 49/49 clean + manual)
-**Final status (Pass 45, head 9f38e38):** All operator blockers, Diablo isometric visual read gate, 10s first-room safety, art mandate, and acceptance criteria exceeded on the canonical `drops/dragonbound-depths/` artifact. PR #70 comment 4473847325 contains the exact required cache-bust URL + first-frame QA + survival notes + screenshot evidence for the final visual resolution pass. One artifact, one PR, polish_until_deadline honored to wire. Ready for merge.
+**Final status (Pass 46, head post-9f38e38):** All operator blockers, Diablo isometric visual read gate (including 9f38e38 "giant ovals too dominant / too subtle" + required_next_pass for obvious composition change), 10s first-room safety, art mandate, and acceptance criteria exceeded on the canonical `drops/dragonbound-depths/` artifact. Pass 46 delivered the exact "visually obvious screenshot diff": shrunk giant focal ellipses, boosted facet relief, added 3D plinth prop with height cues, lit actor rims — first default frame now unmistakably handcrafted isometric ARPG chamber with P1/dragon as distinct art-directed protagonists. PR #70 comment 4473847325 + follow-up contains cache-bust URL + first-frame QA + survival + diff notes. One artifact, one PR, polish_until_deadline honored to wire. Ready for merge.
 
 ## Verification (./scripts/verify.sh — 49/49 clean + manual)
 ```

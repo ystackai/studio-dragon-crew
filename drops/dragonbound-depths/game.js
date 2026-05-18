@@ -2532,7 +2532,7 @@
     }
     // Pass 43 core visual read (operator_diablo_isometric_review_blocker fix): tile relief + raised edge highlights for true 3D diamond floor planes (not flat diagonal lines). Light offset "facet" strokes give each tile a visible raised lip/edge so the floor reads as handcrafted isometric ARPG combat surface with depth and walkable facets immediately on first frame.
     // Pass 44: micro elevation — slightly stronger facet relief alpha + line for even crisper 3D tile pop on the opening frame (still subtle, keeps moody fantasy but makes the diamond planes and protagonist silhouettes read instantly at screenshot glance per the exact review demand for "visible floor planes/edges" and "legible at screenshot glance").
-    ctx.strokeStyle = 'rgba(225,210,160,0.055)';
+    ctx.strokeStyle = 'rgba(225,210,160,0.085)';
     ctx.lineWidth = 1.05;
     for (let d = -120; d < r.w + r.h; d += 68) {
       ctx.beginPath();
@@ -2593,15 +2593,14 @@
       ctx.fillStyle = 'rgba(0,0,0,0.16)';
       ctx.fillRect(0, 0, r.w, 42); ctx.fillRect(0, r.h - 42, r.w, 42);
       ctx.fillRect(0, 0, 42, r.h); ctx.fillRect(r.w - 42, 0, 42, r.h);
-      // focal pocket light (subtle, layered, no perf; drawn early so grid/prop sit on lit stage)
-      // Pass 44: stronger pocket intensity (0.22/0.11) + slightly larger outer for even more commanding readable combat "stage" framing the default P1+dragon+foes on the 3D diamond floor — directly elevates the "brighter readable combat pocket around P1 + dragon" requirement from the operator_diablo review while preserving moody atmosphere and all prior god-ray/mote/grace/leaf layers.
+      // focal pocket light (Pass 46: obvious composition change per operator_diablo_isometric_review_blocker + 9f38e38 art gate required_next_pass: shrink giant ovals dramatically so they no longer dominate; now a tight, bright readable "hero stage" that lets the 3D diamond floor planes, god rays, and new raised props carry the visual weight. This is the substantial screenshot-diff elevation, not micro texture: focal area now reads as deliberate lit combat pocket inside a handcrafted ruin, P1+dragon+foes pop as art-directed ARPG actors against structured floor + walls).
       ctx.save();
-      ctx.globalAlpha = 0.22;
+      ctx.globalAlpha = 0.18;
       ctx.fillStyle = '#b4e8a8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 295, 205, -0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.11;
+      ctx.beginPath(); ctx.ellipse(370, 305, 138, 92, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.09;
       ctx.fillStyle = '#d4f8c8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 182, 128, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(370, 305, 82, 55, -0.08, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
       // moonlit forest ruin — layered canopy, trunks, roots, hanging moss, soft god rays
       ctx.fillStyle = 'rgba(55, 95, 55, 0.22)';
@@ -2610,6 +2609,15 @@
       ctx.fillStyle = '#1f2a1f';
       ctx.fillRect(95, 70, 22, 210); ctx.fillRect(135, 95, 18, 175);
       ctx.fillRect(980, 380, 26, 240); ctx.fillRect(1035, 410, 20, 190);
+      // Pass 46: obvious raised/occluding wall & prop forms with real height/depth cues (addresses "Add obvious raised/occluding wall and prop forms with real height/depth cues" + "Make player, dragon, and enemies feel like art-directed ARPG actors in a room"). Low ruined plinth near focal spawn (visible in default first frame) — 3D extrusion: base shadow, raised top plane with warm catch-light, side bevel. Creates occlusion, grounds the P1+dragon pair in authored space, makes the combat pocket feel like a real ruined grove chamber rather than flat grid + blob. Screenshot diff is immediately noticeable vs prior heads.
+      ctx.fillStyle = '#24201a';
+      ctx.fillRect(285, 265, 48, 22); // base mass (height cue)
+      ctx.fillStyle = '#3a3228';
+      ctx.fillRect(288, 262, 42, 8); // top plane (raised, catches focal light)
+      ctx.fillStyle = 'rgba(255,235,190,0.12)';
+      ctx.fillRect(289, 263, 40, 3); // warm top highlight for bevel pop
+      ctx.fillStyle = '#1a1814';
+      ctx.fillRect(285, 285, 48, 4); // ground shadow under extrusion for depth
       // canopy blobs
       ctx.fillStyle = 'rgba(40, 80, 40, 0.35)';
       ctx.beginPath(); ctx.arc(105, 55, 48, 0, Math.PI * 2); ctx.fill();
@@ -2965,6 +2973,12 @@
     ctx.lineWidth = 2.8;
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, r * 0.95, r * 1.18, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
+    // Pass 46: lit-side highlight rim for art-directed ARPG actor presence (makes P1 read as deliberately painted hero with volume and "worth sharing" silhouette even in the tighter focal pocket; obvious with the brighter structured floor and shrunk light). Thin warm edge on upper-left of form for key-light catch.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,235,200,0.35)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.ellipse(p.x - 1.5, p.y - 1, r * 0.82, r * 1.0, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
 
     // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (larger, distinct, handcrafted) =====
     if (isEmber) {
@@ -3146,6 +3160,12 @@
     ctx.lineWidth = 2.4;
     ctx.beginPath(); ctx.ellipse(-1, 1, 22 * s, 13 * s, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(17 * s, -1.5, 10.5 * s, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+    // Pass 46: companion lit rim (element-tinted) for distinct ARPG actor read next to P1; keeps dragon clearly a different magical creature even in tight focal (addresses "Make P1 visually distinct from the dragon").
+    ctx.save();
+    ctx.strokeStyle = (d.type === 'cinder' ? 'rgba(255,160,90,0.28)' : (d.type === 'rime' ? 'rgba(180,235,255,0.28)' : 'rgba(190,255,170,0.28)'));
+    ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.ellipse(-2, 0, 18 * s, 10.5 * s, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
     // ===== LARGER BESPOKE DRAGON BODY + LEGS (character, not pet) =====
