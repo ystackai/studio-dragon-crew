@@ -80,6 +80,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 26 authored defeat illustration (symmetric personalized loss art — bond endures, tasteful non-grim emotional closure)" "grep -q 'Pass 26' $DROP/game.js && grep -q 'drawDefeatArt' $DROP/game.js && grep -q 'The Depths Claimed You' $DROP/game.js"
   check_shell "Dragonbound Pass 27 relic pickup faceted gem authorship (orbiting glint + facets for handcrafted reward pop)" "grep -q 'Pass 27' $DROP/game.js && grep -q 'faceted relic gem' $DROP/game.js && grep -q 'orbiting glint' $DROP/game.js"
   check_shell "Dragonbound Pass 28 dragon idle personality head sway + gaze wander (alive companion emote when still for creature authorship)" "grep -q 'Pass 28' $DROP/game.js && grep -q 'idleSway' $DROP/game.js && grep -q 'idleGaze' $DROP/game.js"
+  check_shell "Dragonbound Pass 29 dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final authorship capstone)" "grep -q 'Pass 29' $DROP/game.js && grep -q 'idleTail' $DROP/game.js && grep -q 'idleWing' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -99,6 +100,7 @@ verify_dragonbound() {
   echo "  12. Note Pass 26: death/loss overlay now shows a matching authored defeat canvas (personalized hero+dragon in protective bond pose with persistent glow, faint maw memory, cool defiant palette) — symmetric visual authorship for both outcomes"
   echo "  13. Note Pass 27: relic pickups (gold orbs dropped by foes or on clear) now appear as tiny faceted magical gems with rotating highlights + slow orbiting glint — every reward feels like a deliberate authored treasure, not a flat dot (screenshot a pickup near a shrine for full effect)"
   echo "  14. Note Pass 28: pause near a cleared area or shrine — the dragon companion now gently sways its head and eyes wander curiously (alive personality, not static); move and it stops — feels like a real bonded creature (screenshot the idle dragon for proof of authorship)"
+  echo "  15. Note Pass 29: while idle, watch the dragon's tail slowly flick with curious life and wings show subtle resting micro-twitch (even richer personality in quiet moments; screenshot the still companion near a faceted relic or shrine for the full living bond authorship)"
   echo
 }
 

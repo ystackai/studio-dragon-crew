@@ -602,7 +602,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost).
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close).
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -2818,14 +2818,17 @@
   function drawDragon(ctx, d) {
     ctx.save();
     const t = performance.now();
-    const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35;
+    const speed = Math.hypot(d.vx || 0, d.vy || 0);
+    const idle = Math.max(0, 1 - Math.min(1, speed / 0.85));
+    const idleSway = Math.sin(t / 920) * 1.15 * idle + Math.sin(t / 1340) * 0.45 * idle;
+    // Pass 29: dragon idle tail flick + wing micro-twitch for richer living companion personality when still (curious slow flicks and resting shifts — final capstone on creature authorship, "dragon feels alive" spec + operator "expressive effects" + "moments worth sharing" even in quiet shrine pauses). Pure draw, zero cost.
+    const idleTail = idle * (Math.sin(t / 980) * 1.8 + Math.sin(t / 1610) * 0.7);
+    const idleWing = idle * Math.sin(t / 760) * 0.28;
+    const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35 + idleWing;
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
     const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
     const s = (d.radius || 16) / 11; // scale for larger authored dragon (Pass 9)
     // Pass 28: dragon idle personality — gentle head sway + micro look-around when nearly still (makes companion feel alive & curious even at rest, deepens "not a pet" authorship per art mandate + Dragon Crew creature wonder). Pure visual, zero gameplay/perf.
-    const speed = Math.hypot(d.vx || 0, d.vy || 0);
-    const idle = Math.max(0, 1 - Math.min(1, speed / 0.85));
-    const idleSway = Math.sin(t / 920) * 1.15 * idle + Math.sin(t / 1340) * 0.45 * idle;
     ctx.translate(d.x, d.y + bob);
     ctx.rotate(tilt);
 
@@ -2954,8 +2957,8 @@
       ctx.beginPath(); ctx.arc(hx + 19 * s, hy + Math.sin(ba2) * 3, 5 * s, 0, Math.PI * 2); ctx.fill();
     }
 
-    // tail (longer, integrated, wavy, type detail)
-    const tailWave = Math.sin(t / 240 + (d.wingPhase || 0) * 0.28) * 2.8;
+    // tail (longer, integrated, wavy, type detail; Pass 29: + idleTail flick when still for living personality)
+    const tailWave = Math.sin(t / 240 + (d.wingPhase || 0) * 0.28) * 2.8 + idleTail;
     ctx.strokeStyle = bodyCol;
     ctx.lineWidth = 5.2 * s;
     ctx.beginPath();
