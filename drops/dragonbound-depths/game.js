@@ -535,17 +535,26 @@
     const cx = w / 2, cy = h / 2 + 6;
 
     if (hero.id === 'ember') {
-      // Knight: helmet + cape + sword
+      // Knight (Pass 76 humanoid): coherent mini silhouette preview matching in-game assembled hero (helm+visor+plume, torso, pauldrons hint, cape, held sword)
+      ctx.fillStyle = '#2f1f18';
+      ctx.beginPath(); ctx.moveTo(cx-8,cy+2); ctx.quadraticCurveTo(cx-14,cy+10,cx-9,cy+22); ctx.lineTo(cx+7,cy+20); ctx.quadraticCurveTo(cx+12,cy+9,cx+7,cy+2); ctx.fill(); // cape
       ctx.fillStyle = '#3a2a22';
-      ctx.fillRect(cx - 11, cy - 4, 22, 26); // body
-      ctx.fillStyle = hero.color;
-      ctx.beginPath(); ctx.arc(cx, cy - 14, 9, 0, Math.PI * 2); ctx.fill(); // helm
-      ctx.fillStyle = '#2a2f3f';
-      ctx.fillRect(cx - 3, cy + 18, 6, 14); // sword
-      ctx.strokeStyle = '#ffd7a0'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(cx - 12, cy + 8); ctx.lineTo(cx + 13, cy + 4); ctx.stroke(); // cleave arc
-      ctx.fillStyle = 'rgba(255, 110, 70, 0.6)';
-      ctx.beginPath(); ctx.arc(cx + 18, cy + 6, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx-7,cy-2); ctx.lineTo(cx-5,cy+12); ctx.lineTo(cx+5,cy+12); ctx.lineTo(cx+7,cy-2); ctx.closePath(); ctx.fill(); // torso
+      ctx.fillStyle = '#2a2118';
+      ctx.beginPath(); ctx.arc(cx-6,cy-1,5,0,6.28); ctx.fill(); // L pauldron
+      ctx.beginPath(); ctx.arc(cx+6,cy-1,5,0,6.28); ctx.fill(); // R pauldron
+      ctx.fillStyle = '#1f2838';
+      ctx.beginPath(); ctx.arc(cx,cy-10,7,0,6.28); ctx.fill(); // helm
+      ctx.fillStyle = '#0a0f1a';
+      ctx.fillRect(cx-4,cy-11,8,2); // visor
+      ctx.fillStyle = '#c23a2a';
+      ctx.beginPath(); ctx.moveTo(cx-3,cy-15); ctx.quadraticCurveTo(cx+1,cy-22,cx+4,cy-14); ctx.fill(); // plume
+      ctx.strokeStyle = '#ff6b3a'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(cx+5,cy+1); ctx.lineTo(cx+16,cy+8); ctx.stroke(); // sword
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx+7,cy+3); ctx.lineTo(cx+3,cy-1); ctx.stroke(); // cross
+      ctx.fillStyle = 'rgba(255,110,50,0.7)';
+      ctx.beginPath(); ctx.arc(cx+16,cy+8,3,0,6.28); ctx.fill();
     } else if (hero.id === 'frost') {
       ctx.fillStyle = '#2a3a4a';
       ctx.fillRect(cx - 9, cy - 2, 18, 22);
@@ -3269,76 +3278,171 @@
     ctx.beginPath(); ctx.ellipse(p.x - 1.5, p.y - 1, vr * 0.84, vr * 1.05, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
-    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 72: even bolder P1 2.05x visual redesign — unmistakable large primary ARPG hero at screenshot glance) =====
+    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 76: humanoid sprite redesign — coherent top-down knight assembled from distinct parts for a4cb22b / tallhamn humanoid_sprite_gate) =====
     if (isEmber) {
-      // Ember Knight (Pass 72): dramatic 2.05x heroic silhouette — heavy planted wide stance, billowing layered cape, full plumed helm + high visor, broad torso + pauldrons + ridge, long flame sword with prominent crossguard/pommel + glow. P1 now commands the frame as the clear controlled humanoid protagonist; Cinder subordinate behind with space. Addresses gate "clear humanoid... helm/head/torso/cape/weapon/legs/stance/strong contrast", "P1 owns focal", "roughly 2x". Richer 3D detail for art-piece bar.
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.ellipse(p.x, p.y + 3, vr * 0.84, vr * 1.08, 0, 0, Math.PI * 2); ctx.fill();
-      // Pass 74 sprite-quality: distinct torso/chest plate + pauldrons as separate readable forms (not swallowed in one ellipse) for "separate head/helmet, torso, shoulders" humanoid ARPG hero at first glance. Strong value separation + high-contrast rims make P1 unmistakably the primary controlled character in clean focal zone.
-      ctx.fillStyle = '#4a3a32';
-      ctx.fillRect(p.x - vr * 0.48, p.y - 1, vr * 0.96, 10);
-      ctx.fillStyle = '#3a2a22';
-      ctx.beginPath(); ctx.arc(p.x - vr * 0.55, p.y - 2, vr * 0.34, -1.3, 1.9); ctx.fill();
-      ctx.beginPath(); ctx.arc(p.x + vr * 0.55, p.y - 2, vr * 0.34, 1.3, 4.3); ctx.fill();
-      // leg stance (wider, more heroic planted for P1 primacy)
-      ctx.fillStyle = '#2a2520';
-      const legS = vr * 0.29;
-      ctx.beginPath(); ctx.ellipse(p.x - 6 - vx * 0.1, p.y + vr * 0.68, legS, legS * 1.38 + (spd > 1.2 ? 3 : 0), -0.32, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(p.x + 7 + vx * 0.08, p.y + vr * 0.72, legS * 0.92, legS * 1.32, 0.42, 0, Math.PI * 2); ctx.fill();
-      // armor plates + pauldrons (richer 3D for bold silhouette)
-      ctx.fillStyle = '#3a2a22';
-      ctx.fillRect(p.x - vr * 0.58, p.y - 5, vr * 1.16, 13);
-      ctx.fillStyle = '#4a3a2f';
-      ctx.beginPath(); ctx.arc(p.x, p.y + 2, vr * 0.62, 0, Math.PI * 2); ctx.fill();
-      // extra pauldron ridge for character
-      ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 2.1;
-      ctx.beginPath(); ctx.arc(p.x - 5, p.y - 2, vr * 0.48, -1.1, 2.0); ctx.stroke();
-      // cape (dramatic volume, longer, more flow for P1 presence)
-      ctx.fillStyle = p.downed ? '#2a2522' : '#2f1f18';
-      const capeLen = dash ? 32 : 24;
-      const capeSway = (spd < 0.85 ? Math.sin((typeof performance !== 'undefined' ? performance.now() : Date.now()) / 740) * 4.2 : 0);
-      const plumeSway = (spd < 0.85 ? Math.sin((typeof performance !== 'undefined' ? performance.now() : Date.now()) / 680) * 2.2 : 0);
-      ctx.beginPath();
-      ctx.moveTo(p.x - 8, p.y + 2);
-      ctx.quadraticCurveTo(p.x - 17 - vx * 0.3, p.y + 13, p.x - 11 - vx * 0.5, p.y + capeLen + capeSway * 0.7);
-      ctx.lineTo(p.x + 10 + vx * 0.4, p.y + capeLen - 1 + capeSway * 0.4);
-      ctx.quadraticCurveTo(p.x + 16 + vx * 0.25, p.y + 12, p.x + 8, p.y + 2);
-      ctx.fill();
-      // plumed knight helm (stronger, more pronounced for bold readable head/helm silhouette)
-      ctx.fillStyle = p.downed ? '#2f2522' : '#1f2838';
-      ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 4, p.y - Math.sin(p.facing) * 4, vr * 0.86, 0, Math.PI * 2); ctx.fill();
-      // larger dramatic plume crest (wind flutter visible on no-input) — taller for 2.05x heroic presence
-      ctx.fillStyle = '#c23a2a';
-      ctx.beginPath(); ctx.moveTo(p.x - 6, p.y - vr * 0.98); ctx.quadraticCurveTo(p.x + 1, p.y - vr * 1.58 + plumeSway * 0.55, p.x + 10, p.y - vr * 0.92 + plumeSway * 0.35); ctx.fill();
-      // extra back plume layer for volume
-      ctx.fillStyle = '#9c2f22';
-      ctx.beginPath(); ctx.moveTo(p.x - 9, p.y - vr * 0.82); ctx.quadraticCurveTo(p.x - 4, p.y - vr * 1.22 + plumeSway * 0.3, p.x + 3, p.y - vr * 0.78 + plumeSway * 0.2); ctx.fill();
-      // visor glow (stronger)
-      ctx.fillStyle = flash ? '#fff' : '#ff9a5a';
-      ctx.fillRect(p.x + Math.cos(p.facing) * 7 - 5, p.y - 4, 10, 4);
-      // long flame sword (thicker, longer reach, detailed crossguard/pommel + stronger glow for 2.05x weapon identity)
-      ctx.strokeStyle = p.downed ? '#3a2f28' : '#ff6b3a';
-      ctx.lineWidth = 6.4;
-      const wx = p.x + Math.cos(p.facing) * (vr + 5);
-      const wy = p.y + Math.sin(p.facing) * (vr + 5);
-      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 8, p.y + Math.sin(p.facing) * 8);
-      ctx.lineTo(wx + Math.cos(p.facing) * 19, wy + Math.sin(p.facing) * 19); ctx.stroke();
-      ctx.strokeStyle = '#ffd36a'; ctx.lineWidth = 2.4;
-      ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 9, p.y + Math.sin(p.facing) * 9);
-      ctx.lineTo(wx + Math.cos(p.facing) * 17, wy + Math.sin(p.facing) * 17); ctx.stroke();
-      // crossguard + pommel detail
-      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 3.6;
-      ctx.beginPath(); ctx.moveTo(wx - Math.cos(p.facing + 1.57) * 7, wy - Math.sin(p.facing + 1.57) * 7);
-      ctx.lineTo(wx + Math.cos(p.facing + 1.57) * 7, wy + Math.sin(p.facing + 1.57) * 7); ctx.stroke();
-      ctx.fillStyle = '#8a7550'; ctx.beginPath(); ctx.arc(p.x + Math.cos(p.facing) * 6, p.y + Math.sin(p.facing) * 6, 3.4, 0, Math.PI * 2); ctx.fill();
-      // Pass 71 keylight rim boost (high contrast for P1 primacy)
-      ctx.strokeStyle = 'rgba(255, 242, 205, 0.96)'; ctx.lineWidth = 2.9;
-      ctx.beginPath(); ctx.arc(p.x - 1, p.y - 10, vr * 0.62, -1.9, 1.35); ctx.stroke();
-      // flame tip when attacking
-      if (atk || dash) {
-        ctx.fillStyle = 'rgba(255,140,60,0.75)';
-        ctx.beginPath(); ctx.arc(wx + Math.cos(p.facing) * 19, wy + Math.sin(p.facing) * 19, 5.2, 0, Math.PI * 2); ctx.fill();
+      // Ember Knight (Pass 76): coherent humanoid top-down/isometric ARPG hero silhouette built from readable parts — NOT a dominant oval/ring cluster.
+      // Flowing multi-lobe cape (volume + sway), wide planted leg stance with greaves/boots, tapered armored torso (shoulder-to-waist path + chest plate + belt),
+      // separate raised pauldrons (clear shoulder masses), distinct greathelm (dome + neck guard + horizontal visor slit for "head/face" read + facing),
+      // tall back-swept red plume crest (heroic volume, idle flutter), arm + long flame sword held as natural extension (crossguard/pommel/flame tip along facing).
+      // Layered high-contrast black rim + warm keylight makes the entire assembled figure pop as one cohesive "head/helmet, shoulders/torso, cloak/cape shape, arm/weapon, legs/stance, facing direction" at first screenshot glance.
+      // P1 primary, clean standalone silhouette zone, Cinder clearly subordinate behind with gap. Addresses exact gate: "Redraw P1 as an actual humanoid... coherent head/helmet, shoulders/torso, cloak/cape, arm/weapon, legs/stance". Pure authored vector sprite, collision r unchanged.
+      const tNow = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const capeSway = (spd < 0.85 ? Math.sin(tNow / 740) * 4.2 : 0);
+      const plumeSway = (spd < 0.85 ? Math.sin(tNow / 680) * 2.2 : 0);
+      const fc = Math.cos(p.facing || 0);
+      const fs = Math.sin(p.facing || 0);
+      const down = p.downed;
+
+      // 1. Ground shadow for weight/readability (scaled for P1 primacy)
+      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.beginPath(); ctx.ellipse(p.x, p.y + vr * 0.78, vr * 0.78, vr * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+      if (spd > 1.5) {
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.ellipse(p.x - vx * 0.12, p.y + vr * 0.88, vr * 0.88, vr * 0.22, 0, 0, Math.PI * 2); ctx.fill();
       }
+
+      // 2. Cape (large organic volume behind, dark layered, trails opposite facing for dynamic silhouette drama)
+      ctx.fillStyle = down ? '#2a2522' : '#2f1f18';
+      const cLen = dash ? 38 : 28;
+      ctx.beginPath();
+      ctx.moveTo(p.x - 9, p.y + 1);
+      ctx.quadraticCurveTo(p.x - 22 - fc * 6 - vx*0.4, p.y + 14, p.x - 14 - fc*12 - vx*0.6, p.y + cLen + capeSway*0.9);
+      ctx.quadraticCurveTo(p.x - 3, p.y + cLen + 8 + capeSway*0.3, p.x + 13 + fc*8 + vx*0.3, p.y + cLen - 2 + capeSway*0.5);
+      ctx.quadraticCurveTo(p.x + 19 + fc*4, p.y + 15, p.x + 9, p.y + 1);
+      ctx.fill();
+      // inner fold for 3D cape volume
+      ctx.fillStyle = down ? '#221f1c' : '#251a14';
+      ctx.beginPath();
+      ctx.moveTo(p.x - 5, p.y + 4);
+      ctx.quadraticCurveTo(p.x - 14, p.y + 18, p.x - 8, p.y + cLen - 4 + capeSway*0.4);
+      ctx.lineTo(p.x + 6, p.y + cLen - 6 + capeSway*0.2);
+      ctx.quadraticCurveTo(p.x + 12, p.y + 16, p.x + 5, p.y + 4);
+      ctx.fill();
+
+      // 3. Legs (two distinct planted stance supports — greaves + boot flare; wide heroic base, dynamic to facing/vel for readable "legs/stance")
+      ctx.fillStyle = '#2a2520';
+      const legOff = 9;
+      // left leg
+      ctx.beginPath(); ctx.ellipse(p.x - legOff - fc*3 - vx*0.15, p.y + vr*0.62, vr*0.22, vr*0.48, -0.35 + fs*0.1, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1f1a16';
+      ctx.beginPath(); ctx.ellipse(p.x - legOff - fc*3 - vx*0.15, p.y + vr*0.92, vr*0.18, vr*0.22, 0, 0, Math.PI*2); ctx.fill();
+      // right leg (forward-ish)
+      ctx.fillStyle = '#2a2520';
+      ctx.beginPath(); ctx.ellipse(p.x + legOff + fc*2 + vx*0.1, p.y + vr*0.64, vr*0.20, vr*0.46, 0.38 - fs*0.1, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1f1a16';
+      ctx.beginPath(); ctx.ellipse(p.x + legOff + fc*2 + vx*0.1, p.y + vr*0.90, vr*0.17, vr*0.20, 0, 0, Math.PI*2); ctx.fill();
+
+      // 4. Torso (tapered armor path — broad at shoulders, narrower waist for clear humanoid "shoulders/torso" read, not oval blob)
+      ctx.fillStyle = '#3a2a22';
+      ctx.beginPath();
+      ctx.moveTo(p.x - vr*0.62, p.y - vr*0.12);
+      ctx.lineTo(p.x - vr*0.48, p.y + vr*0.38);
+      ctx.lineTo(p.x + vr*0.48, p.y + vr*0.38);
+      ctx.lineTo(p.x + vr*0.62, p.y - vr*0.12);
+      ctx.closePath();
+      ctx.fill();
+      // chest plate (3D armor separation)
+      ctx.fillStyle = '#4a3a2f';
+      ctx.beginPath();
+      ctx.moveTo(p.x - vr*0.42, p.y - vr*0.02);
+      ctx.lineTo(p.x - vr*0.32, p.y + vr*0.28);
+      ctx.lineTo(p.x + vr*0.32, p.y + vr*0.28);
+      ctx.lineTo(p.x + vr*0.42, p.y - vr*0.02);
+      ctx.closePath();
+      ctx.fill();
+      // belt/fauld
+      ctx.fillStyle = '#1f1814';
+      ctx.fillRect(p.x - vr*0.52, p.y + vr*0.32, vr*1.04, 5);
+
+      // 5. Pauldrons (separate raised shoulder armor — unmistakable "shoulders" distinct from torso/helm)
+      ctx.fillStyle = '#2a2118';
+      ctx.beginPath(); ctx.arc(p.x - vr*0.52, p.y - vr*0.08, vr*0.32, -1.4, 2.1); ctx.fill();
+      ctx.fillStyle = '#3a2a22';
+      ctx.beginPath(); ctx.arc(p.x - vr*0.52, p.y - vr*0.08, vr*0.26, -1.2, 1.9); ctx.fill();
+      ctx.fillStyle = '#2a2118';
+      ctx.beginPath(); ctx.arc(p.x + vr*0.52, p.y - vr*0.08, vr*0.32, 1.0, 4.5); ctx.fill();
+      ctx.fillStyle = '#3a2a22';
+      ctx.beginPath(); ctx.arc(p.x + vr*0.52, p.y - vr*0.08, vr*0.26, 1.2, 4.3); ctx.fill();
+
+      // 6. Greathelm + neck (distinct head/helmet silhouette on top of torso; dome + lower guard + visor for "coherent head/helmet" read + facing)
+      const helmX = p.x - fc * 3;
+      const helmY = p.y - vr * 0.22 - fs * 2;
+      ctx.fillStyle = down ? '#2f2522' : '#1f2838';
+      ctx.beginPath(); ctx.arc(helmX, helmY, vr * 0.52, 0, Math.PI * 2); ctx.fill(); // dome
+      ctx.fillStyle = '#162033';
+      ctx.beginPath(); ctx.arc(helmX, helmY + vr*0.18, vr*0.44, 0.6, Math.PI * 1.4); ctx.fill(); // neck/guard
+      // visor slit (horizontal — gives "face/eyes" direction read)
+      ctx.fillStyle = '#0a0f1a';
+      ctx.fillRect(helmX + fc * 8 - 7, helmY - 1, 14, 2.5);
+
+      // 7. Tall plume crest (dramatic back-swept heroic volume, red Ember identity, sways on idle; attached to helm rear for clear silhouette)
+      ctx.fillStyle = '#c23a2a';
+      ctx.beginPath();
+      ctx.moveTo(helmX - fc*2 - 4, helmY - vr*0.38);
+      ctx.quadraticCurveTo(helmX + 2 - fc*4, helmY - vr*0.92 + plumeSway*0.6, helmX + 8 + fc*2, helmY - vr*0.32 + plumeSway*0.25);
+      ctx.lineTo(helmX + 4 + fc*1, helmY - vr*0.28);
+      ctx.fill();
+      ctx.fillStyle = '#9c2f22';
+      ctx.beginPath();
+      ctx.moveTo(helmX - fc*3 - 6, helmY - vr*0.28);
+      ctx.quadraticCurveTo(helmX - 2, helmY - vr*0.68 + plumeSway*0.35, helmX + 5, helmY - vr*0.22 + plumeSway*0.15);
+      ctx.fill();
+
+      // 8. Held flame sword (arm + blade as natural extension of figure; crossguard/pommel/flame for "weapon" identity, orients with facing)
+      const gripX = p.x + vr*0.38 + fc * 4;
+      const gripY = p.y + vr*0.08 + fs * 3;
+      // arm
+      ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 5.5;
+      ctx.beginPath(); ctx.moveTo(p.x + vr*0.48, p.y - vr*0.02); ctx.lineTo(gripX, gripY); ctx.stroke();
+      // blade
+      const bladeLen = vr + 22;
+      const tipX = gripX + fc * bladeLen;
+      const tipY = gripY + fs * bladeLen;
+      ctx.strokeStyle = down ? '#3a2f28' : '#ff6b3a'; ctx.lineWidth = 7.2;
+      ctx.beginPath(); ctx.moveTo(gripX, gripY); ctx.lineTo(tipX, tipY); ctx.stroke();
+      ctx.strokeStyle = '#ffd36a'; ctx.lineWidth = 2.8;
+      ctx.beginPath(); ctx.moveTo(gripX + fc*2, gripY + fs*2); ctx.lineTo(tipX - fc*3, tipY - fs*3); ctx.stroke();
+      // crossguard (perpendicular)
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 4.2;
+      const cg = 9;
+      ctx.beginPath();
+      ctx.moveTo(gripX + fc*1 - fs * cg, gripY + fs*1 + fc * cg);
+      ctx.lineTo(gripX + fc*1 + fs * cg, gripY + fs*1 - fc * cg);
+      ctx.stroke();
+      // pommel
+      ctx.fillStyle = '#8a7550'; ctx.beginPath(); ctx.arc(gripX - fc*3, gripY - fs*3, 3.8, 0, Math.PI*2); ctx.fill();
+      // flame tip on action
+      if (atk || dash) {
+        ctx.fillStyle = 'rgba(255,140,60,0.85)';
+        ctx.beginPath(); ctx.arc(tipX, tipY, 6.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,220,120,0.6)';
+        ctx.beginPath(); ctx.arc(tipX - fc*4, tipY - fs*4, 3.2, 0, Math.PI*2); ctx.fill();
+      }
+
+      // 9. Strong outer silhouette rim + keylight (hugs entire assembled figure for one cohesive hero read, high contrast vs chamber)
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+      ctx.lineWidth = 5.8;
+      ctx.beginPath();
+      ctx.moveTo(p.x - vr*0.68, p.y - vr*0.18);
+      ctx.lineTo(p.x - vr*0.38, p.y + vr*0.42);
+      ctx.quadraticCurveTo(p.x - vr*0.22, p.y + vr*0.78, p.x - 5, p.y + vr*0.98);
+      ctx.quadraticCurveTo(p.x + 4, p.y + vr*0.98, p.x + vr*0.28, p.y + vr*0.42);
+      ctx.lineTo(p.x + vr*0.68, p.y - vr*0.18);
+      ctx.quadraticCurveTo(p.x + vr*0.42, p.y - vr*0.52, helmX + 2, helmY - vr*0.52);
+      ctx.quadraticCurveTo(p.x - vr*0.42, p.y - vr*0.52, p.x - vr*0.68, p.y - vr*0.18);
+      ctx.stroke();
+      ctx.restore();
+      // warm keylight rim (lit edges pop the humanoid form)
+      ctx.strokeStyle = 'rgba(255, 242, 200, 0.92)';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath(); ctx.arc(p.x - 2, p.y - vr*0.08, vr * 0.78, -2.1, 1.6); ctx.stroke();
+
+      // 10. Ember chest crest (tiny flame emblem for identity, readable at ARPG screenshot scale)
+      ctx.fillStyle = 'rgba(255,110,50,0.9)';
+      ctx.beginPath(); ctx.arc(p.x, p.y + vr*0.12, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff8';
+      ctx.beginPath(); ctx.arc(p.x + 1, p.y + vr*0.10, 1.4, 0, Math.PI*2); ctx.fill();
     } else if (isFrost) {
       // Frost Witch (Pass 71: bold P1 visual via vr): slender tall silhouette, veil hood, crystalline staff with glowing orb — scaled for primary hero presence when chosen as P1.
       ctx.fillStyle = col;

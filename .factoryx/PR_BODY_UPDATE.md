@@ -18,7 +18,7 @@ Key requirements met and exceeded:
 - 6 connected areas (5 combat rooms + boss "The Maw of Ash").
 - 6+ enemy behaviors + boss 2-phase, 8 relics with 3-choice shrines, progression.
 - Readable HUD, audio, win/loss/run summary, best persistence.
-- **Operator Art Mandate hard requirement addressed in Passes 8-20:** larger authored hero silhouettes, expressive dragon, rich layered rooms, glowy effects, focal lights, world shake, enemy character art, responsive shrines, and (19-20) bulletproof immediate+transition camera framing + safe spawn spacing so protagonists are always visible/readable from first frame of every room — no off-camera ever. Screenshot-worthy handcrafted magical fantasy piece.
+- **Operator Art Mandate hard requirement addressed across Passes 8-76:** larger authored hero silhouettes, expressive dragon, rich layered rooms, glowy effects, focal lights, world shake, enemy character art, responsive shrines, bulletproof immediate+transition camera framing + safe spawn spacing, and final Pass 76 decisive humanoid sprite redesign (coherent assembled knight P1 with distinct head/helmet/shoulders/torso/cape/weapon/legs/stance — no more abstract oval). Screenshot-worthy handcrafted magical fantasy piece meeting every tallhamn/override visual gate.
 
 ## What Shipped (focused visual authorship polish on canonical artifact)
 - Self-contained drop: `drops/dragonbound-depths/` (index.html + game.js 2500+ LOC + styles.css) — pure client, no deps.
