@@ -1449,9 +1449,9 @@
           if (door.dir === 'west') { player1.x = 70; if (player2) player2.x = 86; }
 
           // Pass 20: immediate camera framing + double update for every room entry (prevents center-snap offscreen flash on transition, matching Pass 19 spawn safety for the full run; addresses remaining "off-camera entry" risk from monitor review)
-          // Pass 50: iso compensation offsets (visual only) keep entry framing centered under shear for every room transition.
-          camera.x = player1.x + (player2 ? 18 : -12) + 31;
-          camera.y = player1.y - 20 - 14;
+          // Pass 50/53: iso compensation offsets (visual only) keep entry framing composed/centered under shear; recentered y/x for the angled view so every room transition feels authored around the player rather than drifted. Matches tallhamn "recenter/tune the camera for the projected view".
+          camera.x = player1.x + (player2 ? 12 : -6) + 18;
+          camera.y = player1.y - 8 - 8;
           camera.zoom = p2Enabled ? 1.02 : (room.isBoss ? 0.86 : 1.18);
           updateCamera(0);
           updateCamera(0);
@@ -2189,9 +2189,9 @@
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#4a3a2f';
         ctx.beginPath(); ctx.arc(en.x - 2.5, en.y + 0.5, en.radius * 0.68, 0, Math.PI * 2); ctx.fill(); // abdomen
-        // mandibles (snappy)
+        // mandibles (snappy) — Pass 53: boosted line + brighter threat color so first-room skitters read as immediate hostile threats in the chamber (not tiny markers) per tallhamn "first enemy should read as threat in chamber, not tiny marker"
         const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.1;
-        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.7;
+        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.05;
         ctx.beginPath(); ctx.moveTo(en.x + 5, en.y - 1.5); ctx.lineTo(en.x + 11, en.y - 2.5 - mPhase); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(en.x + 5, en.y + 1.5); ctx.lineTo(en.x + 11, en.y + 2.5 + mPhase); ctx.stroke();
         // 6 legs, motion-aware scuttle
@@ -2202,10 +2202,14 @@
           ctx.beginPath(); ctx.moveTo(en.x, en.y);
           ctx.lineTo(en.x + Math.cos(la) * len, en.y + Math.sin(la) * (len * 0.58)); ctx.stroke();
         }
-        // eyes
-        ctx.fillStyle = '#ffcc66';
-        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y - 2.1, 1.55, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y + 2.1, 1.55, 0, Math.PI * 2); ctx.fill();
+        // eyes — Pass 53: warmer/more menacing threat tint + slight size for first-glance readability as hostile pack in the composed chamber (addresses "make the first enemy group readable in first screenshot")
+        ctx.fillStyle = '#ffaa55';
+        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y - 2.1, 1.7, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 4.2, en.y + 2.1, 1.7, 0, Math.PI * 2); ctx.fill();
+        // small hostile pupil glint
+        ctx.fillStyle = '#662200';
+        ctx.beginPath(); ctx.arc(en.x + 4.6, en.y - 2.0, 0.7, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 4.6, en.y + 2.2, 0.7, 0, Math.PI * 2); ctx.fill();
       } else if (en.type === 'archer') {
         // Thorn Archer — hooded cloak, quiver, bow with tension telegraph (ranged identity)
         ctx.fillStyle = flash ? '#fff' : '#2f3a2a';
@@ -2340,12 +2344,13 @@
       }
     });
 
-    // players
-    drawPlayer(ctx, player1, selectedHero);
-    if (player2 && p2Enabled) drawPlayer(ctx, player2, selectedHero);
-
+    // Pass 53: draw dragon first (behind) then players so the controlled hero (Ember knight silhouette) renders on top and remains immediately readable as the distinct P1 character separate from the dragon companion. Addresses tallhamn "dragon still visually swallows the hero; Ember/P1 must be immediately readable as the controlled character, separate from Cinder" with draw-order + prior spawn offset + boosted rims. Zero perf/collision impact.
     // dragon companion (beautiful, alive)
     if (dragon) drawDragon(ctx, dragon);
+
+    // players (on top for hero primacy under iso)
+    drawPlayer(ctx, player1, selectedHero);
+    if (player2 && p2Enabled) drawPlayer(ctx, player2, selectedHero);
 
     // Pass 37: explicit visual first-room grace ward (gentle orbiting protective sigils + soft bond halo during cold-start safety window).
     // Makes the 140f / ~2.3s orientation grace (Pass 35b) feel like a deliberate magical gift of the Dragonbound Depths — warm ember runes drift around the P1+dragon focal pair, alpha-tied to remaining time, fading as real pressure begins.
@@ -3815,14 +3820,14 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 58, player1.y + 6, selectedDragon);
+    dragon = createDragon(player1.x - 68, player1.y + 22, selectedDragon); // Pass 53: more lateral/back offset under iso projection so P1 knight silhouette remains immediately distinct and not visually swallowed by dragon body in opening focal frame (addresses tallhamn review "dragon still visually swallows the hero")
 
     loadRoom(0);
 
     // Pass 19: immediate camera framing BEFORE first draw so player/dragon/dragon are perfectly visible and centered on entry frame (no center-room then snap).
-    // Pass 50: small visual-only lead offsets compensate the iso shear/squash so the default Ember+Cinder focal pocket (and 3D props/pillars) land centered in the 1040x670 logical view instead of drifting; zero gameplay effect.
-    camera.x = player1.x + (player2 ? 18 : -12) + 31;
-    camera.y = player1.y - 22 - 14;
+    // Pass 50/53: small visual-only lead offsets compensate the iso shear/squash so the default Ember+Cinder focal pocket lands composed/centered (not high/left drift) in the projected view; tuned recenter for the angled frustum while keeping all props + P1+dragon+foes framed. Addresses tallhamn "projection/framing pushes ... too high/left".
+    camera.x = player1.x + (player2 ? 12 : -6) + 18;
+    camera.y = player1.y - 8 - 8;
     camera.zoom = p2Enabled ? 1.02 : 1.18;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
