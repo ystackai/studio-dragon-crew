@@ -380,6 +380,27 @@
         ]
       },
       {
+        id: 'crypt',
+        name: 'Ember Crypt',
+        theme: 'crypt',
+        w: 1260, h: 800,
+        walls: [
+          {x: 100, y: 140, w: 130, h: 90}, {x: 940, y: 110, w: 110, h: 140},
+          {x: 260, y: 580, w: 150, h: 70}, {x: 850, y: 520, w: 120, h: 100}
+        ],
+        doors: [
+          {to: 3, x: 0, y: 340, w: 22, h: 80, dir: 'west'},
+          {to: 5, x: 580, y: 0, w: 80, h: 22, dir: 'north'}
+        ],
+        spawns: [
+          {x: 200, y: 220, type: 'wisp'},
+          {x: 420, y: 160, type: 'archer'},
+          {x: 680, y: 280, type: 'brute'},
+          {x: 520, y: 480, type: 'skitter'},
+          {x: 880, y: 420, type: 'drake'}
+        ]
+      },
+      {
         id: 'boss',
         name: 'The Maw of Ash',
         theme: 'boss',
@@ -388,7 +409,7 @@
           {x: 160, y: 140, w: 100, h: 100}, {x: 1080, y: 160, w: 120, h: 80},
           {x: 220, y: 620, w: 140, h: 80}, {x: 920, y: 580, w: 160, h: 110}
         ],
-        doors: [],
+        doors: [{to: 4, x: 620, y: 758, w: 80, h: 22, dir: 'south'}],
         spawns: [], // boss spawns manually
         isBoss: true
       }
@@ -1914,6 +1935,19 @@
       ctx.strokeStyle = 'rgba(80, 60, 90, 0.5)';
       ctx.lineWidth = 1.8;
       ctx.beginPath(); ctx.moveTo(220, 120); ctx.lineTo(225, 310); ctx.stroke();
+    }
+    if (r.theme === 'crypt') {
+      // ember crypt — scorched sanctum variant, glowing embers, broken statues
+      ctx.fillStyle = 'rgba(85, 45, 25, 0.18)';
+      ctx.fillRect(120, 180, 140, 200);
+      ctx.fillStyle = '#2f2218';
+      ctx.fillRect(90, 100, 32, 420); ctx.fillRect(1040, 90, 36, 400);
+      ctx.fillStyle = 'rgba(200, 90, 40, 0.22)';
+      ctx.fillRect(96, 140, 20, 80);
+      // ember vents on floor
+      ctx.fillStyle = 'rgba(255, 110, 40, 0.16)';
+      ctx.beginPath(); ctx.arc(380, 620, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(820, 590, 18, 0, Math.PI * 2); ctx.fill();
     }
     if (r.theme === 'fissure') {
       // lava fissure — jagged rocks, lava pools with specular, heat vents, stalactites
