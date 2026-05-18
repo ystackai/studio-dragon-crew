@@ -2191,11 +2191,17 @@
         // carapace ridge (3D threat silhouette)
         ctx.fillStyle = '#2a2118';
         ctx.beginPath(); ctx.arc(en.x - 0.8, en.y - 1.8, vr * 0.55, 0, Math.PI * 2); ctx.fill();
-        // mandibles (snappy, thicker for menace)
+        // mandibles (snappy, thicker for menace) + Pass 59 extra inner pair + dorsal ridge for stronger fantasy threat silhouette at first glance (addresses remaining "first enemies read as tiny markers rather than creature threats" + "high-quality Diablo-style" bar).
         const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.25;
-        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.6;
+        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.8;
         ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y - 2.2); ctx.lineTo(en.x + 14.5, en.y - 3.8 - mPhase); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y + 2.0); ctx.lineTo(en.x + 14.5, en.y + 3.6 + mPhase); ctx.stroke();
+        ctx.lineWidth = 1.9;
+        ctx.beginPath(); ctx.moveTo(en.x + 4.8, en.y - 1.1); ctx.lineTo(en.x + 11.8, en.y - 2.4 - mPhase * 0.6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(en.x + 4.8, en.y + 1.0); ctx.lineTo(en.x + 11.8, en.y + 2.2 + mPhase * 0.6); ctx.stroke();
+        // dorsal carapace ridge for 3D threat volume
+        ctx.fillStyle = '#251c14';
+        ctx.beginPath(); ctx.arc(en.x - 1.5, en.y - 4.2, vr * 0.32, 0, Math.PI * 2); ctx.fill();
         // 6 legs, motion-aware scuttle (longer reach for threat scale)
         ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.65;
         for (let k = 0; k < 6; k++) {
@@ -2699,23 +2705,25 @@
       // Makes the hero/dragon/enemy group pop clearly against the now-structured receding chamber per 9ae887d review ("brighten/value-shape the playable floor and make the hero/dragon/enemy group pop clearly against the chamber").
       // Tiny radial only (no giant ovals), layered over the 3D pavers so the central combat space reads as the intentional lit stage inside the authored ruin hall.
       // Pass 58: stronger focal staging alphas for even clearer value hierarchy — pavers under protagonists catch more light so dark silhouettes + first skitters read as deliberate ARPG focal group at screenshot glance (addresses "stronger value staging", "P1/dragon/enemy pop").
+      // Pass 59: visible value lift bump + recenter on Ember (358,322) for even stronger protagonist pop and separation on the lit 3D paver stage in default first frame. Directly targets tallhamn "still not a high-quality Diablo-style fantasy art piece" + "make the hero/dragon/enemy group pop clearly". Pure draw tweak, zero other impact.
       ctx.save();
-      ctx.globalAlpha = 0.16;
-      const fl = ctx.createRadialGradient(365, 318, 48, 365, 318, 205);
-      fl.addColorStop(0, '#c8d8a8');
+      ctx.globalAlpha = 0.22;
+      const fl = ctx.createRadialGradient(358, 322, 42, 358, 322, 215);
+      fl.addColorStop(0, '#d2e2b2');
       fl.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = fl;
-      ctx.beginPath(); ctx.arc(365, 318, 205, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(358, 322, 215, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
       // focal pocket light (Pass 46: ... now paints over the new 3D tessellated floor for even stronger "lit stage on real geometry" read)
+      // Pass 59: boosted inner alphas + recenter to match new value lift for even more pronounced lit combat pocket under Ember+dragon (visible first-frame composition improvement for tallhamn art gate).
       ctx.save();
-      ctx.globalAlpha = 0.24;
+      ctx.globalAlpha = 0.28;
       ctx.fillStyle = '#b4e8a8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 138, 92, -0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.13;
+      ctx.beginPath(); ctx.ellipse(358, 312, 142, 96, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.16;
       ctx.fillStyle = '#d4f8c8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 82, 55, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(358, 312, 86, 58, -0.08, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
       // moonlit forest ruin — layered canopy, trunks, roots, hanging moss, soft god rays
       ctx.fillStyle = 'rgba(55, 95, 55, 0.22)';
