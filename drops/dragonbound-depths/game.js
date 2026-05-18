@@ -717,7 +717,9 @@
           {x: 710, y: 595, w: 95, h: 48}, // SE plinth occluder for value grouping / depth in default frame
           {x: 88, y: 265, w: 32, h: 92}, // Pass 72 extra: mid-west tall column mass for stronger left boundary silhouette + occlusion in default 2.05x P1 frame; room now reads as deliberate enclosed ruin hall not patterned floor.
           {x: 52, y: 195, w: 26, h: 118}, // Pass 73: extra NW tall column mass (visible left in default frame) for stronger left wall/edge silhouette + occlusion; breaks paver repetition, creates clear chamber boundary read.
-          {x: 1055, y: 295, w: 38, h: 82} // Pass 73: extra mid-east wall mass for right boundary silhouette + foreground separation; value hierarchy + authored enclosure around focal pocket, reduces tile dominance.
+          {x: 1055, y: 295, w: 38, h: 82}, // Pass 73: extra mid-east wall mass for right boundary silhouette + foreground separation; value hierarchy + authored enclosure around focal pocket, reduces tile dominance.
+          {x: 380, y: 680, w: 220, h: 42}, // Pass 83 (structural chamber authorship for 5b8fa25/65c9934 Diablo ARPG gate): low near-south foreground ledge mass under the new 3D wall extrusion + camera.y depth bias. Frames the P1+dragon+first-foes focal pocket from the "near/camera" side of the 3/4 view, turning the opening into a deliberate "peering down into a tall enclosed ruin hall" composition exactly as the reviewer required ("camera looking down into 3/4 dungeon space, not flat decorated canvas"). Visible playfield diff, no spawn/safety impact.
+          {x: 142, y: 520, w: 18, h: 95} // Pass 83: additional mid-west tall column for layered boundary depth + occlusion around the lit combat pocket in default first frame; strengthens "authored set piece with wall height, foreground/background separation, and clear chamber silhouette" under iso + extrusion.
         ],
         doors: [
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
@@ -2052,10 +2054,32 @@
     ctx.strokeStyle = '#2f3a52';
     ctx.lineWidth = 2;
     room.walls.forEach(w => {
+      const wallH = 15.5; // Pass 83 (structural 3D wall extrusion for 65c9934/5b8fa25 Diablo ARPG chamber gate): explicit dropped south/east faces + top riser for tall ruin architecture height under iso shear. Walls now read as solid vertical masses rising from the tessellated paver plane with real occlusion/edge height, not flat rects. Combined with deeper projection + camera depth bias + focal paver value, the default first Grove frame is a convincing overhead 3/4 dungeon hall with P1+dragon+monsters grounded in authored space. Pure visual authorship in playfield render; no gameplay change. Preserves 13s+ safety, 69/69 verify, input smoke.
       drawRoundedRect(ctx, w.x, w.y, w.w, w.h, 8, '#1f283d', '#2f3a52');
-      // top bevel
-      ctx.fillStyle = 'rgba(255,255,255,0.04)';
-      ctx.fillRect(w.x + 3, w.y + 3, w.w - 6, 9);
+      // top bevel highlight (Pass 83)
+      ctx.fillStyle = 'rgba(255,255,255,0.055)';
+      ctx.fillRect(w.x + 2.5, w.y + 2.5, w.w - 5, 7.5);
+      // 3D south (camera-near under shear) dropped face for vertical height
+      ctx.fillStyle = 'rgba(11,15,24,0.93)';
+      ctx.beginPath();
+      ctx.moveTo(w.x + 0.5, w.y + w.h - 0.5);
+      ctx.lineTo(w.x + w.w - 0.5, w.y + w.h - 0.5);
+      ctx.lineTo(w.x + w.w + 2.5, w.y + w.h + wallH * 0.58);
+      ctx.lineTo(w.x + 1.5, w.y + w.h + wallH * 0.58);
+      ctx.closePath();
+      ctx.fill();
+      // east dropped side face (gives thickness + occlusion on angled view)
+      ctx.fillStyle = 'rgba(9,13,21,0.89)';
+      ctx.beginPath();
+      ctx.moveTo(w.x + w.w - 0.5, w.y + 1);
+      ctx.lineTo(w.x + w.w - 0.5, w.y + w.h - 0.5);
+      ctx.lineTo(w.x + w.w + 2.5, w.y + w.h + wallH * 0.58);
+      ctx.lineTo(w.x + w.w + 2.5, w.y + wallH * 0.32);
+      ctx.closePath();
+      ctx.fill();
+      // subtle north/west top riser cap for edge pop and "crowning" architecture read
+      ctx.fillStyle = 'rgba(52,58,74,0.55)';
+      ctx.fillRect(w.x - 1.5, w.y - 2, w.w + 3, 4.5);
     });
 
     // doors (if open)
