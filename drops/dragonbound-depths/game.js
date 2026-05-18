@@ -407,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change).
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -2096,18 +2096,25 @@
     });
     ctx.globalAlpha = 1;
 
-    // dynamic focal key lights + magical bond glow (Pass 15 polish): now correctly drawn in camera/world space
-    // so the protagonists (hero + dragon) are always the warm, brighter focal point of the composition.
-    // This + world shake delivers the "brighter focal composition" and "unmistakably handcrafted" mandate.
+    // dynamic focal key lights + magical bond glow (Pass 15 polish) + Pass 22: stronger halos + soft luminous rim lights around protagonists
+    // so the heroes and dragon command the frame with warm magical presence; silhouettes read larger and more authored even at mid-zoom or on small viewports.
+    // Directly addresses operator visual review "tiny... focal composition" and art mandate for "readable silhouettes" and "unmistakably handcrafted".
     ctx.save();
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = 'rgba(250, 230, 195, 0.052)';
-    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 90, 0, Math.PI * 2); ctx.fill(); }
-    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 66, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 80, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillStyle = 'rgba(255, 248, 215, 0.024)';
-    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 48, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 44, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 0.94;
+    ctx.fillStyle = 'rgba(252, 235, 200, 0.065)';
+    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 95, 0, Math.PI * 2); ctx.fill(); }
+    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 70, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 85, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255, 250, 220, 0.032)';
+    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 52, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 48, 0, Math.PI * 2); ctx.fill(); }
+    // Pass 22: thin glowing bond rims (luminous outline) — gives each protagonist a distinct magical aura that pops against layered dark rooms and props; pure visual, zero collision/ perf impact
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = 'rgba(255, 242, 205, 0.6)';
+    ctx.lineWidth = 2.8;
+    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 23, 0, Math.PI * 2); ctx.stroke(); }
+    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
 
     // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)

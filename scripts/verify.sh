@@ -73,6 +73,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 19 immediate framing + spawn safety (central entry, no off-left) + victory triumph canvas art" "grep -q 'Pass 19' $DROP/game.js && grep -q 'victory-canvas' $DROP/index.html && grep -q 'drawVictoryArt' $DROP/game.js"
   check_shell "Dragonbound Pass 20 safe entry + transition camera framing (no snap offscreen on room changes; safer first spawns)" "grep -q 'Pass 20' $DROP/game.js && grep -q 'tryEnterDoor' $DROP/game.js && grep -q '195, y: 125' $DROP/game.js"
   check_shell "Dragonbound Pass 21 gentle 3-foe first room + entry bond burst (authored welcome particles)" "grep -q 'Pass 21' $DROP/game.js && grep -q 'bond awakening' $DROP/game.js && grep -q 'createParticle' $DROP/game.js"
+  check_shell "Dragonbound Pass 22 magical bond rim lights + boosted focal halos (stronger protagonist presence and silhouette authorship)" "grep -q 'Pass 22' $DROP/game.js && grep -q 'rim lights' $DROP/game.js && grep -q 'focal key lights' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -85,6 +86,7 @@ verify_dragonbound() {
   echo "  5. Confirm dragons visibly follow/help, HUD is readable, and no console errors appear"
   echo "  6. Check 1040px desktop (crisp authored art) and 390px mobile-width layouts"
   echo "  7. Win a run — see the new victory canvas triumph illustration in summary overlay"
+  echo "  8. Note Pass 22: heroes/dragon now have luminous bond rims + stronger warm halos for focal pop (screenshot the playfield)"
   echo
 }
 
