@@ -3208,10 +3208,12 @@
       // cape (flowing, longer on dash)
       ctx.fillStyle = p.downed ? '#2a2522' : '#2f1f18';
       const capeLen = dash ? 26 : 19;
+      // Pass 63 (final art polish pre-deadline): gentle idle cape hem sway when stationary (spd low) — the Ember Knight's cloak catches a subtle grove breeze in god rays while dragon idles with gaze/tail. Makes the default cold-start P1 silhouette feel alive and handcrafted in the composed first screenshot (extra "worth sharing" protagonist authorship, matches dragon Pass 28/29 personality, zero gameplay/collision/perf cost, visible immediately on no-input entry). Snow/Fire Dragon lens.
+      const capeSway = (spd < 0.85 ? Math.sin((typeof performance !== 'undefined' ? performance.now() : Date.now()) / 740) * 3.6 : 0);
       ctx.beginPath();
       ctx.moveTo(p.x - 7, p.y + 2);
-      ctx.quadraticCurveTo(p.x - 14 - vx * 0.3, p.y + 12, p.x - 9 - vx * 0.5, p.y + capeLen);
-      ctx.lineTo(p.x + 8 + vx * 0.4, p.y + capeLen - 1);
+      ctx.quadraticCurveTo(p.x - 14 - vx * 0.3, p.y + 12, p.x - 9 - vx * 0.5, p.y + capeLen + capeSway * 0.65);
+      ctx.lineTo(p.x + 8 + vx * 0.4, p.y + capeLen - 1 + capeSway * 0.35);
       ctx.quadraticCurveTo(p.x + 13 + vx * 0.25, p.y + 11, p.x + 7, p.y + 2);
       ctx.fill();
       // plumed knight helm (strong silhouette)
