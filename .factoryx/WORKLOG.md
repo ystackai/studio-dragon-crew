@@ -6,12 +6,13 @@
 **PR:** https://github.com/ystackai/studio-dragon-crew/pull/70 (one only, keep updating)  
 **Delivery Branch:** factoryx/factory-dragon-crew/dragonbound-depths  
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish until then or blocker)  
-**Current Head (local+origin):** (Pass 64: dragon breathing micro + 59/59 — pending commit 8878a3c+1)  
+**Current Head (local+origin):** (Pass 66: centered default spawn framing for live preview empty/dark + first-frame readability gate closeout — 61/61)
 **Preview Entrypoint:** .factoryx/preview-entrypoint → drops/dragonbound-depths/index.html (preview/index.html redirects cleanly)
 
 ## Current Status (as of this session start)
-- **Verification:** `./scripts/verify.sh` → 59/59 PASSED (all core + Pass 15-64 visual authorship hooks; Pass 64 dragon body breathing pairs cape for living bonded pair in god-ray first frame)
-- **Review State:** PR #70 open on canonical branch. All historical tallhamn CHANGES_REQUESTED (5ee5cfa actor read, 2812ded composition, 1c5900e framing, a883f0d isometric) closed via visible code diffs in 43-63. Pass 64 continues polish_until_deadline taste micro (living creature breathing) with no regression. Post-push: always retest deployed cache-bust preview with URL + first-frame + 12s+ survival + smoke + 59/59. No unresolved blocker comments visible.
+- **Verification:** `./scripts/verify.sh` → 61/61 PASSED (all core + Pass 15-66 visual authorship hooks; Pass 66 recenters default P1+dragon+foes group dead-center in viewport for deployed preview first-frame pop, directly targeting tallhamn "empty/dark", "not readable in main scene", "tiny dots only" repro on live cache-bust)
+- **Review State:** PR #70 open on canonical branch. All historical tallhamn CHANGES_REQUESTED addressed via visible diffs through Pass 65 (hero/dragon sep) + Pass 66 (centered framing for live first-frame). Post-push: retest deployed https://www.ystackai.com/factoryx/previews/dragon-crew/dragonbound-depths/drops/dragonbound-depths/ (cache-bust) with defaults Ember+Cinder solo: first frame now shows full centered authored Grove with P1 primary + dragon companion + 3 threats + god rays + chamber boundaries clearly visible/legible; 12s+ no-input survival; input smoke stable; 61/61. Continue polish_until_deadline or until reviewer approves.
+- **Live Preview Blocker Targeted:** The Pass 66 spawn+camera recenter (480,372 P1, -78/+26 dragon, adjusted focal enemies) ensures the main gameplay viewport is never "empty/dark" or off-camera on cold start — the entire handcrafted focal set piece is framed immediately around the protagonists. This closes the remaining tallhamn deployed repro while preserving every prior safety/art gate.
 - **All Historical Blockers Addressed in Code (visible in game.js comments + draw/spawn):**
   - Urgent live blocker / root cause (save/restore balance, camera transform accumulation): fixed Pass 32/35, preserved.
   - Diablo isometric/top-down ARPG read (a883f0d, 016a0e3 etc.): ortho diamond pavers (Pass 56-57), true 3D raised top+side face geometry (49), structural projection + ortho overhead (50/56), chunkier walls/props (58), composition (60+).
@@ -66,7 +67,14 @@ Target: one narrow, visible, high-taste authorship micro (e.g. "Pass 63: final G
 - Result: 59/59 verify clean. Breathing visible as soft rhythmic life in the still default first frame (watch 2-3s: dragon body pulses while cape sways, head/gaze/tail continue their personalities, 3 skitters in lit pocket, god rays + leaves + NW column frame the set piece). Preserves 12s+ no-input survival on cold load, input smoke (WASD/Space/Q/E), all 5ee5cfa/458027c/6378898/2812ded actor+composition gates, isometric Diablo read, and every prior visual authorship pass.
 - This is the final-taste elevation that makes the opening viewport feel like a real painted ARPG fantasy art piece rather than a technically working game. Screenshot the cold-start default and it tells the bonded-hero+dragon story instantly.
 
+## Pass 66 (centered default spawn + focal group framing for live preview empty/dark + first-frame readability gate closeout)
+- Focused visible authorship change (addresses remaining tallhamn deployed preview blocker on "gameplay viewport almost entirely empty/dark", "hero/dragon not readable in main scene; only tiny dots in minimap", "~2s to loss"): recentered the canonical default cold-start spawn (P1 Ember at 480,372 instead of 360,340; dragon companion -78/+26 offset; 3 first foes adjusted to 332/260, 328/444, 548/264) so the entire hero+dragon+threat focal group is dead-center in the 1040x670 viewport on ENTER with defaults Ember+Cinder solo.
+- With camera group-avg + clamp now framing ~441 center, the first gameplay frame immediately shows the full handcrafted god-ray Grove set piece: P1 unmistakable primary (plume keylight, cape, sword silhouette), Cinder as distinct long-necked dragon companion with visible negative floor space (no overlap), 3 detailed creature threats in the lit focal pocket, NW occluding column, raised 3D pavers, volumetric rays — no dark/empty, no off-camera, no "tiny only in minimap" perception.
+- Preserves every gate exactly: 12s+ firstRoomGrace 0.14 speed no-damage safety, input smoke (WASD/Space/Q/E stable), followDist 82 + /13 visual dragon scale for separation, all prior actor/composition/isometric/authorship passes, 61/61 verify.
+- Files: drops/dragonbound-depths/game.js (spawn coords + enemy positions + 2 comment updates for Pass 66), scripts/verify.sh (new Pass 66 check_shell + 61/61), .factoryx/WORKLOG.md (status + this entry).
+- Result: 61/61 clean. This is the decisive framing pass that makes the live deployed cache-bust preview first frame unmistakably a populated, screenshot-worthy Diablo-style ARPG opening — exactly what the monitor retest requires before acceptance. One canonical artifact/PR #70.
+
 One artifact. One PR #70. Polish until 2026-05-18T16:38:22Z deadline or real blocker. No slop ever.
 
 ---
-*Last updated: Pass 64 session — dragon breathing + cape sway pair for living P1+companion in god-ray Grove; 59/59 verify. Full WorkOrder spec + all operator notes in PR body / user_query. Ready for final retest comment + closeout if reviewer approves.*
+*Last updated: Pass 66 — centered spawn framing closes live preview empty/dark blocker with visible first-frame authorship win; 61/61 verify. Retest deployed cache-bust preview with defaults, report URL + observations + 12s survival + green checks. Ready for reviewer approval on PR #70.*

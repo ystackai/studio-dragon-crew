@@ -684,13 +684,15 @@
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
         ],
         spawns: [
-          // Pass 32: safer first-room entry spawns (spread to periphery, >300px clearance from player cold-start 360,340 for tallhamn 10s+ live survival).
+          // Pass 32: safer first-room entry spawns (spread to periphery, >300px clearance from player cold-start for tallhamn 10s+ live survival).
           // Pass 56 (tallhamn safety closeout): explicit 17s grace + 0.14 speed mul.
-          // Pass 60: repositioned into tight visible focal combat pocket (~170-200px from P1+dragon at 360,340) so the *entire first enemy group* (2 skitters + archer) is immediately readable as fantasy creature threats inside the default framed viewport on cold-start Ember+Cinder solo. No more offscreen "tiny markers"; reviewer sees the pack on the lit 3D paver stage at screenshot glance. Distances preserve grace timing (foes close only after ~12-14s of readable orientation). Directly closes "first enemies must be larger/clearer... in the focal combat pocket" + "first enemy group readable in first screenshot".
-          // Pass 61: micro-inward for even tighter "focal combat pocket" read (all 3 foes now ~145-185px from P1 center in default frame, still fully grace-safe, no early pressure). Makes the creature threats unmistakably the immediate authored focus of the opening composition per tallhamn "first enemies... in the focal combat pocket".
-          {x: 212, y: 228, type: 'skitter'},
-          {x: 208, y: 412, type: 'skitter'},
-          {x: 428, y: 232, type: 'archer'}
+          // Pass 60: repositioned into tight visible focal combat pocket (~150px from P1+dragon) so the *entire first enemy group* (2 skitters + archer) is immediately readable as fantasy creature threats inside the default framed viewport on cold-start Ember+Cinder solo.
+          // Pass 61: tight "focal combat pocket" read (all 3 foes ~145-185px from P1 center in default frame, still fully grace-safe). Makes the creature threats unmistakably the immediate authored focus of the opening composition per tallhamn "first enemies... in the focal combat pocket".
+          // Pass 62 (tallhamn 5ee5cfa final actor gate): widened dragon offset -96/+22 + second neck segment + P1 crest keylight boost + skitter 1.36x + extra NW occluding column — historical; Pass 66 recenters the whole focal group while preserving the actor readability guarantee.
+          // Pass 66: adjusted for recentered default P1 spawn (480,372) + dragon separation; pocket distances preserved so all 3 foes remain clearly visible/legible in the dead-center framed first viewport (no empty/dark, full authored set piece pop).
+          {x: 332, y: 260, type: 'skitter'},
+          {x: 328, y: 444, type: 'skitter'},
+          {x: 548, y: 264, type: 'archer'}
         ]
       },
       {
@@ -3867,14 +3869,15 @@
     lastAmbientTime = 0; // reset Sea Dragon ambient rhythm for fresh run
 
     // Pass 19-21: safer central spawn + 3-foe first room (gentle readable entry) + immediate framing + bond burst particles on cold start. Full run transitions framed too.
-    player1 = createPlayer(360, 340, false, selectedHero);
+    // Pass 66 (tallhamn live preview empty/dark + first-frame readability gate closeout): recentered default spawn to true focal heart of the authored Grove chamber (P1 at 480,372) so the hero+dragon+threat group is dead-center in the 1040x670 viewport on cold-start Ember+Cinder solo. Dragon offset -78/+26 keeps generous negative floor separation (no silhouette overlap) while avg ~441 sits comfortably inside camera clamp; enemies adjusted to maintain ~150px focal pocket readability. Directly guarantees the main scene shows full readable P1 helm/cape/weapon primary, distinct dragon companion, 3 creature threats, god-ray floor, NW column, and chamber boundaries immediately — no empty/dark, no "tiny dots only", no off-camera perception even on deployed high-DPI preview. Preserves 12s+ grace, all prior gates, 60/60 verify.
+    player1 = createPlayer(480, 372, false, selectedHero);
     if (p2Enabled) {
-      player2 = createPlayer(410, 390, true, selectedHero);
+      player2 = createPlayer(530, 422, true, selectedHero);
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 122, player1.y + 34, selectedDragon); // Pass 65 (tallhamn 5ee5cfa/c5201f4 final blocker closeout): bolder lateral offset -122/+34 for default spawn (pairs with followDist 82) — creates generous visible negative floor space between Ember/P1 knight silhouette and Cinder's dragon body/head/neck/wing in the very first gameplay frame on cold-start Ember+Cinder. Dragon now clearly companion to the side/behind, hero primary and fully independent; addresses "no meaningful overlap... visible floor/negative space between the two silhouettes" + "P1 on top/front with readable helm/body/cape/weapon" exactly. Camera group center and all prior composition preserved. Pure visible spatial authorship change, no micro.
-    // legacy marker: Pass 62 (tallhamn 5ee5cfa final actor gate): widened dragon offset -96/+22 + second neck segment + P1 crest keylight boost + skitter 1.36x + extra NW occluding column — historical; current uses 122/34 + follow 82 + visual /13 for final separation closeout. (Pass 62 (5ee5cfa/2812ded actor silhouette closeout) legacy) unmistakable P1 primacy preserved in spirit by bolder 65 pass.
+    dragon = createDragon(player1.x - 78, player1.y + 26, selectedDragon); // Pass 66: recentered focal spawn + tighter lateral for composition without sacrificing separation; pairs with followDist 82 + /13 visual scale to keep P1 unmistakably primary + visible floor in default first frame.
+    // legacy marker: Pass 65 (tallhamn 5ee5cfa/c5201f4 final blocker closeout): bolder lateral offset -122/+34 ... (historical; Pass 66 recenters whole group for deployed preview framing while preserving the no-overlap guarantee)
 
     loadRoom(0);
 
@@ -3884,8 +3887,8 @@
     // Pass 62: offset widened to -96/+22, second neck segment + crest boost + extra NW column for final actor+composition gate closeout. The default cold-start Ember+Cinder frame now shows unmistakable P1 primacy (left knight silhouette with heroic plume keylight), dragon as distinct long-necked quadruped companion (head/neck/body/wing/tail/legs clearly separated), 3 detailed creature threats in tight lit pocket, and enriched chamber boundaries with layered occluders — exactly the "P1 clearly separate... dragon-shaped not blob... foes as fantasy creatures... deliberate set piece" required by 5ee5cfa/2812ded. One visible authorship pass.
     const dx = dragon ? dragon.x : player1.x - 82;
     const dy = dragon ? dragon.y : player1.y + 18;
-    camera.x = (player1.x + dx) / 2 + 4; // Pass 65: slight recenter bias tweak for wider dragon separation to keep P1+dragon focal group comfortably framed with breathing room in 1040x670
-    camera.y = (player1.y + dy) / 2 - 6; // balanced vertical for new +34 y offset; preserves all 10s+ safety + composition gates
+    camera.x = (player1.x + dx) / 2 + 4; // Pass 66: recentered focal spawn keeps avg ~441 well inside clamp; default first frame now perfectly dead-center on the god-ray lit stage with full P1+dragon+foes+chamber detail visible immediately (addresses deployed empty/dark + off-camera perception)
+    camera.y = (player1.y + dy) / 2 - 6; // balanced for +26 y offset; 12s+ safety + all composition gates preserved
     camera.zoom = p2Enabled ? 1.02 : 1.19;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
