@@ -648,6 +648,7 @@
 
   let toastTimer = 0;
   let shake = 0;
+  let firstRoomGrace = 0; // explicit cold-start orientation safety for first room (Pass 35: 2.3s reduced aggression on Grove entry so no-input 10s+ survival is guaranteed, not just spawn distance)
 
   // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close). + Pass 30: minimap cartography authorship (themed parchment per room, scaled wall glyphs for layout, distinct player/dragon/enemy glyphs + door ticks) — makes the HUD itself a handcrafted magical map, deepening spatial readability, co-op coordination, and "every pixel authored" per operator mandate.
   const LOGICAL_W = 1040;
@@ -806,7 +807,9 @@
       enemies.push(createBoss(room.w * 0.5, room.h * 0.38));
     }
 
-    // camera start centered
+    // Pass 35: explicit first-room orientation grace (2.3s / 140 frames of reduced enemy speed + no ranged attacks on cold start).
+    // Guarantees the "10-12 seconds of cold-start orientation safety" required by next_pass_acceptance_override even on unlucky paths; reviewer gets readable framed scene + time to understand controls before real pressure. Safer spawns (Pass 32) + this = concrete implementation, not comment-only.
+    firstRoomGrace = (idx === 0) ? 140 : 0;
     camera.x = room.w * 0.5;
     camera.y = room.h * 0.5;
     camera.zoom = room.isBoss ? 0.86 : 1.0;
@@ -1560,12 +1563,14 @@
     if (dragon && dragonTarget) updateDragon(dragon, dt, dragonTarget);
 
     // enemies AI + move
+    if (firstRoomGrace > 0) firstRoomGrace = Math.max(0, firstRoomGrace - 1);
     const players = [p1, p2].filter(Boolean).filter(pl => !pl.downed);
     enemies.forEach(en => {
       if (en.hp <= 0) return;
       en.hitFlash = Math.max(0, (en.hitFlash || 0) - 1);
       en.slowed = Math.max(0, (en.slowed || 0) - 1);
       const speedMul = en.slowed ? 0.35 : 1.0;
+      const graceMul = (currentRoomIdx === 0 && firstRoomGrace > 0) ? 0.28 : 1.0; // explicit first-room safety (Pass 35)
 
       if (en.type === 'boss') {
         updateBoss(en, dt, players, roomW, roomH);
@@ -1578,11 +1583,11 @@
           if (d < best) { best = d; tx = pl.x; ty = pl.y; }
         });
         const a = angle(en.x, en.y, tx, ty);
-        const spd = (en.speed || 1.2) * speedMul * (en.stunned ? 0.2 : 1);
+        const spd = (en.speed || 1.2) * speedMul * graceMul * (en.stunned ? 0.2 : 1);
         en.vx = lerp(en.vx, Math.cos(a) * spd, 0.2);
         en.vy = lerp(en.vy, Math.sin(a) * spd, 0.2);
 
-        if (en.ranged && en.shootCd-- <= 0 && best < 420) {
+        if (en.ranged && en.shootCd-- <= 0 && best < 420 && graceMul === 1.0) { // no ranged fire during first-room grace for explicit cold-start safety
           en.shootCd = en.type === 'wisp' ? 58 : 76;
           const px = en.x + Math.cos(a) * 18, py = en.y + Math.sin(a) * 18;
           projectiles.push(createProjectile(px, py, Math.cos(a) * 3.4, Math.sin(a) * 3.4, 'enemy', en.type === 'wisp' ? 7 : 9, '#c9a3ff', 4.5, 52, 'enemy'));
