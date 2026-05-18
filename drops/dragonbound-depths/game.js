@@ -446,7 +446,9 @@
       attackCd: 0,
       passiveTimer: 0,
       breathAngle: 0,
-      breathActive: 0
+      breathActive: 0,
+      wingPhase: 0,
+      blinkCd: 48 + Math.random() * 30
     };
   }
 
@@ -835,6 +837,13 @@
         // happy/content
         particles.push(createParticle(d.x, d.y - 22, 0, -0.5, 13, '#ffe8b0', 2.3, 'spark'));
       }
+    }
+
+    // evolve companion animation state (alive feel)
+    d.wingPhase = (d.wingPhase || 0) + dt * 0.11 + Math.min(0.9, Math.hypot(d.vx, d.vy) * 0.014);
+    d.blinkCd = (d.blinkCd || 40) - dt;
+    if (d.blinkCd <= 0) {
+      d.blinkCd = 52 + Math.random() * 68;
     }
 
     // active ability
@@ -1235,6 +1244,15 @@
 
     // camera follow (co-op aware)
     updateCamera(dt);
+
+    // fissure atmospheric hazards (env variety + visual authorship)
+    if (room && room.theme === 'fissure' && Math.random() < 0.09) {
+      const px = rand(80, room.w - 80), py = rand(120, room.h - 120);
+      particles.push(createParticle(px, py - 8, rand(-0.6, 0.6), -1.1 - Math.random(), 22 + Math.random() * 16, '#ff8a4a', 2.2 + Math.random(), 'fire'));
+      if (Math.random() < 0.3) {
+        particles.push(createParticle(px + 12, py + 4, 0.2, -0.8, 16, '#ffcc70', 1.6, 'spark'));
+      }
+    }
 
     // win/lose checks
     const alivePlayers = [p1, p2].filter(pl => pl && !pl.downed);
@@ -1672,6 +1690,14 @@
       ctx.beginPath(); ctx.moveTo(90, 300); ctx.quadraticCurveTo(320, 520, 680, 380); ctx.stroke();
       ctx.fillStyle = 'rgba(255, 140, 50, 0.18)';
       ctx.beginPath(); ctx.arc(420, 410, 38, 0, Math.PI * 2); ctx.fill();
+      // extra lava seams + glow vents for depth
+      ctx.strokeStyle = 'rgba(255, 160, 60, 0.22)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(180, 520); ctx.quadraticCurveTo(290, 610, 410, 540); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(760, 210); ctx.quadraticCurveTo(880, 280, 970, 240); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 90, 30, 0.12)';
+      ctx.beginPath(); ctx.arc(280, 580, 26, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(850, 260, 19, 0, 6.28); ctx.fill();
     }
 
     // boundary glow
@@ -1726,56 +1752,128 @@
 
   function drawDragon(ctx, d) {
     ctx.save();
-    const bob = Math.sin(performance.now() / 280) * 1.4;
+    const t = performance.now();
+    const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35;
+    const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
+    const tilt = Math.max(-0.18, Math.min(0.18, (d.vx || 0) * 0.022));
     ctx.translate(d.x, d.y + bob);
+    ctx.rotate(tilt);
 
-    // body
-    ctx.fillStyle = d.color;
+    // body (subtle type accent)
+    let bodyCol = d.color;
+    ctx.fillStyle = bodyCol;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 17, 8.5, d.vx * 0.08, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 17, 8.8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // head
-    const hx = 15;
-    ctx.beginPath();
-    ctx.arc(hx, -1.5, 7.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // wing
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 9;
-    ctx.beginPath();
-    ctx.moveTo(-4, -2);
-    ctx.quadraticCurveTo(-17, -18, -3, -11);
-    ctx.stroke();
-
-    // eye
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(hx + 3, -2, 2.2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#1a2233';
-    ctx.beginPath(); ctx.arc(hx + 4, -2, 1.1, 0, Math.PI * 2); ctx.fill();
-
-    // breath active
-    if (d.breathActive > 0) {
-      const ba = d.breathAngle || 0;
-      ctx.fillStyle = d.type === 'cinder' ? 'rgba(255, 120, 60, 0.45)' : (d.type === 'rime' ? 'rgba(140, 210, 255, 0.4)' : 'rgba(190, 240, 170, 0.35)');
-      for (let i = 0; i < 3; i++) {
-        const spread = (i - 1) * 0.35;
-        ctx.beginPath();
-        ctx.moveTo(hx + 4, -1);
-        ctx.lineTo(hx + 22 + Math.cos(ba + spread) * 26, -1 + Math.sin(ba + spread) * 26);
-        ctx.lineTo(hx + 22 + Math.cos(ba - spread) * 26, -1 + Math.sin(ba - spread) * 26);
-        ctx.fill();
-      }
+    // type-specific body detail / rim (luminous bespoke)
+    if (d.type === 'cinder') {
+      ctx.fillStyle = 'rgba(255,110,50,0.35)';
+      ctx.beginPath(); ctx.ellipse(-2, 0.5, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // ember flecks
+      ctx.fillStyle = 'rgba(255,160,70,0.6)';
+      ctx.beginPath(); ctx.arc(-8, 2, 1.8, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -3, 1.4, 0, 6.28); ctx.fill();
+    } else if (d.type === 'rime') {
+      ctx.strokeStyle = 'rgba(230,245,255,0.55)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 15.5, 7.8, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(200,235,255,0.4)';
+      ctx.beginPath(); ctx.arc(-5, -2, 2.2, 0, 6.28); ctx.fill();
+    } else {
+      // gale: wind-swept highlights
+      ctx.strokeStyle = 'rgba(210,255,195,0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-9, -4); ctx.quadraticCurveTo(-2, -7, 7, -3); ctx.stroke();
     }
 
-    // tail
-    ctx.strokeStyle = d.color;
-    ctx.lineWidth = 4.5;
+    // head (position offset for life)
+    const hx = 15.5;
+    const hy = -1.2 + Math.sin(t / 380) * 0.4;
+    ctx.fillStyle = bodyCol;
     ctx.beginPath();
-    ctx.moveTo(-14, 1);
-    ctx.quadraticCurveTo(-26, 9, -32, 4);
+    ctx.arc(hx, hy, 7.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // type head accents
+    if (d.type === 'cinder') {
+      // small back-swept horns
+      ctx.fillStyle = '#3a2a22';
+      ctx.beginPath(); ctx.moveTo(hx - 1, hy - 6); ctx.lineTo(hx + 4, hy - 12); ctx.lineTo(hx + 2, hy - 5); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hx - 2, hy + 5); ctx.lineTo(hx + 3, hy + 10); ctx.lineTo(hx + 1, hy + 5); ctx.fill();
+    } else if (d.type === 'rime') {
+      ctx.fillStyle = 'rgba(220,245,255,0.7)';
+      ctx.beginPath(); ctx.arc(hx - 3, hy - 4, 2.8, 0, 6.28); ctx.fill();
+    } else {
+      // gale crest tuft
+      ctx.strokeStyle = 'rgba(195,255,180,0.7)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(hx - 4, hy - 6); ctx.lineTo(hx - 1, hy - 11); ctx.stroke();
+    }
+
+    // wing (animated flap, type styled)
+    const wingLift = -14 - flap * 5.5;
+    ctx.strokeStyle = d.type === 'cinder' ? 'rgba(255,140,80,0.28)' : (d.type === 'rime' ? 'rgba(200,235,255,0.32)' : 'rgba(195,255,185,0.30)');
+    ctx.lineWidth = d.type === 'gale' ? 7 : 8.5;
+    ctx.beginPath();
+    ctx.moveTo(-5, -1.5);
+    ctx.quadraticCurveTo(-18, wingLift, -2, -10 - flap * 0.8);
     ctx.stroke();
+    // secondary feather for gale
+    if (d.type === 'gale') {
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-3, -2);
+      ctx.quadraticCurveTo(-13, wingLift * 0.7, 1, -7);
+      ctx.stroke();
+    }
+
+    // eye (blink + gaze toward breath/target)
+    const blink = (d.blinkCd || 40) < 9;
+    const gaze = (d.breathAngle || 0) * 0.12;
+    ctx.fillStyle = '#f8fbff';
+    ctx.beginPath(); ctx.arc(hx + 3.5 + gaze * 0.6, hy - 0.8, blink ? 0.9 : 2.35, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = d.type === 'rime' ? '#1e3a4a' : '#1a2233';
+    ctx.beginPath(); ctx.arc(hx + 4 + gaze, hy - 0.7, blink ? 0.4 : 1.15, 0, Math.PI * 2); ctx.fill();
+    // catchlight
+    if (!blink) {
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath(); ctx.arc(hx + 3.8 + gaze * 0.5, hy - 1.4, 0.7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // breath active (more expressive cone + core)
+    if (d.breathActive > 0) {
+      const ba = d.breathAngle || 0;
+      const ba2 = ba + Math.sin(t / 90) * 0.04;
+      const breathCol = d.type === 'cinder' ? 'rgba(255, 130, 55, 0.55)' : (d.type === 'rime' ? 'rgba(155, 225, 255, 0.48)' : 'rgba(195, 250, 180, 0.42)');
+      ctx.fillStyle = breathCol;
+      for (let i = 0; i < 3; i++) {
+        const spread = (i - 1) * 0.38;
+        ctx.beginPath();
+        ctx.moveTo(hx + 5, hy);
+        ctx.lineTo(hx + 24 + Math.cos(ba2 + spread) * 30, hy + Math.sin(ba2 + spread) * 28);
+        ctx.lineTo(hx + 24 + Math.cos(ba2 - spread) * 30, hy + Math.sin(ba2 - spread) * 28);
+        ctx.fill();
+      }
+      // bright core
+      ctx.fillStyle = d.type === 'cinder' ? 'rgba(255,200,120,0.7)' : 'rgba(230,250,255,0.6)';
+      ctx.beginPath();
+      ctx.arc(hx + 18, hy + Math.sin(ba2) * 4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // tail (wavy, type styled)
+    const tailWave = Math.sin(t / 260 + (d.wingPhase || 0) * 0.3) * 2.2;
+    ctx.strokeStyle = d.color;
+    ctx.lineWidth = 4.8;
+    ctx.beginPath();
+    ctx.moveTo(-13, 0.5);
+    ctx.quadraticCurveTo(-24, 7 + tailWave * 0.3, -29, 3 + tailWave);
+    ctx.stroke();
+    if (d.type === 'cinder') {
+      ctx.fillStyle = 'rgba(255,100,40,0.5)';
+      ctx.beginPath(); ctx.arc(-28, 3 + tailWave, 2.8, 0, 6.28); ctx.fill();
+    }
 
     ctx.restore();
   }

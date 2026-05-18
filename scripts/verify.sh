@@ -70,4 +70,4 @@ echo "  9. Pause (Esc), mute, victory/defeat summaries work"
 echo " 10. No console errors, 60fps feel, art reads as authored (not placeholder)"
 echo
 echo "If all manual items pass and this script is green → ready for PR update."
-echo "Next: mobile touch/solo input, dynamic canvas scale, fissure creature/env variety, dragon emote barks. (Pass 4 camera+particles+fissure visuals shipped)"
+echo "Next: touch input for solo mobile, dynamic canvas backing scale, extra dragon idle head-turn emotes. (Pass 5 shipped — dragon visual life + fissure atmosphere)"
