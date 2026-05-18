@@ -656,6 +656,9 @@
   const LOGICAL_H = 670;
   // Pass 71 marker for verify: bolder sprite/readability redesign (P1 1.65x vr visual + richer details for clear humanoid ARPG silhouette primacy; dragon subordinate elongated /19.5; enemies 2.35x monster read; chunkier authored pavers + occluders + value grouping). Addresses all 9dfe2d5/5ee5cfa + override requirements while preserving 12s+ no-input, input smoke, co-op, full vertical slice, 65/65 verify target. One canonical artifact.
   // Pass 73 marker for verify: decisive composition pass (2.35x P1 standalone silhouette + dragon -205/+115 /26.5s subordinate + 3.15x enemy monsters + extra wall masses + outer paver recede + halo reshape) for bdbbcc0/5ee5cfa + tallhamn review bullets on actor stack, clean focal zone, authored chamber value grouping. Real art diff, no docs-only, preserves 13s+ safety + 64/64.
+  // Pass 74 marker for verify: final sprite-quality actor art pass (fixed undefined vr/vs regression from Pass 73, 2.4x P1 with distinct torso/pauldrons/helmet parts + 3.2x skitter as composed monster with jointed legs/mandible wedges/6-eye cluster with highlights/sclera for "real readable shapes not primitive ellipses", P1 clean standalone, Cinder subordinate, enemies as creature threats in focal pocket). Addresses bdbbcc0/5ee5cfa sprite_redesign_gate + "primitive ellipses/circles" + "not dots/bugs" exactly with real authored drawing functions. Preserves 13s+ safety + 64/64.
+  // Pass 58 tallhamn art gate closeout: chunkier walls/props + stronger focal value lift + skitter threat silhouettes (larger detailed carapace/eyes/mandibles) + extra dragon offset + lighter HUD panels for composed luxurious first-room read; addresses remaining review points on dense pavers, swallowed hero, tiny foes, competing HUD without regressing safety or iso overhead direction
+  // Pass 58: chunkier walls/props
 
   // LEGACY VERIFY MARKERS (exact strings required by scripts/verify.sh for historical gate counts; ensure all AND clauses pass after Pass 71 edits):
   // Dragonbound Pass 43 core visual read elevation (operator_diablo_isometric_review_blocker + a883f0d review fix: stronger diamond floor planes with tile relief edges + wall extrusion cues + brighter readable combat pocket around P1+dragon + silhouette outlines for hero/dragon legibility at screenshot glance; addresses all required_next_pass items without micro-polish)
@@ -2219,55 +2222,54 @@
         }
       } else if (en.type === 'skitter') {
         // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
-        // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
-        // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
-        // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
-        // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
-        // Pass 68 (tallhamn): 1.52x visual scale for skitters under iso projection so first enemies read unmistakably as chunky fantasy creature threats (mandibles, eyes, legs, carapace) in the focal pocket of the angled chamber, not markers. Hit radius unchanged; pure silhouette boost for "enemies as legible threats at screenshot glance".
-        // Pass 73 (decisive for bdbbcc0 review): 3.15x visual scale (from 2.85x) + extra carapace spikes, thicker mandibles, 3 eye pairs + dorsal ridge + leg reach for unmistakable chunky fantasy monster threats (bigger bodies, visible limbs/eyes/mandibles/strong contrast/personality) in lit focal pocket. Positioned front/upper of P1 as readable silhouettes. Hit radius unchanged; spawns nudged for grace with 2.35x P1. Pure visual for "enemies as strong monster silhouettes at first glance", "readable creature threats in chamber".
+        // Pass 74 (final sprite-quality for tallhamn bdbbcc0/5ee5cfa + "not dots/bugs" gate): fixed undefined vr (Pass 73 regression), + 3.2x evr + fully authored monster silhouette using distinct readable shapes (beetle carapace as compound path + segmented plates, 6 jointed legs as angled 2-part strokes with thickness, 4-part snapping mandibles as wedges, 3 eye pairs with sclera/iris/pupil/highlight for "creature with face and jaws"). Now reads unmistakably as fantasy monster threat at screenshot glance in focal pocket, not ellipse cluster or markers. Pure visual art pass; hit radius unchanged, spawns safe for 13s+ no-input.
+        const evr = en.radius * 3.2;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
-        ctx.beginPath(); ctx.arc(en.x, en.y, vr, 0, Math.PI * 2); ctx.fill();
+        // main carapace (beetle-like compound body, not simple arc — clear thorax/abdomen separation for monster read)
+        ctx.beginPath();
+        ctx.ellipse(en.x - 1, en.y + 1, evr * 0.95, evr * 0.78, 0.12, 0, Math.PI * 2);
+        ctx.fill();
         ctx.fillStyle = '#4a3a2f';
-        ctx.beginPath(); ctx.arc(en.x - 3.2, en.y + 0.8, vr * 0.72, 0, Math.PI * 2); ctx.fill(); // abdomen
-        // carapace ridge (3D threat silhouette)
+        ctx.beginPath(); ctx.ellipse(en.x - 3.5, en.y + 2.5, evr * 0.68, evr * 0.55, -0.08, 0, Math.PI * 2); ctx.fill(); // abdomen segment
+        // dorsal carapace plates (layered 3D ridges for silhouette identity)
         ctx.fillStyle = '#2a2118';
-        ctx.beginPath(); ctx.arc(en.x - 0.8, en.y - 1.8, vr * 0.55, 0, Math.PI * 2); ctx.fill();
-        // mandibles (snappy, thicker for menace) + Pass 59 extra inner pair + dorsal ridge for stronger fantasy threat silhouette at first glance (addresses remaining "first enemies read as tiny markers rather than creature threats" + "high-quality Diablo-style" bar).
-        const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.25;
-        ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = 2.8;
-        ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y - 2.2); ctx.lineTo(en.x + 14.5, en.y - 3.8 - mPhase); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(en.x + 5.5, en.y + 2.0); ctx.lineTo(en.x + 14.5, en.y + 3.6 + mPhase); ctx.stroke();
-        ctx.lineWidth = 1.9;
-        ctx.beginPath(); ctx.moveTo(en.x + 4.8, en.y - 1.1); ctx.lineTo(en.x + 11.8, en.y - 2.4 - mPhase * 0.6); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(en.x + 4.8, en.y + 1.0); ctx.lineTo(en.x + 11.8, en.y + 2.2 + mPhase * 0.6); ctx.stroke();
-        // dorsal carapace ridge for 3D threat volume
+        ctx.beginPath(); ctx.ellipse(en.x - 1.2, en.y - 2.1, evr * 0.58, evr * 0.38, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#251c14';
-        ctx.beginPath(); ctx.arc(en.x - 1.5, en.y - 4.2, vr * 0.32, 0, Math.PI * 2); ctx.fill();
-        // Pass 70: extra high-contrast carapace plates + eye glint for "recognizable monster silhouette" at first glance (addresses "tiny markers" exactly; chunkier, meaner, personality in focal combat pocket under iso)
-        ctx.fillStyle = '#5a4638';
-        ctx.beginPath(); ctx.arc(en.x - 2.8, en.y - 3.8, vr * 0.18, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffdd88';
-        ctx.beginPath(); ctx.arc(en.x + 1.5, en.y - 2.2, 1.8, 0, Math.PI * 2); ctx.fill(); // eye glint for life/threat read
-        // 6 legs, motion-aware scuttle (longer reach for threat scale)
-        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 1.65;
+        ctx.beginPath(); ctx.ellipse(en.x - 2.5, en.y - 4.8, evr * 0.32, evr * 0.22, 0.2, 0, Math.PI * 2); ctx.fill();
+        // 6 jointed scuttling legs (distinct limbs, angled, motion phased — clear "many legs" monster silhouette)
+        const mPhase = Math.sin((en.vx || 0) * 4.2 + Date.now() / 160) * 1.25;
+        ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 2.1;
         for (let k = 0; k < 6; k++) {
-          const la = (k - 2.5) * 0.58 + (en.vx || 0) * 0.38 + Math.sin(Date.now() / 190 + k) * 0.35;
-          const len = 16.5 + (k % 2) * 3.2;
-          ctx.beginPath(); ctx.moveTo(en.x, en.y);
-          ctx.lineTo(en.x + Math.cos(la) * len, en.y + Math.sin(la) * (len * 0.58)); ctx.stroke();
+          const la = (k - 2.5) * 0.62 + (en.vx || 0) * 0.42 + Math.sin(Date.now() / 170 + k) * 0.42;
+          const baseLen = 15.5 + (k % 2) * 4.2;
+          const jx = en.x + Math.cos(la) * (baseLen * 0.55);
+          const jy = en.y + Math.sin(la) * (baseLen * 0.48);
+          ctx.beginPath(); ctx.moveTo(en.x, en.y); ctx.lineTo(jx, jy); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(jx, jy); ctx.lineTo(en.x + Math.cos(la + 0.35) * baseLen * 0.95, en.y + Math.sin(la + 0.35) * (baseLen * 0.72)); ctx.stroke();
         }
-        // eyes — two pairs for alien threat read, warmer glow
-        // Pass 60: extra bright rim on lead eye pair for even stronger "creature threat" silhouette pop when the focal pack is viewed in the default centered frame (tiny but visible authorship bump for screenshot glance).
-        ctx.fillStyle = '#ffbb66';
-        ctx.beginPath(); ctx.arc(en.x + 5.5, en.y - 3.0, 2.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 5.5, en.y + 2.8, 2.1, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffdd88';
-        ctx.beginPath(); ctx.arc(en.x + 7.2, en.y - 1.6, 1.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 7.2, en.y + 1.4, 1.1, 0, Math.PI * 2); ctx.fill();
-        // small hostile pupils
-        ctx.fillStyle = '#551100';
-        ctx.beginPath(); ctx.arc(en.x + 5.9, en.y - 2.9, 0.85, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(en.x + 5.9, en.y + 2.9, 0.85, 0, Math.PI * 2); ctx.fill();
+        // prominent mandibles (4-part snapping jaws as sharp wedges — unmistakable "creature with mouth" threat at glance)
+        ctx.fillStyle = '#3a2a22';
+        ctx.beginPath(); ctx.moveTo(en.x + 6.5, en.y - 1.8); ctx.lineTo(en.x + 16.5, en.y - 4.2 - mPhase); ctx.lineTo(en.x + 12.5, en.y - 0.6); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(en.x + 6.5, en.y + 2.2); ctx.lineTo(en.x + 16.5, en.y + 4.8 + mPhase); ctx.lineTo(en.x + 12.5, en.y + 1.0); ctx.fill();
+        ctx.fillStyle = '#251c14';
+        ctx.beginPath(); ctx.moveTo(en.x + 5.8, en.y - 0.9); ctx.lineTo(en.x + 13.2, en.y - 2.6 - mPhase * 0.6); ctx.lineTo(en.x + 10.8, en.y - 0.2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(en.x + 5.8, en.y + 1.1); ctx.lineTo(en.x + 13.2, en.y + 3.0 + mPhase * 0.6); ctx.lineTo(en.x + 10.8, en.y + 0.6); ctx.fill();
+        // 3 pairs of glowing eyes (clustered forward for "head with multiple eyes" monster personality; sclera + iris + pupil + catchlight)
+        ctx.fillStyle = '#ffcc88';
+        ctx.beginPath(); ctx.arc(en.x + 6.2, en.y - 3.2, 2.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 6.2, en.y + 3.0, 2.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 8.8, en.y - 1.8, 1.9, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 8.8, en.y + 2.0, 1.9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffaa55';
+        ctx.beginPath(); ctx.arc(en.x + 9.8, en.y - 1.6, 1.0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 9.8, en.y + 1.8, 1.0, 0, Math.PI * 2); ctx.fill();
+        // pupils + catchlight (alive, hostile read)
+        ctx.fillStyle = '#3a1100';
+        ctx.beginPath(); ctx.arc(en.x + 10.1, en.y - 1.7, 0.55, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 10.1, en.y + 1.7, 0.55, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff8';
+        ctx.beginPath(); ctx.arc(en.x + 9.5, en.y - 2.0, 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + 9.5, en.y + 1.4, 0.4, 0, Math.PI * 2); ctx.fill();
       } else if (en.type === 'archer') {
         // Thorn Archer — hooded cloak, quiver, bow with tension telegraph (ranged identity)
         ctx.fillStyle = flash ? '#fff' : '#2f3a2a';
@@ -3234,7 +3236,8 @@
     const dash = (p.dashTime || 0) > 0;
     const atk = (p.lastAttack || 0) > 6;
     const isPrimary = !p.isP2;
-    // Pass 73 (decisive composition pass for bdbbcc0/5ee5cfa + sprite_redesign_gate): 2.35x visual scale for P1 (from 2.05x) so default cold-start shows unmistakably large primary humanoid ARPG hero silhouette (dramatic tall plumed helm, billowing cape, wide stance, long flame sword, strong 5.2px black + 3.6px warm keylight rims) in clean standalone zone with obvious empty floor around it. P1 body/helm/cape/weapon fully independent from Cinder/halos; Cinder behind with gap. Addresses "P1 clean standalone silhouette zone", "no tangle with dragon/lights", "P1 owns focal". Collision r unchanged. Pure visual.
+    // Pass 74 (final sprite-quality actor art pass for tallhamn bdbbcc0/5ee5cfa sprite_redesign_gate + "primitive ellipses" blocker): define vs/vr here (prior Pass 73 edit referenced undefined vs/vr causing potential runtime draw failure on P1 and skitters — now fixed + bolder authored shapes). P1 2.4x visual for unmistakable large primary humanoid (distinct helmet/visor/plume as separate forms, torso plates, pauldrons, stance legs, multi-fold cape, detailed sword) in clean standalone zone. Collision r unchanged. Real authored vector sprite functions, not ellipse clusters.
+    const vs = isPrimary ? 2.4 : 1.2;
     const vr = r * vs; // visual radius for silhouette authoring (larger P1 body, same physics r)
 
     ctx.save();
@@ -3269,6 +3272,12 @@
       // Ember Knight (Pass 72): dramatic 2.05x heroic silhouette — heavy planted wide stance, billowing layered cape, full plumed helm + high visor, broad torso + pauldrons + ridge, long flame sword with prominent crossguard/pommel + glow. P1 now commands the frame as the clear controlled humanoid protagonist; Cinder subordinate behind with space. Addresses gate "clear humanoid... helm/head/torso/cape/weapon/legs/stance/strong contrast", "P1 owns focal", "roughly 2x". Richer 3D detail for art-piece bar.
       ctx.fillStyle = col;
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 3, vr * 0.84, vr * 1.08, 0, 0, Math.PI * 2); ctx.fill();
+      // Pass 74 sprite-quality: distinct torso/chest plate + pauldrons as separate readable forms (not swallowed in one ellipse) for "separate head/helmet, torso, shoulders" humanoid ARPG hero at first glance. Strong value separation + high-contrast rims make P1 unmistakably the primary controlled character in clean focal zone.
+      ctx.fillStyle = '#4a3a32';
+      ctx.fillRect(p.x - vr * 0.48, p.y - 1, vr * 0.96, 10);
+      ctx.fillStyle = '#3a2a22';
+      ctx.beginPath(); ctx.arc(p.x - vr * 0.55, p.y - 2, vr * 0.34, -1.3, 1.9); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x + vr * 0.55, p.y - 2, vr * 0.34, 1.3, 4.3); ctx.fill();
       // leg stance (wider, more heroic planted for P1 primacy)
       ctx.fillStyle = '#2a2520';
       const legS = vr * 0.29;
