@@ -1796,10 +1796,19 @@
       shake *= 0.82;
     }
 
-    // vignette + atmospheric overlay
+    // dynamic focal key light around heroes + dragon (brighter composition, magical bond glow — Pass 12)
+    ctx.fillStyle = 'rgba(235, 215, 180, 0.032)';
+    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 72, 0, Math.PI * 2); ctx.fill(); }
+    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 55, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 62, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.018)';
+    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 38, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 34, 0, Math.PI * 2); ctx.fill(); }
+
+    // vignette + atmospheric overlay (kept for depth, focal lights now lift heroes)
     const grd = ctx.createRadialGradient(LOGICAL_W * 0.5, LOGICAL_H * 0.48, 180, LOGICAL_W * 0.5, LOGICAL_H * 0.5, 620);
     grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(1, 'rgba(4, 7, 14, 0.55)');
+    grd.addColorStop(1, 'rgba(4, 7, 14, 0.52)');
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
