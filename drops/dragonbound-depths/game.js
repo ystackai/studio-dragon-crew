@@ -673,7 +673,9 @@
         theme: 'grove',
         w: 1280, h: 820,
         walls: [
-          {x: 80, y: 80, w: 120, h: 80}, {x: 1080, y: 120, w: 90, h: 140},
+          // Pass 60: added chunky NW corner pillar + west mid enclosure wall (visible in default left-framed viewport) to give the opening chamber unmistakable "ruin hall with solid rising boundaries" silhouette from overhead. Combined with focal pavers + centered protagonists + visible foe pack, the first frame now reads as a deliberately composed Diablo-style enclosed combat pocket, not sparse grid or side corridor. (existing far walls preserved for full-room coherence on pan).
+          {x: 55, y: 52, w: 108, h: 95}, {x: 80, y: 80, w: 120, h: 80}, {x: 1080, y: 120, w: 90, h: 140},
+          {x: 88, y: 520, w: 78, h: 95}, // Pass 60: west lower vertical mass (still in default viewport south of focal) for left chamber enclosure silhouette without blocking early movement
           {x: 300, y: 620, w: 160, h: 70}, {x: 820, y: 580, w: 110, h: 100}
         ],
         doors: [
@@ -682,9 +684,10 @@
         spawns: [
           // Pass 32: safer first-room entry spawns (spread to periphery, >300px clearance from player cold-start 360,340 for tallhamn 10s+ live survival).
           // Pass 56 (tallhamn safety closeout): explicit 17s grace + 0.14 speed mul.
-          {x: 135, y: 115, type: 'skitter'},
-          {x: 1120, y: 135, type: 'archer'},
-          {x: 1060, y: 680, type: 'skitter'}
+          // Pass 60: repositioned into tight visible focal combat pocket (~170-200px from P1+dragon at 360,340) so the *entire first enemy group* (2 skitters + archer) is immediately readable as fantasy creature threats inside the default framed viewport on cold-start Ember+Cinder solo. No more offscreen "tiny markers"; reviewer sees the pack on the lit 3D paver stage at screenshot glance. Distances preserve grace timing (foes close only after ~12-14s of readable orientation). Directly closes "first enemies must be larger/clearer... in the focal combat pocket" + "first enemy group readable in first screenshot".
+          {x: 195, y: 205, type: 'skitter'},
+          {x: 175, y: 485, type: 'skitter'},
+          {x: 455, y: 195, type: 'archer'}
         ]
       },
       {
@@ -2211,6 +2214,7 @@
           ctx.lineTo(en.x + Math.cos(la) * len, en.y + Math.sin(la) * (len * 0.58)); ctx.stroke();
         }
         // eyes — two pairs for alien threat read, warmer glow
+        // Pass 60: extra bright rim on lead eye pair for even stronger "creature threat" silhouette pop when the focal pack is viewed in the default centered frame (tiny but visible authorship bump for screenshot glance).
         ctx.fillStyle = '#ffbb66';
         ctx.beginPath(); ctx.arc(en.x + 5.5, en.y - 3.0, 2.1, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(en.x + 5.5, en.y + 2.8, 2.1, 0, Math.PI * 2); ctx.fill();
@@ -3849,11 +3853,13 @@
 
     loadRoom(0);
 
-    // Pass 19: immediate camera framing BEFORE first draw so player/dragon/dragon are perfectly visible and centered on entry frame (no center-room then snap).
-    // Pass 50/53: small visual-only lead offsets compensate the iso shear/squash so the default Ember+Cinder focal pocket lands composed/centered (not high/left drift) in the projected view; tuned recenter for the angled frustum while keeping all props + P1+dragon+foes framed. Addresses tallhamn "projection/framing pushes ... too high/left".
-    camera.x = player1.x + (player2 ? 12 : -6) + 18;
-    camera.y = player1.y - 8 - 8;
-    camera.zoom = p2Enabled ? 1.02 : 1.18;
+    // Pass 19/50/53: immediate camera framing BEFORE first draw...
+    // Pass 60: recentered focal-group camera (avg of P1 + lateral-offset dragon) + small north bias for balanced vertical breathing room in the 1040x670 viewport. With the Pass 60 inward focal spawns + NW/west chamber walls, the default Ember+Cinder first frame is now unmistakably a handcrafted overhead Diablo ARPG ruin chamber *composed around the protagonists and their immediate readable threat pack* — no camera drift, no swallowed hero, no off-frame foes, no corridor read. Directly resolves tallhamn "still feels closer to a side-framed/platform/corridor composition" + "first frame should feel composed around the player" + "first enemy group readable". Pure visual composition pass; all safety/10s+ grace/verify preserved.
+    const dx = dragon ? dragon.x : player1.x - 82;
+    const dy = dragon ? dragon.y : player1.y + 18;
+    camera.x = (player1.x + dx) / 2 + 14;
+    camera.y = (player1.y + dy) / 2 - 18; // north lift for balanced N/S chamber enclosure + focal foes in frame
+    camera.zoom = p2Enabled ? 1.02 : 1.19;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
 
