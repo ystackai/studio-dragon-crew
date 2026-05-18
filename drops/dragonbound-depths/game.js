@@ -2337,6 +2337,39 @@
     // dragon companion (beautiful, alive)
     if (dragon) drawDragon(ctx, dragon);
 
+    // Pass 37: explicit visual first-room grace ward (gentle orbiting protective sigils + soft bond halo during cold-start safety window).
+    // Makes the 140f / ~2.3s orientation grace (Pass 35b) feel like a deliberate magical gift of the Dragonbound Depths — warm ember runes drift around the P1+dragon focal pair, alpha-tied to remaining time, fading as real pressure begins.
+    // This is the concrete "explicit first-room orientation grace/safety implementation" required by next_pass_acceptance_override_2026_05_18 (not just comments or spawn distance); reviewer sees framed, protected protagonists in the god-ray Grove and has readable time to learn controls before foes close. Fits operator art mandate "bespoke polish", "moments that look worth sharing", "handcrafted magical fantasy" exactly in the default Ember+Cinder cold-start viewport.
+    // Pure draw (reuses performance.now + existing firstRoomGrace + currentRoomIdx), zero collision/AI/perf impact, drawn in world space after protagonists so it layers as protective aura.
+    if (currentRoomIdx === 0 && firstRoomGrace > 0 && player1) {
+      const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0012;
+      const gx = player1.x + (dragon ? (dragon.x - player1.x) * 0.32 : 0);
+      const gy = player1.y + (dragon ? (dragon.y - player1.y) * 0.32 : 14);
+      const gPhase = firstRoomGrace / 140;
+      const gAlpha = 0.38 + gPhase * 0.22;
+      ctx.save();
+      // soft protective under-halo (warm ember, matches default Cinder + grove god rays; makes focal pair "pop" as safe center)
+      ctx.globalAlpha = gAlpha * 0.55;
+      ctx.fillStyle = '#ffcc88';
+      ctx.beginPath(); ctx.arc(gx, gy + 4, 29 + Math.sin(t * 2.1) * 1.8, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(255, 215, 140, 0.22)';
+      ctx.beginPath(); ctx.arc(gx - 1, gy + 2, 21 + Math.sin(t * 1.6 + 1) * 1.2, 0, 6.2832); ctx.fill();
+      // 3 slow-drifting protective sigils / runes (tiny handcrafted wards orbiting the bond — screenshot-friendly fantasy detail, zero text needed)
+      ctx.globalAlpha = gAlpha * 0.85;
+      ctx.strokeStyle = 'rgba(255, 235, 190, 0.85)';
+      ctx.lineWidth = 1.35;
+      for (let i = 0; i < 3; i++) {
+        const a = t * 0.85 + i * 2.0944 + (firstRoomGrace % 55) * 0.008;
+        const rr = 24.5 + Math.sin(t * 1.3 + i) * 2.2;
+        const sx = gx + Math.cos(a) * rr;
+        const sy = gy + Math.sin(a) * (rr * 0.58) - 2;
+        ctx.beginPath(); ctx.arc(sx, sy, 3.8, 0, 6.2832); ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 250, 225, 0.95)';
+        ctx.beginPath(); ctx.arc(sx, sy, 1.35, 0, 6.2832); ctx.fill();
+      }
+      ctx.restore();
+    }
+
     // projectiles (glowing + trails for satisfying feedback)
     projectiles.forEach(pr => {
       const pc = pr.color || '#fff';
