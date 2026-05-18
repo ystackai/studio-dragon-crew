@@ -602,7 +602,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot).
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -1952,11 +1952,27 @@
         ctx.fillStyle = '#fff';
         ctx.beginPath(); ctx.arc(pu.x - 1.5, pu.y + bob - 1.5, 2, 0, Math.PI * 2); ctx.fill();
       } else {
+        // Pass 27: faceted relic gem + orbiting glint for authored reward pop (tiny handcrafted treasure, matches shrine gem richness per art mandate)
+        const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0023;
+        const rot = t + (pu.x || 0) * 0.0035;
+        const gx = pu.x, gy = pu.y + bob;
         ctx.fillStyle = '#d4af77';
-        ctx.beginPath(); ctx.arc(pu.x, pu.y + bob, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#fff6';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(pu.x, pu.y + bob, 9, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(gx, gy, 6.3, 0, Math.PI * 2); ctx.fill();
+        // 4 facet highlights (subtle 3D cut gem read)
+        ctx.fillStyle = 'rgba(255,248,215,0.92)';
+        for (let fi = 0; fi < 4; fi++) {
+          const fa = rot + fi * 1.5708;
+          ctx.beginPath(); ctx.arc(gx + Math.cos(fa) * 2.85, gy + Math.sin(fa) * 2.15, 2.05, 0, Math.PI * 2); ctx.fill();
+        }
+        // soft outer magical aura (no globalAlpha mutation)
+        ctx.strokeStyle = 'rgba(244,217,160,0.58)';
+        ctx.lineWidth = 3.1;
+        ctx.beginPath(); ctx.arc(gx, gy, 10.2, 0, Math.PI * 2); ctx.stroke();
+        // slow orbiting magic glint (tiny spark that circles — makes every relic pickup feel alive and worth the fight)
+        ctx.fillStyle = 'rgba(255,255,235,0.8)';
+        const ox = gx + Math.cos(rot * 1.65) * 7.9;
+        const oy = gy + Math.sin(rot * 1.65) * 5.5;
+        ctx.beginPath(); ctx.arc(ox, oy, 1.5, 0, Math.PI * 2); ctx.fill();
       }
     });
 
