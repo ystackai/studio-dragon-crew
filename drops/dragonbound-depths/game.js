@@ -337,6 +337,151 @@
     ctx.strokeRect(6, 6, w - 12, h - 12);
   }
 
+  // Pass 26: defeat illustration — handcrafted canvas art for loss screen, symmetric to victory art.
+  // Shows the chosen hero + dragon in a close, protective "bond endures" pose (dragon curve/wing shielding, hero supported, soft persistent bond light).
+  // Cool ash/blue-gray palette with faint looming maw memory + muted element accents + floating faded relics.
+  // Makes the "Depths Claimed You" moment also screenshot-worthy and emotionally resonant (not just stats); tone is defiant/magical, never grimdark.
+  // Reuses the same personalization (heroId/dragType from globals) so every loss feels personal to the run's bond.
+  function drawDefeatArt(canvas) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const w = canvas.width, h = canvas.height;
+    const heroId = (typeof player1 !== 'undefined' && player1 && player1.heroId) || 'ember';
+    const dragType = (typeof dragon !== 'undefined' && dragon && dragon.type) || 'cinder';
+    const heroCol = (typeof player1 !== 'undefined' && player1 && player1.color) || '#ff6b4a';
+    const dragCol = (typeof dragon !== 'undefined' && dragon && dragon.color) || '#ff8a4a';
+
+    // Cool ash / defiant twilight gradient (not grim — still magical, bond holds)
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#0b0f18');
+    bg.addColorStop(0.5, '#141a26');
+    bg.addColorStop(1, '#1c2433');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle cracked floor (same arena remnant, cooler)
+    ctx.fillStyle = 'rgba(48, 52, 62, 0.55)';
+    ctx.fillRect(30, h - 32, w - 60, 28);
+    ctx.strokeStyle = 'rgba(90, 98, 115, 0.3)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.moveTo(40 + i * 78, h - 31);
+      ctx.lineTo(55 + i * 72, h - 8);
+      ctx.stroke();
+    }
+
+    // Distant faint boss memory silhouette (high, small, not threatening — a shadow of what was faced)
+    ctx.fillStyle = 'rgba(38, 34, 44, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(58, 22);
+    ctx.quadraticCurveTo(92, 6, 138, 20);
+    ctx.quadraticCurveTo(168, 8, 198, 23);
+    ctx.lineTo(198, 32);
+    ctx.lineTo(58, 32);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(58, 52, 66, 0.25)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(82, 14); ctx.lineTo(72, 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(118, 12); ctx.lineTo(128, 1); ctx.stroke();
+
+    // Soft persistent bond glow between the pair (center of emotional authorship)
+    const gR = dragCol;
+    const glow = ctx.createRadialGradient(205, 48, 6, 205, 56, 58);
+    glow.addColorStop(0, gR + '55');
+    glow.addColorStop(0.45, gR + '22');
+    glow.addColorStop(1, 'rgba(40, 48, 68, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(152, 14, 118, 78);
+
+    // Hero + dragon in close protective bond pose (dragon body/wing arcs around hero; they stand together)
+    const hx = 172, hy = 54;
+    ctx.fillStyle = '#252a34';
+    ctx.fillRect(hx - 6, hy + 5, 14, 20); // body
+    ctx.fillStyle = heroCol;
+    ctx.beginPath(); ctx.arc(hx, hy - 5, 7.5, 0, Math.PI * 2); ctx.fill(); // helm/hood
+    // Hero class detail (muted, spent but upright)
+    if (heroId === 'frost') {
+      ctx.fillStyle = '#d0e8f8';
+      ctx.fillRect(hx - 9, hy - 12, 18, 4);
+      ctx.strokeStyle = '#a8d4f0'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(hx + 3, hy + 4); ctx.lineTo(hx + 18, hy - 16); ctx.stroke();
+    } else if (heroId === 'tide') {
+      ctx.fillStyle = 'rgba(100, 190, 160, 0.45)';
+      ctx.beginPath(); ctx.arc(hx, hy - 9, 8.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#b8e0d0'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(hx + 1, hy + 2); ctx.lineTo(hx + 17, hy - 18); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#e86a4a';
+      ctx.beginPath(); ctx.arc(hx, hy - 5, 7.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#d4c090';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(hx + 2, hy + 3); ctx.lineTo(hx + 15, hy - 19); ctx.stroke();
+    }
+    // Cape / support lean (hero resting weight on dragon)
+    ctx.fillStyle = 'rgba(52, 48, 58, 0.65)';
+    ctx.beginPath(); ctx.moveTo(hx - 5, hy + 7); ctx.quadraticCurveTo(hx - 14, hy + 16, hx - 7, hy + 24); ctx.fill();
+
+    // Dragon companion — body curved protectively, wing/tail embracing the bond
+    const dx = 232, dy = 50;
+    ctx.fillStyle = '#242a36';
+    ctx.beginPath(); ctx.ellipse(dx - 2, dy + 8, 16, 10, -0.35, 0, Math.PI * 2); ctx.fill(); // curved body
+    ctx.fillStyle = dragCol;
+    ctx.beginPath(); ctx.arc(dx + 14, dy - 2, 7, 0, Math.PI * 2); ctx.fill(); // head (alert, bonded)
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(dx + 17, dy - 3, 1.6, 0, Math.PI * 2); ctx.fill(); // eye
+    // Grounded legs + tail wrapping toward hero (protective)
+    ctx.fillStyle = '#2f353f';
+    ctx.fillRect(dx - 10, dy + 15, 3.5, 6);
+    ctx.fillRect(dx + 2, dy + 14, 3.5, 7);
+    ctx.strokeStyle = '#2f353f';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath(); ctx.moveTo(dx - 12, dy + 6); ctx.quadraticCurveTo(dx - 24, dy + 4, dx - 26, dy + 15); ctx.stroke();
+    // Wing as gentle shield curve over the pair
+    ctx.strokeStyle = '#3a424f';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(dx - 6, dy - 2); ctx.quadraticCurveTo(dx - 18, dy - 18, dx - 4, dy - 12); ctx.stroke();
+
+    // Subdued element accent (no active breath — quiet, enduring glow)
+    if (dragType === 'cinder') {
+      ctx.fillStyle = 'rgba(255, 130, 60, 0.35)';
+      ctx.beginPath(); ctx.arc(dx + 22, dy - 1, 3.5, 0, Math.PI * 2); ctx.fill();
+    } else if (dragType === 'rime') {
+      ctx.strokeStyle = 'rgba(180, 230, 255, 0.4)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(dx + 10, dy - 7); ctx.lineTo(dx + 15, dy - 12); ctx.stroke();
+    } else {
+      ctx.strokeStyle = 'rgba(170, 230, 155, 0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(dx + 20, dy - 4); ctx.quadraticCurveTo(dx + 26, dy - 7, dx + 30, dy - 3); ctx.stroke();
+    }
+
+    // The bond arc — warm persistent light (core emotional visual: connection does not break)
+    ctx.strokeStyle = 'rgba(255, 205, 140, 0.38)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(hx + 10, hy + 4); ctx.quadraticCurveTo(205, 40, dx - 8, dy + 6); ctx.stroke();
+
+    // Two faint relics (one still carries dragon tint — hope remains)
+    ctx.fillStyle = 'rgba(160, 170, 185, 0.5)';
+    ctx.beginPath(); ctx.arc(178, 28, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = dragCol + '66';
+    ctx.beginPath(); ctx.arc(208, 30, 2.8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,250,0.35)';
+    ctx.beginPath(); ctx.arc(209, 29, 1.0, 0, Math.PI * 2); ctx.fill();
+
+    // Cool ash / memory motes (quiet, not celebratory)
+    ctx.fillStyle = 'rgba(170, 180, 200, 0.45)';
+    for (let i = 0; i < 11; i++) {
+      const mx = 52 + (i * 21 + (i % 2) * 5) % (w - 90);
+      const my = 12 + Math.sin(i * 0.9 + 1.2) * 14;
+      ctx.beginPath(); ctx.arc(mx, my, 0.7 + (i % 2) * 0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Cool silver-blue border (defiant, not defeated)
+    ctx.strokeStyle = 'rgba(140, 155, 178, 0.28)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(6, 6, w - 12, h - 12);
+  }
+
   function drawHeroPreview(ctx, hero, w, h) {
     ctx.fillStyle = '#0d1320';
     ctx.fillRect(0, 0, w, h);
@@ -3103,7 +3248,11 @@
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('overlay-title').textContent = 'The Depths Claimed You';
     const vcanD = document.getElementById('victory-canvas');
-    if (vcanD) vcanD.style.display = 'none';
+    if (vcanD) {
+      vcanD.style.display = 'block';
+      // draw after tick for layout (Pass 26 authored defeat art, personalized to the run's bond)
+      setTimeout(() => { try { drawDefeatArt(vcanD); } catch(e){} }, 12);
+    }
     document.getElementById('overlay-body').innerHTML = `
       Rooms reached: <b>${runStats.rooms}</b> &nbsp; • &nbsp; Kills: <b>${runStats.kills}</b> &nbsp; • &nbsp; Time: <b>${time}s</b><br>
       Relics found: ${runStats.relics.length ? runStats.relics.join(', ') : 'none'}

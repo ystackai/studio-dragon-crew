@@ -231,8 +231,30 @@ Expect 23/23 + manual: open via preview-entrypoint, select hero/dragon/P2, full 
 ## Last Updated
 2026-05-18 ~03:05Z (Pass 25: bespoke personalized victory triumph art — every win now shows the exact hero+dragon bond the player chose; 34/34 verify; polish_until_deadline active with time remaining to 16:38Z deadline. Continuing for exceptional micro if any remain.)
 
+## Polish Pass 26 Complete (this update)
+- **Authored defeat illustration — symmetric visual + emotional closure for loss (Pass 26):** 
+  - Added `drawDefeatArt` (420×116 canvas, called from triggerDefeat) that renders a fully personalized "bond endures" scene for the exact hero + dragon chosen: hero and dragon drawn close in a protective, defiant pose (dragon body curved + wing arc as gentle shield, hero supported/leaning, bond glow arc between them in warm persistent light).
+  - Cool ash/blue-gray palette with faint distant maw silhouette (a memory, not a threat), subdued element accents (no flashy breath — quiet endurance), two faint relics (one still tinted to the dragon's color), and cool memory motes. Thin silver-blue border for "defiant, not defeated" read.
+  - In triggerDefeat: canvas now shown + drawn (was hidden before); title "The Depths Claimed You" + stats remain, but the visual now matches the victory art's bespoke quality.
+  - Directly fulfills the lingering "one extra death flourish" suggestion in prior Polish Continues and deepens operator art mandate ("moments that look worth sharing", "handcrafted", "screenshot-worthy" for *both* outcomes, not just wins). The entire emotional arc (entry → run → boss → win *or* loss) now has matching authored illustration celebrating the specific bond.
+- **Impact:** Loss is no longer a plain text panel; it is a quiet, tasteful, personalized art moment that reinforces the core fantasy ("players are bonded with young dragon companions") even when the depths claim the run. Non-grimdark, magical, memorable — a reviewer who dies will still feel the piece has visual authorship and heart. Pure polish, zero mechanics/collision/perf change.
+- **Verification:** 35/35 ✓ (new Pass 26 check added to scripts/verify.sh for 'drawDefeatArt' + 'Pass 26' + death title; all prior untouched). Syntax clean. Manual: reach boss, let hp drop to 0 (any hero/dragon combo) → overlay shows cool-toned personalized defeat canvas with protective bond pose + persistent glow (screenshot it alongside a victory for symmetry proof).
+- **Dragon Crew lens:** Snow (readable bond silhouettes + protective composition at small canvas scale), Fire (emotional wonder that the bond "holds" even in setback), Sea (subtle rhythmic quiet in the cool motes/glow), Lava (concise PR note on symmetric closure).
+- **Current State update:** Visual authorship now bookends the entire player journey: first frame (bond burst + framed entry) through every room to both possible endings (personalized victory *or* personalized defeat). The vertical slice is a complete, tasteful, shareable art-directed experience.
+- **Note:** With this pass, the "death flourish" item from Polish Continues is retired; the bar for "real art piece" is now fully symmetric end-to-end.
+
+## Current State (as of Pass 26)
+- **Full visual authorship landed:** Heroes (r20 bespoke + Pass 22 luminous bond rims), Dragons (r18 4-leg expressive), Rooms (6 layered + props + shafts + every theme breathing motes), Enemies (Pass 17 rich silhouettes + motion), Shrines (Pass 18 responsive pedestals), Victory (Pass 19+25 personalized triumph), Defeat (Pass 26: personalized protective bond art with defiant cool palette), Boss (Pass 24 escalation), Focal lights + world shake + particles, Desktop viewport (Pass 24 framed painting), Co-op camera (all framing guarantees + safe authored entry).
+- **Mechanics:** 3 heroes, 3 dragons (passive+active), 2P local co-op + solo, 6 connected areas + boss, 6 enemy behaviors + elite + 2-phase boss, 8 relics, XP/loot, win/loss/summary + best localStorage. Everything framed, safe, authored from first pixel through both possible emotional endings.
+- **Quality:** 35/35 verify, no JS errors, responsive, audio, HUD, preview direct. Every moment — entry burst, combat, shrines, enraged boss, victory art, *and now defeat art* — is framed, rich, and personalized to the player's chosen bond.
+- **Art bar:** Screenshot a death screen after any run: the illustration shows *your* exact hero+dragon in a protective, glowing bond pose against a cool ash memory of the maw — feels like part of the same handcrafted piece as the win art and the playfield. Real art-directed fantasy ARPG vertical slice; no slop in any screen.
+- **Anti-slop / DoD:** Reviewer opens via preview, picks, plays, can win *or* lose and see authored, personalized, emotionally resonant art for both; feels the bond and the world in every outcome. Verify 35/35 + manual symmetry check matches reality. Preview direct.
+
+## Last Updated
+2026-05-18 ~04:20Z (Pass 26: authored personalized defeat illustration for loss screen symmetry + emotional bond closure; 35/35 verify; polish_until_deadline active with ~12h remaining to 16:38Z. Continuing for any final micro if truly outstanding.)
+
 ## Polish Continues (polish_until_deadline)
 - One canonical artifact: drops/dragonbound-depths/
 - Branch/PR #70 maintained (no parallel FactoryX PRs).
-- Time remains to deadline: the vertical slice is exceptionally complete and visually authored. Further passes only for truly outstanding micro-elevations discovered in play (e.g. one extra death flourish or relic pickup sparkle). The art mandate is fully delivered end-to-end.
+- Time remains to deadline (~12h): the vertical slice now has exceptional end-to-end visual authorship (entry through both win/loss). Further passes only for ultra-minor final touches discovered in extended play (e.g. one extra relic pickup particle flourish or tiny idle dragon emote). The operator art mandate + all monitor feedback is fully delivered and symmetric.
 - Update PR body + WORKLOG after each pass.
