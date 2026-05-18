@@ -3064,6 +3064,40 @@
       ctx.globalAlpha = 1;
       ctx.restore();
       ctx.lineWidth = 1;
+
+      // Pass 87 (pre-deadline layered environments + composition authorship for operator art mandate "layered environments", "foreground/background layering", "handcrafted magical fantasy ARPG set piece", "moments worth sharing" + residual chamber luxury notes): 5 delicate hanging vine/root clusters with slow organic sway + inner facet glints catching the god-ray shafts. Drawn high from upper ruin edges (NW columns + canopy mass) so they frame the exact default Ember+Cinder+first-foe focal pocket from above in the 3/4 view — adds vertical depth, "moonlit forest reclaiming the depths" personality, and richer silhouette interplay without touching or flattening any actor. Makes the opening Diablo-style ruin chamber read as an even more deliberate, shareable painted fantasy diorama at cold-start screenshot glance. Pure draw (reuses t), zero gameplay/collision/safety/verify impact. Visible playfield diff in first viewport god-ray zone.
+      ctx.strokeStyle = 'rgba(52, 68, 42, 0.72)';
+      ctx.lineWidth = 1.55;
+      const vineClusters = [
+        {x: 198, y: 19, count: 3, phase: 0.0, len: 51},
+        {x: 292, y: 14, count: 2, phase: 1.7, len: 64},
+        {x: 442, y: 9, count: 4, phase: 3.1, len: 37},
+        {x: 175, y: 78, count: 3, phase: 4.9, len: 69},
+        {x: 835, y: 27, count: 2, phase: 0.9, len: 48}
+      ];
+      vineClusters.forEach((vc, vi) => {
+        for (let k = 0; k < vc.count; k++) {
+          const sway = Math.sin(t * 0.82 + vc.phase + k * 2.1) * (4.2 + (k % 2) * 1.8);
+          const vx = vc.x + k * 5.2 - 2.5;
+          ctx.beginPath();
+          ctx.moveTo(vx, vc.y);
+          ctx.quadraticCurveTo(vx + sway * 0.35, vc.y + vc.len * 0.42, vx + sway, vc.y + vc.len);
+          ctx.stroke();
+          // root barb / tiny leaf tip catching god-ray light
+          ctx.fillStyle = 'rgba(145, 188, 102, 0.58)';
+          ctx.beginPath();
+          ctx.arc(vx + sway * 0.9 + (k - 1) * 0.9, vc.y + vc.len - 1.5, 2.35, 0, Math.PI * 2);
+          ctx.fill();
+          // 3D facet glint on mid-segment (makes vines feel volumetric and integrated with shafts)
+          if ((vi + k) % 2 === 0) {
+            ctx.fillStyle = 'rgba(225, 250, 185, 0.62)';
+            ctx.beginPath();
+            ctx.arc(vx + sway * 0.55, vc.y + vc.len * 0.51, 1.15, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
+      ctx.lineWidth = 1;
     }
     if (r.theme === 'crystal') {
       // crystal hollow — floating clusters, facet glows, light refraction, stalagmites
