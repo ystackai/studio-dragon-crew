@@ -273,6 +273,9 @@
   let camera = { x: 0, y: 0, zoom: 1 };
   let runStats = { kills: 0, rooms: 0, relics: [], startTime: 0 };
   let relics = []; // active modifiers
+  let wardCharges = 0;
+  let chainCounter = 0;
+  let bestRun = null; // loaded from localStorage
 
   let toastTimer = 0;
   let shake = 0;
@@ -388,6 +391,8 @@
     projectiles = [];
     pickups = [];
     shrines = [];
+    chainCounter = 0;
+    if (relics.includes('ward')) wardCharges = 1; else wardCharges = 0;
 
     // spawn enemies from definition
     room.spawns.forEach(s => {
@@ -475,7 +480,8 @@
       attackCd: 60,
       moveCd: 0,
       enraged: false,
-      elite: true
+      elite: true,
+      telegraph: 0
     };
   }
 
@@ -595,8 +601,9 @@
       playSound('cleave', 0.6);
       shake = Math.max(shake, 3);
     } else if (heroId === 'frost') {
-      // Frost bolt
+      // Frost bolt (+pierce if relic)
       const bolt = createProjectile(px, py, Math.cos(dir) * 5.8, Math.sin(dir) * 5.8, 'p1', 9, '#a5e0ff', 5, 58, 'bolt');
+      if (relics.includes('pierce')) bolt.pierce = 1;
       projectiles.push(bolt);
       playSound('bolt', 0.5);
     } else {
@@ -684,6 +691,21 @@
     } else {
       playSound('roll', 0.6);
     }
+
+    // Gale Cloak relic: dash leaves wind push
+    if (relics.includes('gust')) {
+      const pushDir = dir;
+      enemies.forEach(en => {
+        if (dist(p.x, p.y, en.x, en.y) < 68) {
+          knockback(en, p.x - Math.cos(pushDir)*10, p.y - Math.sin(pushDir)*10, 2.8);
+          en.slowed = Math.max(en.slowed || 0, 8);
+        }
+      });
+      for (let i=0; i<7; i++) {
+        const a = pushDir + rand(-0.6, 0.6);
+        particles.push(createParticle(p.x - Math.cos(dir)*18, p.y - Math.sin(dir)*18, Math.cos(a)*1.8, Math.sin(a)*1.8, 16, '#a8e8b0', 2.8, 'wind'));
+      }
+    }
   }
 
   function damageEnemy(en, dmg, fromX, fromY) {
@@ -701,6 +723,19 @@
       onEnemyDeath(en);
     }
     playSound('hit', 0.4);
+
+    // Chain Spark relic: every 3rd hit chains lightning
+    if (relics.includes('chain')) {
+      chainCounter++;
+      if (chainCounter % 3 === 0) {
+        const near = enemies.filter(e => e !== en && e.hp > 0 && dist(en.x, en.y, e.x, e.y) < 118).slice(0, 2);
+        near.forEach(ne => {
+          damageEnemy(ne, 7, en.x, en.y);
+          particles.push(createParticle(ne.x, ne.y - 10, 0, -1.2, 14, '#e8f0a0', 2.5, 'spark'));
+          shake = Math.max(shake, 2);
+        });
+      }
+    }
   }
 
   function onEnemyDeath(en) {
@@ -723,6 +758,15 @@
 
   function damagePlayer(p, dmg, fromX, fromY) {
     if (p.downed) return;
+    // Stone Ward relic: block one hit per room
+    if (relics.includes('ward') && wardCharges > 0) {
+      wardCharges = 0;
+      p.hitFlash = 6;
+      particles.push(createParticle(p.x, p.y - 22, 0, -0.4, 18, '#d4c8a0', 3, 'spark'));
+      showToast('Ward blocked!');
+      playSound('pickup', 0.3);
+      return; // no damage
+    }
     p.hp -= dmg;
     p.hitFlash = 9;
     knockback(p, fromX || p.x, fromY || p.y, 1.2);
@@ -781,10 +825,24 @@
       }
     }
 
+    // dragon personality emotes (makes companion feel alive, not decorative)
+    if (Math.random() < 0.009) {
+      const nearFoes = enemies.filter(e => e.hp > 0 && dist(d.x, d.y, e.x, e.y) < 135).length;
+      if (nearFoes > 1) {
+        // alert bark
+        for (let i=0; i<2; i++) particles.push(createParticle(d.x + rand(-6,6), d.y - 20 - i*4, rand(-0.4,0.4), -0.7, 11, d.color, 2.1, 'spark'));
+      } else if (nearFoes === 0 && Math.random() < 0.5) {
+        // happy/content
+        particles.push(createParticle(d.x, d.y - 22, 0, -0.5, 13, '#ffe8b0', 2.3, 'spark'));
+      }
+    }
+
     // active ability
     d.attackCd -= dt;
     if (d.attackCd <= 0) {
-      d.attackCd = (d.type === 'cinder' ? 78 : (d.type === 'rime' ? 66 : 82));
+      const baseCd = (d.type === 'cinder' ? 78 : (d.type === 'rime' ? 66 : 82));
+      const mult = relics.includes('dragonheart') ? 0.74 : 1.0;
+      d.attackCd = Math.floor(baseCd * mult);
       d.breathActive = 16;
       d.breathAngle = angle(d.x, d.y, target.x, target.y) || d.breathAngle;
 
@@ -903,10 +961,16 @@
         panel.style.display = 'none';
         gameState = 'playing';
         showToast(`Acquired: ${r.name}`);
-        // apply immediate
+        // apply immediate / state
         if (r.id === 'vigor') {
           player1.maxHp += 15; player1.hp += 15;
           if (player2) { player2.maxHp += 15; player2.hp += 15; }
+        }
+        if (r.id === 'ward') {
+          wardCharges = 1;
+        }
+        if (r.id === 'dragonheart' && dragon) {
+          dragon.attackCd = Math.floor(dragon.attackCd * 0.6); // immediate refresh feel
         }
       };
       actions.appendChild(btn);
@@ -1059,9 +1123,9 @@
         enemies.forEach(en => {
           if (en.hp > 0 && dist(en.x, en.y, pr.x, pr.y) < (en.radius + pr.radius + 2)) {
             let dmg = pr.damage;
-            if (pr.kind === 'spear' && pr.pierce) dmg = 10;
+            if ((pr.kind === 'spear' || pr.kind === 'bolt') && pr.pierce) dmg = (pr.kind === 'spear' ? 11 : 8);
             damageEnemy(en, dmg, pr.x, pr.y);
-            if (pr.kind === 'spear' && pr.pierce > 0) pr.pierce--; else pr.hit = true;
+            if (pr.pierce != null && pr.pierce > 0) { pr.pierce--; } else { pr.hit = true; }
             if (relics.includes('frostbite')) en.slowed = Math.max(en.slowed || 0, 22);
           }
         });
@@ -1101,6 +1165,8 @@
             runStats.relics.push(r.name);
             showToast(`Found: ${r.name}`);
             if (r.id === 'vigor') { p1.maxHp += 8; p1.hp += 8; if (p2) { p2.maxHp += 8; p2.hp += 8; } }
+            if (r.id === 'ward') { wardCharges = 1; }
+            if (r.id === 'dragonheart' && dragon) { dragon.attackCd = Math.floor(dragon.attackCd * 0.5); }
           }
         }
         pu.life = 0;
@@ -1198,6 +1264,7 @@
 
   function updateBoss(boss, dt, players, roomW, roomH) {
     boss.hitFlash = Math.max(0, boss.hitFlash - 1);
+    boss.telegraph = Math.max(0, (boss.telegraph || 0) - 1);
     boss.attackCd -= dt;
     boss.moveCd -= dt;
 
@@ -1214,6 +1281,7 @@
       }
       if (boss.attackCd <= 0) {
         boss.attackCd = boss.enraged ? 42 : 58;
+        boss.telegraph = 0;
         // ground slam + adds
         for (let i = 0; i < 5; i++) {
           const a = (i / 5) * 6.28 + rand(-0.2, 0.2);
@@ -1224,6 +1292,8 @@
         });
         shake = Math.max(shake, 9);
         playSound('boss-slam', 0.8);
+      } else if (boss.attackCd < 22 && boss.phase === 1) {
+        boss.telegraph = Math.max(boss.telegraph || 0, boss.attackCd);
       }
     } else {
       // phase 2 flying charges
@@ -1389,6 +1459,27 @@
         const pct = en.hp / en.maxHp;
         ctx.arc(en.x, en.y, en.radius + 10, -1.8, -1.8 + pct * 3.6);
         ctx.stroke();
+
+        // telegraph for upcoming slam (crack + danger ring)
+        if (en.telegraph > 0) {
+          const t = en.telegraph / 22;
+          const r = 78 + Math.sin(Date.now()/120) * 3;
+          ctx.strokeStyle = `rgba(255, 70, 40, ${0.35 + t*0.4})`;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(en.x, en.y, r, 0, 6.28);
+          ctx.stroke();
+          // ground cracks
+          ctx.strokeStyle = `rgba(120, 40, 20, ${0.5 + t*0.4})`;
+          ctx.lineWidth = 1.5;
+          for (let k=0; k<5; k++) {
+            const ca = (k/5)*6.28 + (en.telegraph % 7 - 3.5)*0.04;
+            ctx.beginPath();
+            ctx.moveTo(en.x, en.y);
+            ctx.lineTo(en.x + Math.cos(ca)* (r-8), en.y + Math.sin(ca)*(r-8));
+            ctx.stroke();
+          }
+        }
       } else if (en.type === 'skitter') {
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
@@ -1820,6 +1911,8 @@
 
     rooms = createRooms();
     relics = [];
+    wardCharges = 0;
+    chainCounter = 0;
     runStats = { kills: 0, rooms: 0, relics: [], startTime: Date.now() };
 
     player1 = createPlayer(180, 260, false, selectedHero);
@@ -1874,12 +1967,14 @@
 
   function triggerDefeat() {
     gameState = 'dead';
+    saveBestRun();
     const time = Math.floor((Date.now() - runStats.startTime) / 1000);
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('overlay-title').textContent = 'The Depths Claimed You';
     document.getElementById('overlay-body').innerHTML = `
       Rooms reached: <b>${runStats.rooms}</b> &nbsp; • &nbsp; Kills: <b>${runStats.kills}</b> &nbsp; • &nbsp; Time: <b>${time}s</b><br>
       Relics found: ${runStats.relics.length ? runStats.relics.join(', ') : 'none'}
+      ${bestRun ? `<br><span style="color:#a7c4a0">Personal best: ${bestRun.rooms} rooms in ${bestRun.time}s</span>` : ''}
     `;
     document.getElementById('overlay-actions').innerHTML = `
       <button class="primary" onclick="restartRun()">Try Again</button>
@@ -1890,6 +1985,7 @@
 
   function triggerVictory() {
     gameState = 'victory';
+    saveBestRun();
     const time = Math.floor((Date.now() - runStats.startTime) / 1000);
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('overlay-title').textContent = 'The Maw Falls — Victory';
@@ -1897,6 +1993,7 @@
       You and your dragon companion have cleared the Depths.<br>
       Rooms: <b>${runStats.rooms}</b> &nbsp; Kills: <b>${runStats.kills}</b> &nbsp; Time: <b>${time}s</b><br>
       Relics: ${runStats.relics.length ? runStats.relics.join(' • ') : '—'}
+      ${bestRun ? `<br><span style="color:#a7c4a0">Record: ${bestRun.rooms} rooms / ${bestRun.kills} kills in ${bestRun.time}s</span>` : ''}
     `;
     document.getElementById('overlay-actions').innerHTML = `
       <button class="primary" onclick="restartRun()">Descend Again</button>
@@ -1916,6 +2013,30 @@
     t.textContent = text;
     t.className = 'show';
     setTimeout(() => { t.className = ''; }, 1650);
+  }
+
+  function loadBestRun() {
+    try {
+      const raw = localStorage.getItem('dbd_best_run');
+      if (raw) bestRun = JSON.parse(raw);
+    } catch (e) {}
+  }
+  function saveBestRun() {
+    if (!runStats || runStats.rooms < 1) return;
+    const time = Math.floor((Date.now() - runStats.startTime) / 1000);
+    const candidate = {
+      rooms: runStats.rooms,
+      kills: runStats.kills,
+      time: time,
+      relicCount: runStats.relics.length,
+      hero: selectedHero ? selectedHero.name : '',
+      dragon: selectedDragon ? selectedDragon.name : ''
+    };
+    const better = !bestRun || candidate.rooms > bestRun.rooms || (candidate.rooms === bestRun.rooms && candidate.time < (bestRun.time || 999));
+    if (better) {
+      bestRun = candidate;
+      try { localStorage.setItem('dbd_best_run', JSON.stringify(bestRun)); } catch (e) {}
+    }
   }
 
   function gameLoop(now = 0) {
@@ -1942,6 +2063,7 @@
   function setupTitleScreen() {
     titleCanvas = document.getElementById('title-canvas');
     if (titleCanvas) drawTitleArt(titleCanvas);
+    loadBestRun();
 
     // hero cards
     const heroRow = document.getElementById('hero-cards');
