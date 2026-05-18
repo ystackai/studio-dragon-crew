@@ -2064,6 +2064,10 @@
     titleCanvas = document.getElementById('title-canvas');
     if (titleCanvas) drawTitleArt(titleCanvas);
     loadBestRun();
+    const fn = document.querySelector('.footer-note');
+    if (fn && bestRun) {
+      fn.textContent = `Record: ${bestRun.rooms} rooms • ${bestRun.kills} kills • ${bestRun.time}s (${bestRun.hero.split(' ')[0]} + ${bestRun.dragon})`;
+    }
 
     // hero cards
     const heroRow = document.getElementById('hero-cards');
