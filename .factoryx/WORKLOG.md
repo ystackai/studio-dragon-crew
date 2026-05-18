@@ -5,9 +5,9 @@
 **Artifact:** drops/dragonbound-depths/ (index.html + game.js + styles.css)  
 **Preview:** .factoryx/preview-entrypoint → drops/dragonbound-depths/index.html (direct)  
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish_until_deadline)  
-**Status:** Active — visual authorship polish in progress per operator mandate
+**Status:** Active — visual authorship polish in progress per operator mandate (Pass 24 complete; 33/33; ~14h to deadline)
 
-## Current State (as of latest — Pass 18)
+## Current State (as of latest — Pass 24; see bottom sections for full history)
 - **Shrine / decision moment polish (Pass 18):** Upgraded the room-clear shrines from simple glowing dots into handcrafted stone pedestals with rotating carved runes, a faceted hovering relic gem that bobs gently, and — crucially — fully responsive interaction cues: when either player approaches within ~78px the gem brightens, the aura pulses larger and stronger, the rune ring glows, and tiny golden sparkles orbit the pedestal. On spawn, 18 golden "emerge" particles burst upward for a magical reveal. This turns every post-combat choice into a visually authored, living moment that feels worth approaching and deciding over — directly fulfilling the WORKLOG-suggested "subtle environmental interaction polish (more responsive shrine visuals)" and deepening the art mandate ("moments that look worth sharing", "handcrafted magical-fantasy").
 - **Impact:** The "little decision moments" now pop with creature-wonder and authorship; combined with all prior hero/dragon/enemy/room/focal/shake polish, every frame of play (combat, exploration, or choosing at a shrine) is screenshot-worthy. No more generic floor markers. The vertical slice feels like a real, tasteful fantasy ARPG opening.
 - **Verification:** 27/27 green post-edit (new Pass 18 hook added to verify.sh). Pure visual + spawn particles; no behavior, collision, or perf change. Manual: clear a room, watch the shrine materialize with particles, approach — see the gem flare + sparkles + stronger glow as you near; feels alive and intentional.
