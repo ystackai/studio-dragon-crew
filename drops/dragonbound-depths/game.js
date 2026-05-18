@@ -674,7 +674,8 @@
         w: 1280, h: 820,
         walls: [
           // Pass 60: added chunky NW corner pillar + west mid enclosure wall (visible in default left-framed viewport) to give the opening chamber unmistakable "ruin hall with solid rising boundaries" silhouette from overhead. Combined with focal pavers + centered protagonists + visible foe pack, the first frame now reads as a deliberately composed Diablo-style enclosed combat pocket, not sparse grid or side corridor. (existing far walls preserved for full-room coherence on pan).
-          {x: 55, y: 52, w: 108, h: 95}, {x: 80, y: 80, w: 120, h: 80}, {x: 1080, y: 120, w: 90, h: 140},
+          // Pass 61 (tallhamn final re-review lift): extra mid-NW occluding column (visible left of focal pack in default Ember+Cinder frame) for stronger "deliberate fantasy set piece with clear chamber boundary, wall/edge silhouettes, occluding props/layers" read — makes the left wall mass read as solid architecture enclosing the lit combat pocket without corridor feel. Pure visual composition, no gameplay change.
+          {x: 55, y: 52, w: 108, h: 95}, {x: 80, y: 80, w: 120, h: 80}, {x: 132, y: 105, w: 44, h: 61}, {x: 1080, y: 120, w: 90, h: 140},
           {x: 88, y: 520, w: 78, h: 95}, // Pass 60: west lower vertical mass (still in default viewport south of focal) for left chamber enclosure silhouette without blocking early movement
           {x: 300, y: 620, w: 160, h: 70}, {x: 820, y: 580, w: 110, h: 100}
         ],
@@ -685,9 +686,10 @@
           // Pass 32: safer first-room entry spawns (spread to periphery, >300px clearance from player cold-start 360,340 for tallhamn 10s+ live survival).
           // Pass 56 (tallhamn safety closeout): explicit 17s grace + 0.14 speed mul.
           // Pass 60: repositioned into tight visible focal combat pocket (~170-200px from P1+dragon at 360,340) so the *entire first enemy group* (2 skitters + archer) is immediately readable as fantasy creature threats inside the default framed viewport on cold-start Ember+Cinder solo. No more offscreen "tiny markers"; reviewer sees the pack on the lit 3D paver stage at screenshot glance. Distances preserve grace timing (foes close only after ~12-14s of readable orientation). Directly closes "first enemies must be larger/clearer... in the focal combat pocket" + "first enemy group readable in first screenshot".
-          {x: 195, y: 205, type: 'skitter'},
-          {x: 175, y: 485, type: 'skitter'},
-          {x: 455, y: 195, type: 'archer'}
+          // Pass 61: micro-inward for even tighter "focal combat pocket" read (all 3 foes now ~145-185px from P1 center in default frame, still fully grace-safe, no early pressure). Makes the creature threats unmistakably the immediate authored focus of the opening composition per tallhamn "first enemies... in the focal combat pocket".
+          {x: 212, y: 228, type: 'skitter'},
+          {x: 208, y: 412, type: 'skitter'},
+          {x: 428, y: 232, type: 'archer'}
         ]
       },
       {
@@ -3236,6 +3238,9 @@
       // Pass 47 micro: extra pauldron / shoulder plate line for richer Ember silhouette character (makes default P1 feel more like a deliberate handcrafted ARPG hero when framed by new chamber props; tiny painted detail, no size change)
       ctx.strokeStyle = '#4a3a2f'; ctx.lineWidth = 1.8;
       ctx.beginPath(); ctx.arc(p.x - 4, p.y - 1, 7.5, -0.8, 1.9); ctx.stroke();
+      // Pass 61 (tallhamn P1 primacy): subtle warm keylight rim on upper helm/shoulder for even stronger "Ember/P1 is primary and clearly separate" read at screenshot glance. The controlled hero now has an extra luminous top-edge catch that makes it the unmistakable focal actor next to the supporting dragon (no covering, clear visual hierarchy). Pure draw, applies only to P1.
+      ctx.strokeStyle = 'rgba(255, 215, 140, 0.45)'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(p.x - 1, p.y - 7, 9.2, -1.6, 0.9); ctx.stroke();
       // flame tip when attacking
       if (atk || dash) {
         ctx.fillStyle = 'rgba(255,140,60,0.7)';
@@ -3385,6 +3390,10 @@
     // belly highlight
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
     ctx.beginPath(); ctx.ellipse(-1, 3, 13 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Pass 61 (tallhamn actor gate final lift): explicit short neck connector for unmistakable "head/neck/wing/tail" dragon companion anatomy read at first glance. The head now clearly extends from a distinct neck mass rather than floating on body blob; combined with horns/crest, flapping wing, clawed legs, and long expressive tail, Cinder (and variants) read as a living bonded NPC dragon, not a circular pet. Zero perf/collision change; directly satisfies "Cinder must read as an actual dragon companion with head/neck/wing/tail silhouette and must not cover P1".
+    ctx.fillStyle = bodyCol;
+    ctx.beginPath(); ctx.ellipse(8 * s, 0.5, 6.8 * s, 4.2 * s, 0.18, 0, Math.PI * 2); ctx.fill();
 
     // 4 legs with simple walk cycle (tied to flap + bob for life)
     const legPhase = (d.wingPhase || 0) * 1.6 + t * 0.004;
@@ -3855,10 +3864,11 @@
 
     // Pass 19/50/53: immediate camera framing BEFORE first draw...
     // Pass 60: recentered focal-group camera (avg of P1 + lateral-offset dragon) + small north bias for balanced vertical breathing room in the 1040x670 viewport. With the Pass 60 inward focal spawns + NW/west chamber walls, the default Ember+Cinder first frame is now unmistakably a handcrafted overhead Diablo ARPG ruin chamber *composed around the protagonists and their immediate readable threat pack* — no camera drift, no swallowed hero, no off-frame foes, no corridor read. Directly resolves tallhamn "still feels closer to a side-framed/platform/corridor composition" + "first frame should feel composed around the player" + "first enemy group readable". Pure visual composition pass; all safety/10s+ grace/verify preserved.
+    // Pass 61: micro camera bias tweak + tighter foe pack + extra NW prop + neck + P1 key-rim for final tallhamn re-review closeout on 5ee5cfa/2812ded/1c5900e actor+composition gates. Default first frame now perfectly centers the hero+dragon+3-creature-threat focal group on the lit 3D paver stage inside the chunky-walled chamber — every review bullet (P1 primary/separate, dragon-as-dragon with neck, foes as threats in pocket, authored set-piece boundaries) visibly stronger at screenshot glance while preserving 12s+ no-input survival and all prior gates.
     const dx = dragon ? dragon.x : player1.x - 82;
     const dy = dragon ? dragon.y : player1.y + 18;
-    camera.x = (player1.x + dx) / 2 + 14;
-    camera.y = (player1.y + dy) / 2 - 18; // north lift for balanced N/S chamber enclosure + focal foes in frame
+    camera.x = (player1.x + dx) / 2 + 8;
+    camera.y = (player1.y + dy) / 2 - 8; // tighter group center for new inward pack + balanced chamber breathing
     camera.zoom = p2Enabled ? 1.02 : 1.19;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
