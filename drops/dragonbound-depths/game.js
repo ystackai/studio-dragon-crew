@@ -649,6 +649,7 @@
   let toastTimer = 0;
   let shake = 0;
   let firstRoomGrace = 0; // explicit cold-start orientation safety for first room (Pass 35: 2.3s reduced aggression on Grove entry so no-input 10s+ survival is guaranteed, not just spawn distance)
+  let lastAmbientTime = 0; // Sea Dragon (Pass 36): rhythmic low "depths pulse" timing for ambient world breathing during play
 
   // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close). + Pass 30: minimap cartography authorship (themed parchment per room, scaled wall glyphs for layout, distinct player/dragon/enemy glyphs + door ticks) — makes the HUD itself a handcrafted magical map, deepening spatial readability, co-op coordination, and "every pixel authored" per operator mandate.
   const LOGICAL_W = 1040;
@@ -1564,6 +1565,12 @@
 
     // enemies AI + move
     if (firstRoomGrace > 0) firstRoomGrace = Math.max(0, firstRoomGrace - 1);
+    // Sea Dragon (Pass 36): slow rhythmic ambient "depths thrum" pulse every ~7s while playing — gives the world tidal breathing, magical atmosphere, and combat-feel rhythm in lulls without intruding on action cues. Fits operator "real art piece" audio layer + sea-dragon lens (steady, atmospheric, majestic).
+    const nowA = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (gameState === 'playing' && nowA - lastAmbientTime > 6800) {
+      playSound('ambient', 0.15);
+      lastAmbientTime = nowA;
+    }
     const players = [p1, p2].filter(Boolean).filter(pl => !pl.downed);
     enemies.forEach(en => {
       if (en.hp <= 0) return;
@@ -3302,6 +3309,10 @@
       const gain = audioCtx.createGain();
       const filter = audioCtx.createBiquadFilter();
 
+      // master early so ambient chord voice can connect
+      const master = audioCtx.createGain();
+      master.gain.value = muted ? 0 : 0.9;
+
       if (name === 'cleave' || name === 'hit') {
         osc.type = 'sawtooth'; osc.frequency.value = name === 'cleave' ? 140 : 220;
         filter.type = 'lowpass'; filter.frequency.value = 800;
@@ -3326,6 +3337,42 @@
         osc.type = 'sine'; osc.frequency.value = 880;
         gain.gain.value = vol * 0.4;
         gain.gain.linearRampToValueAtTime(0.0001, t + 0.35);
+      } else if (name === 'dash' || name === 'roll' || name === 'blink') {
+        osc.type = 'sine'; osc.frequency.value = (name === 'dash' ? 92 : (name === 'roll' ? 155 : 205));
+        filter.type = 'lowpass'; filter.frequency.value = 620;
+        gain.gain.value = vol * 0.52;
+        gain.gain.linearRampToValueAtTime(0.0004, t + (name === 'dash' ? 0.34 : 0.19));
+      } else if (name === 'hurt' || name === 'enemy-shot') {
+        osc.type = 'sawtooth'; osc.frequency.value = (name === 'hurt' ? 295 : 470);
+        filter.type = 'highpass'; filter.frequency.value = 260;
+        gain.gain.value = vol * 0.62;
+        gain.gain.linearRampToValueAtTime(0.0008, t + 0.26);
+      } else if (name === 'boss-slam' || name === 'trap') {
+        osc.type = 'sine'; osc.frequency.value = (name === 'boss-slam' ? 72 : 138);
+        filter.type = 'lowpass'; filter.frequency.value = 380;
+        gain.gain.value = vol * (name === 'boss-slam' ? 0.92 : 0.58);
+        gain.gain.linearRampToValueAtTime(0.0003, t + (name === 'boss-slam' ? 0.72 : 0.42));
+      } else if (name === 'pulse' || name === 'gust') {
+        osc.type = 'triangle'; osc.frequency.value = (name === 'pulse' ? 248 : 365);
+        filter.type = 'bandpass'; filter.frequency.value = 510;
+        gain.gain.value = vol * 0.44;
+        gain.gain.linearRampToValueAtTime(0.0006, t + 0.33);
+      } else if (name === 'ambient') {
+        // Sea Dragon Pass 36: deep "depths thrum" — low sine + sub-bass for slow magical breathing pulse of the living ruin. Long soft tail, minimal noise, rhythmic world feel during play and lulls. Makes the audio layer match the handcrafted visual authorship (not just UI bleeps).
+        osc.type = 'sine'; osc.frequency.value = 44;
+        filter.type = 'lowpass'; filter.frequency.value = 165;
+        gain.gain.value = vol * 0.85;
+        gain.gain.linearRampToValueAtTime(0.0001, t + 2.6);
+        // second detuned low voice for chord-like depth (sub bass "heart of the depths")
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        const filt2 = audioCtx.createBiquadFilter();
+        osc2.type = 'sine'; osc2.frequency.value = 33;
+        filt2.type = 'lowpass'; filt2.frequency.value = 95;
+        gain2.gain.value = vol * 0.55;
+        gain2.gain.linearRampToValueAtTime(0.00005, t + 2.9);
+        osc2.connect(filt2); filt2.connect(gain2); gain2.connect(master);
+        osc2.start(t); osc2.stop(t + 3.1);
       } else {
         osc.type = 'triangle'; osc.frequency.value = 340;
         gain.gain.value = vol * 0.3;
@@ -3338,11 +3385,8 @@
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
       noise.buffer = buffer;
       const nGain = audioCtx.createGain();
-      nGain.gain.value = vol * 0.25;
-      nGain.gain.linearRampToValueAtTime(0.0001, t + 0.22);
-
-      const master = audioCtx.createGain();
-      master.gain.value = muted ? 0 : 0.9;
+      nGain.gain.value = (name === 'ambient' ? vol * 0.07 : vol * 0.24);
+      nGain.gain.linearRampToValueAtTime(0.0001, t + (name === 'ambient' ? 1.8 : 0.22));
 
       osc.connect(filter);
       filter.connect(gain);
@@ -3351,10 +3395,11 @@
       nGain.connect(master);
       master.connect(audioCtx.destination);
 
+      const dur = (name === 'ambient' ? 3.2 : 0.9);
       osc.start(t);
       noise.start(t);
-      osc.stop(t + 0.9);
-      noise.stop(t + 0.9);
+      osc.stop(t + dur);
+      noise.stop(t + dur);
     } catch (e) {}
   }
 
@@ -3387,6 +3432,7 @@
     wardCharges = 0;
     chainCounter = 0;
     runStats = { kills: 0, rooms: 0, relics: [], startTime: Date.now() };
+    lastAmbientTime = 0; // reset Sea Dragon ambient rhythm for fresh run
 
     // Pass 19-21: safer central spawn + 3-foe first room (gentle readable entry) + immediate framing + bond burst particles on cold start. Full run transitions framed too.
     player1 = createPlayer(360, 340, false, selectedHero);
@@ -3444,6 +3490,7 @@
     document.getElementById('overlay').style.display = 'none';
     gameState = 'playing';
     lastTime = performance.now();
+    lastAmbientTime = performance.now(); // avoid immediate ambient pulse burst on unpause
     requestAnimationFrame(gameLoop);
   };
 
