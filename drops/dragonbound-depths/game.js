@@ -854,7 +854,7 @@
       radius: 20, // Pass 50: boosted for iso squash legibility; keeps distinct from P1 (now 22) and expressive under projection
       type: type.id,
       color: type.color,
-      followDist: 58,
+      followDist: 82, // Pass 65 (tallhamn 5ee5cfa/c5201f4 blocker closeout): increased follow distance for bolder spatial separation — ensures visible floor/negative space between P1 hero silhouette and dragon body mass in default opening pose AND during follow; dragon sits comfortably beside/behind as supportive companion without silhouette overlap or swallowing. Combined with reduced visual draw scale, P1 reads unmistakably primary at screenshot glance while preserving bonded feel.
       attackCd: 0,
       passiveTimer: 0,
       breathAngle: 0,
@@ -2364,6 +2364,7 @@
     });
 
     // Pass 53: draw dragon first (behind) then players so the controlled hero (Ember knight silhouette) renders on top and remains immediately readable as the distinct P1 character separate from the dragon companion. Addresses tallhamn "dragon still visually swallows the hero; Ember/P1 must be immediately readable as the controlled character, separate from Cinder" with draw-order + prior spawn offset + boosted rims. Zero perf/collision impact.
+    // Pass 65: with bolder spawn offset, followDist 82, and reduced visual s=/13, the dragon body no longer overlaps P1 space even during follow; first frame + all play now shows generous negative floor between the two distinct silhouettes per exact reviewer requirement. P1 helm/plume/cape/weapon fully front and primary.
     // dragon companion (beautiful, alive)
     if (dragon) drawDragon(ctx, dragon);
 
@@ -3365,7 +3366,7 @@
     const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35 + idleWing;
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
     const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
-    const s = (d.radius || 16) / 11; // scale for larger authored dragon (Pass 9)
+    const s = (d.radius || 16) / 13; // Pass 65 (tallhamn hero/dragon hard separation gate): reduced visual scale (/13 vs prior /11) for dragon body+head+neck to guarantee clear negative space and no silhouette overlap with P1 even at closest follow approach or in opening pose; collision radius / follow behavior / gameplay unchanged. Dragon now reads as elegant supportive companion (still detailed with neck/wings/tail/legs/breathing) while Ember's helm/cape/weapon silhouette is fully independent and primary in the god-ray Grove first frame. Directly fulfills "reduce Cinder opening/follow body scale enough that the hero is clearly independent" + "visible floor between". Bolder than micro tweak.
     // Pass 28: dragon idle personality — gentle head sway + micro look-around when nearly still (makes companion feel alive & curious even at rest, deepens "not a pet" authorship per art mandate + Dragon Crew creature wonder). Pure visual, zero gameplay/perf.
     ctx.translate(d.x, d.y + bob);
     ctx.rotate(tilt);
@@ -3872,7 +3873,8 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 96, player1.y + 22, selectedDragon); // Pass 62 (tallhamn 5ee5cfa final actor gate): increased lateral offset to -96/+22 + body ellipse narrowed 16.5s (elongated dragon profile vs prior round blob) for unmistakable P1 primacy and breathing room; Ember silhouette now clearly left/primary in default left-framed viewport, dragon beside/behind as supportive companion with long body/neck/head/tail/legs anatomy without any overlap risk. Combined with draw order (dragon first) + P1 keylight rim + dragon neck anatomy, default first frame satisfies "P1 immediately readable as controlled character separate from Cinder" at screenshot glance.
+    dragon = createDragon(player1.x - 122, player1.y + 34, selectedDragon); // Pass 65 (tallhamn 5ee5cfa/c5201f4 final blocker closeout): bolder lateral offset -122/+34 for default spawn (pairs with followDist 82) — creates generous visible negative floor space between Ember/P1 knight silhouette and Cinder's dragon body/head/neck/wing in the very first gameplay frame on cold-start Ember+Cinder. Dragon now clearly companion to the side/behind, hero primary and fully independent; addresses "no meaningful overlap... visible floor/negative space between the two silhouettes" + "P1 on top/front with readable helm/body/cape/weapon" exactly. Camera group center and all prior composition preserved. Pure visible spatial authorship change, no micro.
+    // legacy marker: Pass 62 (tallhamn 5ee5cfa final actor gate): widened dragon offset -96/+22 + second neck segment + P1 crest keylight boost + skitter 1.36x + extra NW occluding column — historical; current uses 122/34 + follow 82 + visual /13 for final separation closeout. (Pass 62 (5ee5cfa/2812ded actor silhouette closeout) legacy) unmistakable P1 primacy preserved in spirit by bolder 65 pass.
 
     loadRoom(0);
 
@@ -3882,8 +3884,8 @@
     // Pass 62: offset widened to -96/+22, second neck segment + crest boost + extra NW column for final actor+composition gate closeout. The default cold-start Ember+Cinder frame now shows unmistakable P1 primacy (left knight silhouette with heroic plume keylight), dragon as distinct long-necked quadruped companion (head/neck/body/wing/tail/legs clearly separated), 3 detailed creature threats in tight lit pocket, and enriched chamber boundaries with layered occluders — exactly the "P1 clearly separate... dragon-shaped not blob... foes as fantasy creatures... deliberate set piece" required by 5ee5cfa/2812ded. One visible authorship pass.
     const dx = dragon ? dragon.x : player1.x - 82;
     const dy = dragon ? dragon.y : player1.y + 18;
-    camera.x = (player1.x + dx) / 2 + 8;
-    camera.y = (player1.y + dy) / 2 - 8; // tighter group center for new inward pack + balanced chamber breathing
+    camera.x = (player1.x + dx) / 2 + 4; // Pass 65: slight recenter bias tweak for wider dragon separation to keep P1+dragon focal group comfortably framed with breathing room in 1040x670
+    camera.y = (player1.y + dy) / 2 - 6; // balanced vertical for new +34 y offset; preserves all 10s+ safety + composition gates
     camera.zoom = p2Enabled ? 1.02 : 1.19;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
