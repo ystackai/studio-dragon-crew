@@ -1949,9 +1949,9 @@
   // ==================== DRAW ====================
   function draw() {
     if (!ctx || !room) return;
-    // Pass 32: root camera save/restore balance + setTransform guard (fixes live preview first-frame empty/off-camera + transform accumulation per urgent_root_cause_2026-05-18).
-    // Always reset to identity first so clear + all overlays are reliable even if prior frame had error or unbalanced state.
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Pass 32/35: root camera save/restore balance + dpr-aware setTransform guard (fixes live preview first-frame empty/off-camera on high-DPI deploys + transform accumulation per urgent_root_cause + operator notes).
+    // Reset to the correct base DPR scale (matching setupCanvas) every frame so logical draws always land in the full canvas bitmap; prevents 1x-only regression that made scene "dark/empty" for retina reviewers while still blocking accumulation.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.save();
     ctx.fillStyle = '#0a0f1a';
     ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
@@ -2413,8 +2413,8 @@
     if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
-    // Pass 32: restore the root camera save() so vignette, screen rumble, and touch controls are drawn in true screen space (LOGICAL_W/H identity).
-    // This balances the save at top of draw() (the one before camera translate/scale) and eliminates accumulation that caused "dark/empty first frame" and off-camera player in deployed preview.
+    // Pass 32/35: restore the root camera save() so vignette, screen rumble, and touch controls are drawn in true screen space (under the dpr base scale).
+    // This balances the save at top of draw() and eliminates accumulation. The dpr setTransform guard ensures high-DPI preview deploys (retina, etc.) also see full authored first frame with P1/dragon/enemies/room immediately visible.
     ctx.restore();
 
     // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)
