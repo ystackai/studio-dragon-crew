@@ -407,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change).
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -2362,6 +2362,24 @@
         const px = 180 + ((i * 191 + t * 14) % (r.w - 360));
         const py = 160 + ((i * 73 + t * 19) % (r.h - 320)) + Math.sin(t + i * 2) * 14;
         ctx.beginPath(); ctx.arc(px, py, 1.3 + (i % 2), 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (r.theme === 'crypt') {
+      // drifting embers and warm soot — scorched crypt, dangerous beauty, lingering magic (Pass 23)
+      // Gives the Ember Crypt its own breathing atmospheric signature matching grove fireflies / crystal glints / fissure heat / boss ash.
+      ctx.fillStyle = 'rgba(255, 155, 75, 0.38)';
+      for (let i = 0; i < 10; i++) {
+        const seed = i * 1.23 + 0.7;
+        const drift = ((t * 38 + seed * 27) % (r.h - 120));
+        const px = 70 + ((seed * 47) % (r.w - 140)) + Math.sin(t * 0.55 + i) * 9;
+        const py = 90 + drift * 0.85;
+        const ss = 1.05 + Math.sin(t * 2.4 + seed) * 0.32;
+        ctx.beginPath(); ctx.arc(px, py, ss, 0, Math.PI * 2); ctx.fill();
+        if (i % 2 === 0) {
+          ctx.fillStyle = 'rgba(255, 195, 110, 0.19)';
+          ctx.beginPath(); ctx.arc(px + 0.5, py - 5, ss * 1.6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255, 155, 75, 0.38)';
+        }
       }
     }
 

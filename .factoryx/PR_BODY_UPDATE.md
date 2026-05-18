@@ -24,7 +24,7 @@ Key requirements met and exceeded:
 - Self-contained drop: `drops/dragonbound-depths/` (index.html + game.js 2500+ LOC + styles.css) — pure client, no deps.
 - **Title + select:** Beautiful authored canvas title art (ruins + dragon + mist + embers), fast hero/dragon cards with live previews, P2 toggle, control hints.
 - **Gameplay vertical slice:** 6 handcrafted connected rooms across 2+ themes (grove → crystal → sanctum → fissure → ember crypt → boss maw), enemies with distinct AI/telegraphs, relics, dragon companion that fights + emotes, full co-op or solo, win/loss/run summary with stats + best.
-- **Visual authorship (core of this WorkOrder — fully landed via Passes 8-17):** 
+- **Visual authorship (core of this WorkOrder — fully landed via Passes 8-23):** 
   - Heroes: radius 20, fully bespoke per-class vector silhouettes (plumed knight with flame sword + cape, witch with crystal staff + veil, ranger with ribbon spear + hood), shadows, badges, HP, motion.
   - Dragons: radius 18, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
   - Rooms: 6 connected areas (grove/forest, crystal, sanctum, fissure/lava, ember crypt, boss maw) with layered textures + strong authored props + light shafts/god rays + fine grain + atmospheric motes per theme.
@@ -35,13 +35,13 @@ Key requirements met and exceeded:
   - Desktop canvas 1040x670 logical (Pass 16: crisp 1:1 render + r20 heroes + 1.18x solo zoom for commanding, screenshot-ready presence); 390px mobile graceful. The playable viewport is a real handcrafted magical-fantasy art piece.
 - **Controls + UX:** Full keyboard parity (P1 WASD/Space/Q/E, P2 Arrows/Enter/U/O), solo touch virtual stick + action pads, pause/mute/restart, overlays, no console errors.
 - **Audio:** WebAudio (attacks, hits, abilities, clears, boss, ambient) with mute persist.
-- **Verification:** 29/29 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15-20 camera/entry safety + spawn spacing). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas + all transitions, boss, relics, summary all work. Every room entry framed/safe, first foes readable.
+- **Verification:** 32/32 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15-23 camera/entry/spawn safety + shrine+enemy+atmospheric authorship). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas + all transitions, boss, relics, summary all work. Every room entry framed/safe, first foes readable, every room now has its own breathing atmospheric motes (Pass 23).
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
-## Verification (./scripts/verify.sh — 29/29 clean + manual)
+## Verification (./scripts/verify.sh — 32/32 clean + manual)
 ```
 ./scripts/verify.sh
-... 29/29 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 15-20 camera/entry/spawn safety + shrine+enemy authorship, preview entrypoint
+... 32/32 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 15-23 camera/entry/spawn safety + shrine+enemy+atmospheric (Pass 23 Ember Crypt embers) authorship, preview entrypoint
 ```
 Manual play (browser):
 - Load preview/index.html (or direct drop) → title → pick hero + dragon + optional P2 → ENTER.
@@ -77,8 +77,8 @@ Manual play (browser):
 - ✓ Heroes/dragons materially change (melee vs ranged, fire/ice/wind abilities, companion passives/actives).
 - ✓ 6 connected areas + progression + boss (not one arena).
 - ✓ Combat readable (telegraphs, flashes, particles, hit reactions, ability feedback).
-- ✓ Preview opens game directly. Verification matches reality. 29/29 green. Every room entry is framed and safe (no off-camera).
-- **Art mandate:** No generic canvas, no placeholder shapes, no lifeless pet. Handcrafted silhouettes, layered environments, expressive effects, focal composition — screenshot-worthy magical fantasy slice with Dragon Crew taste. Operator visual review feedback addressed in dedicated passes; kept polishing past "green checks".
+- ✓ Preview opens game directly. Verification matches reality. 32/32 green. Every room entry is framed and safe (no off-camera). Every room (incl. Ember Crypt) now has its own authored drifting atmospheric motes for consistent world life (Pass 23).
+- **Art mandate:** No generic canvas, no placeholder shapes, no lifeless pet. Handcrafted silhouettes, layered environments with consistent theme-specific atmospheric drifting motes in every room (Pass 23), expressive effects, focal composition — screenshot-worthy magical fantasy slice with Dragon Crew taste. Operator visual review feedback addressed in dedicated passes; kept polishing past "green checks".
 
 ## Release Notes (for PR / studio)
 **Dragonbound Depths** — a handcrafted co-op fantasy action RPG vertical slice.

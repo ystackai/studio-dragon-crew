@@ -74,6 +74,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 20 safe entry + transition camera framing (no snap offscreen on room changes; safer first spawns)" "grep -q 'Pass 20' $DROP/game.js && grep -q 'tryEnterDoor' $DROP/game.js && grep -q '195, y: 125' $DROP/game.js"
   check_shell "Dragonbound Pass 21 gentle 3-foe first room + entry bond burst (authored welcome particles)" "grep -q 'Pass 21' $DROP/game.js && grep -q 'bond awakening' $DROP/game.js && grep -q 'createParticle' $DROP/game.js"
   check_shell "Dragonbound Pass 22 magical bond rim lights + boosted focal halos (stronger protagonist presence and silhouette authorship)" "grep -q 'Pass 22' $DROP/game.js && grep -q 'rim lights' $DROP/game.js && grep -q 'focal key lights' $DROP/game.js"
+  check_shell "Dragonbound Pass 23 Ember Crypt atmospheric embers + theme mote consistency (deeper environmental authorship in every room)" "grep -q 'Pass 23' $DROP/game.js && grep -q 'Ember Crypt atmospheric embers' $DROP/game.js && grep -q 'crypt' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -87,6 +88,7 @@ verify_dragonbound() {
   echo "  6. Check 1040px desktop (crisp authored art) and 390px mobile-width layouts"
   echo "  7. Win a run — see the new victory canvas triumph illustration in summary overlay"
   echo "  8. Note Pass 22: heroes/dragon now have luminous bond rims + stronger warm halos for focal pop (screenshot the playfield)"
+  echo "  9. Note Pass 23: Ember Crypt (room 5) now has its own drifting ember/soot atmosphere for consistent handcrafted room life across all 6 areas"
   echo
 }
 
