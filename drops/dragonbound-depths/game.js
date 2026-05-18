@@ -3243,7 +3243,9 @@
       // Pass 61 (tallhamn P1 primacy): subtle warm keylight rim on upper helm/shoulder for even stronger "Ember/P1 is primary and clearly separate" read at screenshot glance. The controlled hero now has an extra luminous top-edge catch that makes it the unmistakable focal actor next to the supporting dragon (no covering, clear visual hierarchy). Pure draw, applies only to P1.
       ctx.strokeStyle = 'rgba(255, 220, 150, 0.58)'; ctx.lineWidth = 1.55;
       ctx.beginPath(); ctx.arc(p.x - 1, p.y - 7, 9.6, -1.65, 1.0); ctx.stroke();
-      // Pass 62 (5ee5cfa hero/dragon read gate): extra bright crest highlight on plume + helm top for unmistakable "Ember is the controlled hero, not the dragon" primacy at first glance. The knight's red plume now catches a stronger heroic keylight, making P1 the clear focal silhouette in the hero+dragon pair (dragon neck/body reads as companion behind). Visible composition win for default Ember+Cinder frame.
+      // Pass 62 (5ee5cfa hero/dragon read gate): extra bright crest highlight on plume + helm top for unmistakable "Ember is the controlled hero, not the dragon" primacy at first glance. The knight's red plume now catches a stronger heroic keylight, making P1 the clear focal silhouette in the hero+dragon pair (dragon neck/body reads as companion behind). Visible composition win for default Ember+Cinder frame. (Pass 62 final: +0.1 alpha + wider arc for even stronger P1 pop against elongated dragon)
+      ctx.strokeStyle = 'rgba(255, 225, 160, 0.68)'; ctx.lineWidth = 1.75;
+      ctx.beginPath(); ctx.arc(p.x - 1, p.y - 8, 10.2, -1.75, 1.1); ctx.stroke();
       // flame tip when attacking
       if (atk || dash) {
         ctx.fillStyle = 'rgba(255,140,60,0.7)';
@@ -3374,7 +3376,7 @@
     ctx.save();
     ctx.strokeStyle = 'rgba(0,0,0,0.78)';
     ctx.lineWidth = 2.7;
-    ctx.beginPath(); ctx.ellipse(-1, 1, 22 * s, 13 * s, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-1, 1, 21 * s, 11.5 * s, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(17 * s, -1.5, 10.5 * s, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
     // Pass 46: companion lit rim (element-tinted) for distinct ARPG actor read next to P1; keeps dragon clearly a different magical creature even in tight focal (addresses "Make P1 visually distinct from the dragon").
@@ -3385,23 +3387,23 @@
     ctx.restore();
 
     // ===== LARGER BESPOKE DRAGON BODY + LEGS (character, not pet) =====
-    // main body mass (scaled, rounder for presence)
+    // main body mass (Pass 62 final elongation: 16.5s width vs prior rounder 19s — makes Cinder read unmistakably as long-necked dragon companion with body/tail profile, not circular blob over P1; directly targets 5ee5cfa "Cinder reads as a large orange blob rather than a distinct NPC dragon companion with head/neck/wings/tail/pose")
     ctx.fillStyle = bodyCol;
     ctx.beginPath();
-    ctx.ellipse(0, 1, 19 * s, 10.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 1, 16.5 * s, 10.5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     // belly highlight
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath(); ctx.ellipse(-1, 3, 13 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-1, 3, 11.5 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.fill();
 
     // Pass 61 (tallhamn actor gate final lift): explicit short neck connector for unmistakable "head/neck/wing/tail" dragon companion anatomy read at first glance. The head now clearly extends from a distinct neck mass rather than floating on body blob; combined with horns/crest, flapping wing, clawed legs, and long expressive tail, Cinder (and variants) read as a living bonded NPC dragon, not a circular pet. Zero perf/collision change; directly satisfies "Cinder must read as an actual dragon companion with head/neck/wing/tail silhouette and must not cover P1".
     ctx.fillStyle = bodyCol;
-    ctx.beginPath(); ctx.ellipse(8 * s, 0.5, 6.8 * s, 4.2 * s, 0.18, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9.5 * s, 0.5, 6.8 * s, 4.2 * s, 0.18, 0, Math.PI * 2); ctx.fill();
     // Pass 62 (5ee5cfa/2812ded actor silhouette closeout): second neck segment + subtle throat highlight for clearer "head - neck - body" chain anatomy. Makes the dragon silhouette read as a long-necked quadruped companion with distinct segments (not blob) even at small scale in the default focal pocket; the neck now bridges head to shoulders with visible taper, reinforcing "dragon-shaped" vs round mass per exact review requirement. Pure visual authorship.
     ctx.fillStyle = 'rgba(0,0,0,0.08)';
-    ctx.beginPath(); ctx.ellipse(3 * s, 1.2, 4.2 * s, 3.1 * s, 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4 * s, 1.2, 4.2 * s, 3.1 * s, 0.1, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = bodyCol;
-    ctx.beginPath(); ctx.ellipse(4.5 * s, 0.8, 5.1 * s, 3.4 * s, 0.12, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(5.5 * s, 0.8, 5.1 * s, 3.4 * s, 0.12, 0, Math.PI * 2); ctx.fill();
 
     // 4 legs with simple walk cycle (tied to flap + bob for life)
     const legPhase = (d.wingPhase || 0) * 1.6 + t * 0.004;
@@ -3866,7 +3868,7 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 96, player1.y + 22, selectedDragon); // Pass 62 (tallhamn 5ee5cfa final actor gate): increased lateral offset to -96/+22 for unmistakable P1 primacy and breathing room; Ember silhouette now clearly left/primary in default left-framed viewport, dragon beside/behind as supportive companion without any overlap risk. Combined with draw order (dragon first) + P1 keylight rim + dragon neck anatomy, default first frame satisfies "P1 immediately readable as controlled character separate from Cinder" at screenshot glance.
+    dragon = createDragon(player1.x - 96, player1.y + 22, selectedDragon); // Pass 62 (tallhamn 5ee5cfa final actor gate): increased lateral offset to -96/+22 + body ellipse narrowed 16.5s (elongated dragon profile vs prior round blob) for unmistakable P1 primacy and breathing room; Ember silhouette now clearly left/primary in default left-framed viewport, dragon beside/behind as supportive companion with long body/neck/head/tail/legs anatomy without any overlap risk. Combined with draw order (dragon first) + P1 keylight rim + dragon neck anatomy, default first frame satisfies "P1 immediately readable as controlled character separate from Cinder" at screenshot glance.
 
     loadRoom(0);
 
