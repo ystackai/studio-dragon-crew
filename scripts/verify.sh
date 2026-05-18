@@ -72,6 +72,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 18 shrine visual authorship + responsive interaction (pedestal, gem, near glow/sparkles for decision moments)" "grep -q 'Pass 18' $DROP/game.js && grep -q 'shrine pedestal' $DROP/game.js && grep -q 'responsive near-player' $DROP/game.js"
   check_shell "Dragonbound Pass 19 immediate framing + spawn safety (central entry, no off-left) + victory triumph canvas art" "grep -q 'Pass 19' $DROP/game.js && grep -q 'victory-canvas' $DROP/index.html && grep -q 'drawVictoryArt' $DROP/game.js"
   check_shell "Dragonbound Pass 20 safe entry + transition camera framing (no snap offscreen on room changes; safer first spawns)" "grep -q 'Pass 20' $DROP/game.js && grep -q 'tryEnterDoor' $DROP/game.js && grep -q '195, y: 125' $DROP/game.js"
+  check_shell "Dragonbound Pass 21 gentle 3-foe first room + entry bond burst (authored welcome particles)" "grep -q 'Pass 21' $DROP/game.js && grep -q 'bond awakening' $DROP/game.js && grep -q 'createParticle' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"

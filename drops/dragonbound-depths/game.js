@@ -407,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry).
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -438,8 +438,7 @@
         spawns: [
           {x: 195, y: 125, type: 'skitter'},
           {x: 590, y: 510, type: 'skitter'},
-          {x: 920, y: 235, type: 'archer'},
-          {x: 810, y: 555, type: 'skitter'}
+          {x: 920, y: 235, type: 'archer'}
         ]
       },
       {
@@ -2920,7 +2919,7 @@
     chainCounter = 0;
     runStats = { kills: 0, rooms: 0, relics: [], startTime: Date.now() };
 
-    // Pass 19/20: safer central spawn + repositioned first enemies for breathing room; immediate framing before RAF (no off-camera entry frame). Full run transitions also now framed safely.
+    // Pass 19-21: safer central spawn + 3-foe first room (gentle readable entry) + immediate framing + bond burst particles on cold start. Full run transitions framed too.
     player1 = createPlayer(360, 340, false, selectedHero);
     if (p2Enabled) {
       player2 = createPlayer(410, 390, true, selectedHero);
@@ -2937,6 +2936,14 @@
     camera.zoom = p2Enabled ? 1.02 : 1.18;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
+
+    // Pass 21: small authored "bond awakening" particle burst on entry for extra magical first-frame wonder (fits art mandate "moments that look worth sharing")
+    const entryX = player1.x, entryY = player1.y;
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * 6.28 + rand(-0.2, 0.2);
+      const sp = 0.6 + Math.random() * 0.9;
+      particles.push(createParticle(entryX + Math.cos(a) * 18, entryY + Math.sin(a) * 14 - 6, Math.cos(a) * sp, Math.sin(a) * sp - 0.3, 18 + rand(4, 14), '#c8a2ff', 1.8 + Math.random(), 'spark'));
+    }
 
     gameState = 'playing';
     lastTime = performance.now();
