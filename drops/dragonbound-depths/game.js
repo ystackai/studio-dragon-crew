@@ -3278,9 +3278,9 @@
     ctx.beginPath(); ctx.ellipse(p.x - 1.5, p.y - 1, vr * 0.84, vr * 1.05, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
-    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 76: humanoid sprite redesign — coherent top-down knight assembled from distinct parts for a4cb22b / tallhamn humanoid_sprite_gate) =====
+    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 76: humanoid sprite redesign — coherent top-down knight assembled from distinct parts for a4cb22b / tallhamn humanoid_sprite_gate; Pass 77: visor+plume micro-elevation for even stronger "head/helmet + facing direction" read under iso y-compress) =====
     if (isEmber) {
-      // Ember Knight (Pass 76): coherent humanoid top-down/isometric ARPG hero silhouette built from readable parts — NOT a dominant oval/ring cluster.
+      // Ember Knight (Pass 76+77): coherent humanoid top-down/isometric ARPG hero silhouette built from readable parts — NOT a dominant oval/ring cluster.
       // Flowing multi-lobe cape (volume + sway), wide planted leg stance with greaves/boots, tapered armored torso (shoulder-to-waist path + chest plate + belt),
       // separate raised pauldrons (clear shoulder masses), distinct greathelm (dome + neck guard + horizontal visor slit for "head/face" read + facing),
       // tall back-swept red plume crest (heroic volume, idle flutter), arm + long flame sword held as natural extension (crossguard/pommel/flame tip along facing).
@@ -3371,21 +3371,23 @@
       ctx.beginPath(); ctx.arc(helmX, helmY, vr * 0.52, 0, Math.PI * 2); ctx.fill(); // dome
       ctx.fillStyle = '#162033';
       ctx.beginPath(); ctx.arc(helmX, helmY + vr*0.18, vr*0.44, 0.6, Math.PI * 1.4); ctx.fill(); // neck/guard
-      // visor slit (horizontal — gives "face/eyes" direction read)
+      // visor slit (horizontal — gives "face/eyes" direction read; Pass 77: thicker + tiny highlight rim for stronger facing/identity under iso shear)
       ctx.fillStyle = '#0a0f1a';
-      ctx.fillRect(helmX + fc * 8 - 7, helmY - 1, 14, 2.5);
+      ctx.fillRect(helmX + fc * 8 - 7, helmY - 1, 14, 3.5);
+      ctx.fillStyle = 'rgba(255,245,210,0.65)';
+      ctx.fillRect(helmX + fc * 8 - 6, helmY - 1.5, 12, 1.2);
 
-      // 7. Tall plume crest (dramatic back-swept heroic volume, red Ember identity, sways on idle; attached to helm rear for clear silhouette)
+      // 7. Tall plume crest (dramatic back-swept heroic volume, red Ember identity, sways on idle; attached to helm rear for clear silhouette; Pass 77: taller apex for better "head/helmet + facing" pop under y-compress iso projection)
       ctx.fillStyle = '#c23a2a';
       ctx.beginPath();
       ctx.moveTo(helmX - fc*2 - 4, helmY - vr*0.38);
-      ctx.quadraticCurveTo(helmX + 2 - fc*4, helmY - vr*0.92 + plumeSway*0.6, helmX + 8 + fc*2, helmY - vr*0.32 + plumeSway*0.25);
+      ctx.quadraticCurveTo(helmX + 2 - fc*4, helmY - 1.05*vr + plumeSway*0.6, helmX + 8 + fc*2, helmY - vr*0.32 + plumeSway*0.25);
       ctx.lineTo(helmX + 4 + fc*1, helmY - vr*0.28);
       ctx.fill();
       ctx.fillStyle = '#9c2f22';
       ctx.beginPath();
       ctx.moveTo(helmX - fc*3 - 6, helmY - vr*0.28);
-      ctx.quadraticCurveTo(helmX - 2, helmY - vr*0.68 + plumeSway*0.35, helmX + 5, helmY - vr*0.22 + plumeSway*0.15);
+      ctx.quadraticCurveTo(helmX - 2, helmY - 0.78*vr + plumeSway*0.35, helmX + 5, helmY - vr*0.22 + plumeSway*0.15);
       ctx.fill();
 
       // 8. Held flame sword (arm + blade as natural extension of figure; crossguard/pommel/flame for "weapon" identity, orients with facing)
