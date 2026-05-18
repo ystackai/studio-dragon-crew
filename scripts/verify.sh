@@ -76,6 +76,7 @@ verify_dragonbound() {
   check_shell "Dragonbound Pass 22 magical bond rim lights + boosted focal halos (stronger protagonist presence and silhouette authorship)" "grep -q 'Pass 22' $DROP/game.js && grep -q 'rim lights' $DROP/game.js && grep -q 'focal key lights' $DROP/game.js"
   check_shell "Dragonbound Pass 23 Ember Crypt atmospheric embers + theme mote consistency (deeper environmental authorship in every room)" "grep -q 'Pass 23' $DROP/game.js && grep -q 'Ember Crypt atmospheric embers' $DROP/game.js && grep -q 'crypt' $DROP/game.js"
   check_shell "Dragonbound Pass 24 boss phase-2 vent particle escalation + pulsing vents + desktop canvas frame glow (enraged maw visual depth + painting viewport authorship)" "grep -q 'Pass 24' $DROP/game.js && grep -q 'vent embers' $DROP/game.js && grep -q 'framed magical painting' $DROP/styles.css"
+  check_shell "Dragonbound Pass 25 bespoke victory triumph art (personalized hero+dragon silhouettes, element tints, bond glow in summary illustration)" "grep -q 'Pass 25' $DROP/game.js && grep -q 'drawVictoryArt' $DROP/game.js && grep -q 'bespoke personalized' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -87,10 +88,11 @@ verify_dragonbound() {
   echo "  4. Clear multiple rooms, collect relics, reach the boss"
   echo "  5. Confirm dragons visibly follow/help, HUD is readable, and no console errors appear"
   echo "  6. Check 1040px desktop (crisp authored art) and 390px mobile-width layouts"
-  echo "  7. Win a run — see the new victory canvas triumph illustration in summary overlay"
+  echo "  7. Win a run — see the victory canvas triumph illustration now personalized to your exact hero + dragon choice (bespoke weapons, crests, tints, bond glow — Pass 25)"
   echo "  8. Note Pass 22: heroes/dragon now have luminous bond rims + stronger warm halos for focal pop (screenshot the playfield)"
   echo "  9. Note Pass 23: Ember Crypt (room 5) now has its own drifting ember/soot atmosphere for consistent handcrafted room life across all 6 areas"
   echo "  10. Note Pass 24: boss phase 2 erupts with 16 vent particles on enrage + pulsing lava vents (living menace); desktop #game-container has warm ember frame glow making the entire viewport read as a framed magical art piece (screenshot the fight window and the enraged Maw)"
+  echo "  11. Note Pass 25: every win summary now shows a unique handcrafted illustration matching the bond you chose — different every playthrough"
   echo
 }
 

@@ -166,6 +166,12 @@
   function drawVictoryArt(canvas) {
     const ctx = canvas.getContext('2d', { alpha: true });
     const w = canvas.width, h = canvas.height;
+    // Pass 25: read chosen bond for bespoke personalized triumph art (unique per hero+dragon)
+    const heroId = (typeof player1 !== 'undefined' && player1 && player1.heroId) || 'ember';
+    const dragType = (typeof dragon !== 'undefined' && dragon && dragon.type) || 'cinder';
+    const heroCol = (typeof player1 !== 'undefined' && player1 && player1.color) || '#ff6b4a';
+    const dragCol = (typeof dragon !== 'undefined' && dragon && dragon.color) || '#ff8a4a';
+
     // Dark maw-ash gradient bg (victory over darkness, warm embers)
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#0f121c');
@@ -205,75 +211,119 @@
     ctx.fillRect(102, h - 38, 14, 5);
     ctx.fillRect(152, h - 35, 10, 4);
 
-    // Central glow / relic light from victory (focal warm pool)
+    // Central glow / relic light from victory — tinted to chosen dragon's element (Pass 25 bespoke)
+    const gR = dragCol;
     const glow = ctx.createRadialGradient(210, 52, 8, 210, 58, 72);
-    glow.addColorStop(0, 'rgba(255, 210, 140, 0.55)');
-    glow.addColorStop(0.4, 'rgba(255, 170, 90, 0.22)');
-    glow.addColorStop(1, 'rgba(80, 50, 30, 0)');
+    glow.addColorStop(0, gR + '88');
+    glow.addColorStop(0.35, gR + '33');
+    glow.addColorStop(1, 'rgba(60, 40, 28, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(140, 12, 140, 92);
 
-    // Hero (Ember Knight triumphant, sword raised, cape flow)
+    // Hero triumphant — bespoke per chosen class (Pass 25: unique silhouette + weapon + accent)
     const hx = 178, hy = 58;
     ctx.fillStyle = '#2f2520';
-    ctx.fillRect(hx - 7, hy + 4, 15, 22); // body + cloak
-    ctx.fillStyle = '#ff6b4a';
-    ctx.beginPath(); ctx.arc(hx, hy - 6, 8, 0, Math.PI * 2); ctx.fill(); // helm
-    // raised sword
-    ctx.strokeStyle = '#e8d8a0';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(hx + 3, hy + 2); ctx.lineTo(hx + 22, hy - 28); ctx.stroke();
-    ctx.fillStyle = '#ff8a4a';
-    ctx.beginPath(); ctx.arc(hx + 22, hy - 29, 3.5, 0, Math.PI * 2); ctx.fill();
-    // cape flourish
+    ctx.fillRect(hx - 7, hy + 4, 15, 22); // body + cloak base
+    ctx.fillStyle = heroCol;
+    ctx.beginPath(); ctx.arc(hx, hy - 6, 8, 0, Math.PI * 2); ctx.fill(); // helm/hood
+    if (heroId === 'frost') {
+      // Frost Witch: veil hood, crystal staff, ice shards
+      ctx.fillStyle = '#e0f4ff';
+      ctx.fillRect(hx - 10, hy - 14, 20, 5); // veil brim
+      ctx.strokeStyle = '#c8e8ff'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(hx + 4, hy + 3); ctx.lineTo(hx + 24, hy - 24); ctx.stroke(); // staff
+      ctx.fillStyle = 'rgba(180, 230, 255, 0.7)';
+      for (let s = 0; s < 3; s++) { ctx.beginPath(); ctx.arc(hx + 24 - s*3, hy - 24 + s*2, 1.8 - s*0.3, 0, 6.28); ctx.fill(); }
+    } else if (heroId === 'tide') {
+      // Tide Ranger: hood, ribbon spear, piercing line
+      ctx.fillStyle = 'rgba(110, 210, 170, 0.5)';
+      ctx.beginPath(); ctx.arc(hx, hy - 10, 9.5, 0, Math.PI * 2); ctx.fill(); // hood
+      ctx.strokeStyle = '#d0f0d8'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(hx + 2, hy + 1); ctx.lineTo(hx + 26, hy - 26); ctx.stroke(); // spear
+      ctx.fillStyle = heroCol;
+      ctx.beginPath(); ctx.arc(hx + 27, hy - 27, 3.2, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // Ember Knight (default): plumed helm, flame sword, cape
+      ctx.fillStyle = '#ff6b4a';
+      ctx.beginPath(); ctx.arc(hx, hy - 6, 8, 0, Math.PI * 2); ctx.fill(); // helm
+      ctx.strokeStyle = '#e8d8a0';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(hx + 3, hy + 2); ctx.lineTo(hx + 22, hy - 28); ctx.stroke();
+      ctx.fillStyle = '#ff8a4a';
+      ctx.beginPath(); ctx.arc(hx + 22, hy - 29, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // Shared cape flourish (tinted lightly)
     ctx.fillStyle = 'rgba(60, 40, 35, 0.7)';
     ctx.beginPath(); ctx.moveTo(hx - 6, hy + 6); ctx.quadraticCurveTo(hx - 18, hy + 18, hx - 9, hy + 28); ctx.fill();
 
-    // Dragon companion (Cinder-style, wings half-spread in triumph, head high, embers)
+    // Dragon companion — bespoke per chosen bond (Pass 25: head crest/breath/wings match element)
     const dx = 252, dy = 54;
     ctx.fillStyle = '#2a2320';
-    // body
-    ctx.beginPath(); ctx.ellipse(dx, dy + 6, 18, 11, -0.2, 0, Math.PI * 2); ctx.fill();
-    // head
-    ctx.fillStyle = '#ff8a4a';
-    ctx.beginPath(); ctx.arc(dx + 18, dy - 3, 7.5, 0, Math.PI * 2); ctx.fill();
-    // eye
+    ctx.beginPath(); ctx.ellipse(dx, dy + 6, 18, 11, -0.2, 0, Math.PI * 2); ctx.fill(); // body
+    ctx.fillStyle = dragCol;
+    ctx.beginPath(); ctx.arc(dx + 18, dy - 3, 7.5, 0, Math.PI * 2); ctx.fill(); // head
+    // eye (always)
     ctx.fillStyle = '#fff';
     ctx.beginPath(); ctx.arc(dx + 21, dy - 4, 1.8, 0, Math.PI * 2); ctx.fill();
-    // neck crest
-    ctx.fillStyle = '#c85a2a';
-    ctx.beginPath(); ctx.moveTo(dx + 12, dy - 2); ctx.lineTo(dx + 6, dy - 14); ctx.lineTo(dx + 15, dy - 1); ctx.fill();
-    // legs grounded
+    // legs + tail (grounded proud)
     ctx.fillStyle = '#3a2f28';
     ctx.fillRect(dx - 8, dy + 14, 4, 7);
     ctx.fillRect(dx + 4, dy + 13, 4, 8);
-    // tail curled proud
     ctx.strokeStyle = '#3a2f28';
     ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(dx - 14, dy + 4); ctx.quadraticCurveTo(dx - 28, dy + 2, dx - 32, dy + 14); ctx.stroke();
-    // wings (triumph spread hint)
+    // wings
     ctx.strokeStyle = '#4a3830';
     ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(dx - 2, dy - 4); ctx.quadraticCurveTo(dx - 14, dy - 22, dx + 2, dy - 18); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(dx + 6, dy - 2); ctx.quadraticCurveTo(dx - 4, dy - 26, dx + 14, dy - 16); ctx.stroke();
-    // breath/ember sparks
-    ctx.fillStyle = 'rgba(255, 150, 60, 0.7)';
-    for (let i = 0; i < 5; i++) {
-      const px = dx + 26 + i * 3.5 + Math.sin(i) * 2;
-      const py = dy - 6 + (i % 2) * 4;
-      ctx.beginPath(); ctx.arc(px, py, 1.3 + (i % 2) * 0.5, 0, Math.PI * 2); ctx.fill();
+
+    // Element-specific dragon flourish (Pass 25 bespoke)
+    if (dragType === 'cinder') {
+      // fire breath + embers
+      ctx.fillStyle = 'rgba(255, 140, 50, 0.75)';
+      ctx.beginPath(); ctx.moveTo(dx + 23, dy - 2); ctx.lineTo(dx + 36, dy - 7); ctx.lineTo(dx + 36, dy + 3); ctx.fill();
+      ctx.fillStyle = 'rgba(255, 170, 60, 0.6)';
+      for (let i = 0; i < 6; i++) {
+        const px = dx + 27 + i * 2.8 + Math.sin(i) * 1.5;
+        ctx.beginPath(); ctx.arc(px, dy - 5 + (i % 2) * 3, 1.1, 0, 6.28); ctx.fill();
+      }
+    } else if (dragType === 'rime') {
+      // ice crown + frost aura shards
+      ctx.strokeStyle = '#e0f8ff';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(dx + 12, dy - 8); ctx.lineTo(dx + 18, dy - 15); ctx.lineTo(dx + 25, dy - 7); ctx.stroke();
+      ctx.fillStyle = 'rgba(190, 235, 255, 0.55)';
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath(); ctx.arc(dx + 19 + i * 4, dy - 9, 1.6, 0, 6.28); ctx.fill();
+      }
+    } else {
+      // gale: wind tufts + gust lines
+      ctx.strokeStyle = '#d4f0c0';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath(); ctx.moveTo(dx + 24, dy - 6 - i * 2); ctx.quadraticCurveTo(dx + 32, dy - 9 - i * 3, dx + 38, dy - 5 - i * 1); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(180, 240, 160, 0.4)';
+      ctx.beginPath(); ctx.arc(dx + 34, dy - 4, 2.2, 0, 6.28); ctx.fill();
     }
 
-    // Floating relics (3 small orbs from choices, glowing)
+    // Bond glow arc between hero and dragon (Pass 25: the connection feels alive)
+    ctx.strokeStyle = 'rgba(255, 210, 140, 0.45)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(hx + 14, hy + 2); ctx.quadraticCurveTo(218, 42, dx - 6, dy + 4); ctx.stroke();
+
+    // Floating relics (3 small orbs, one tinted to dragon element for personalization)
     const relicY = 34;
+    const relicCols = [dragCol, '#8fd4ff', '#b3e8a0'];
     [168, 198, 230].forEach((rx, i) => {
-      ctx.fillStyle = i === 0 ? '#ff8a4a' : (i === 1 ? '#8fd4ff' : '#b3e8a0');
+      ctx.fillStyle = relicCols[i % 3];
       ctx.beginPath(); ctx.arc(rx, relicY, 3.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,240,0.6)';
       ctx.beginPath(); ctx.arc(rx - 0.8, relicY - 0.8, 1.1, 0, Math.PI * 2); ctx.fill();
     });
 
-    // Atmospheric gold motes + embers (victory particles)
+    // Atmospheric gold motes + embers (victory particles) — slight dragon tint influence
     ctx.fillStyle = 'rgba(255, 200, 120, 0.65)';
     for (let i = 0; i < 14; i++) {
       const mx = 48 + (i * 23 + (i % 3) * 7) % (w - 80);
@@ -407,7 +457,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection.
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;

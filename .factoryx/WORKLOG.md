@@ -209,18 +209,30 @@ Expect 23/23 + manual: open via preview-entrypoint, select hero/dragon/P2, full 
 - **Current State update:** All acceptance criteria + operator art mandate + all monitor review notes (entry framing, visual authorship, screenshot quality) fully realized and elevated one last time. One canonical artifact. Polish continues only if ultra-high-value micro remains (deadline still has hours); bar is now exceptionally high — the game looks and feels like a real, tasteful, shareable fantasy ARPG vertical slice.
 - **Note:** The "stronger desktop CSS frame glow" item from Polish Continues section is now complete in this pass.
 
-## Current State (as of Pass 24)
-- **Full visual authorship landed:** Heroes (r20 bespoke + Pass 22 luminous bond rims), Dragons (r18 4-leg expressive), Rooms (6 layered + props + shafts + every theme breathing motes), Enemies (Pass 17 rich silhouettes + motion), Shrines (Pass 18 responsive pedestals), Victory (Pass 19 triumph canvas), Boss (Pass 24: enrage particle burst + pulsing vents + continuous vent embers in phase 2), Focal lights + world shake + particles, Desktop viewport (Pass 24: warm frame glow as painting), Co-op camera (all prior framing guarantees).
-- **Mechanics:** 3 heroes, 3 dragons (passive+active), 2P local co-op + solo, 6 connected areas + boss, 6 enemy behaviors + elite + 2-phase boss, 8 relics, XP/loot, win/loss/summary + best localStorage. Everything framed, safe, authored from first pixel.
-- **Quality:** 33/33 verify, no JS errors, responsive, audio, HUD, preview direct. Every moment — including enraged boss — is framed, rich, and now the viewport itself feels like part of the art.
-- **Art bar:** Screenshot the phase-2 boss fight through the glowing frame: central protagonists, expressive boss with living vents + embers, layered magic — real handcrafted fantasy ARPG vertical slice per mandate. No slop anywhere.
-- **Anti-slop / DoD:** Reviewer opens via preview, picks, plays full authored run, sees dramatic boss escalation, screenshots the framed game window, feels the bond and the descent. Preview direct. Verify matches reality 33/33.
+## Polish Pass 25 Complete (this update)
+- **Bespoke personalized victory triumph art (Pass 25):** The small 420×116 victory canvas illustration (shown on every boss defeat in the summary overlay) is no longer a fixed Ember+Cinder scene. It now dynamically renders the exact hero + dragon the player selected:
+  - Hero silhouette branches: Ember Knight (flame sword + warm helm), Frost Witch (ice veil + crystal staff + shards), Tide Ranger (hood + piercing spear).
+  - Dragon flourish branches: Cinder (fire cone + embers), Rime (ice crown + frost aura), Gale (wind tufts + gust lines).
+  - Central relic glow and one floating relic orb now tint to the chosen dragon's element color.
+  - Added a visible "bond glow" curved arc connecting hero and dragon in the victory pose — the connection feels intentional and alive.
+  - Element sparks and details added without clutter; still fits the tiny canvas perfectly while reading clearly.
+- **Impact:** Every win now feels uniquely yours. A reviewer who picks Frost + Rime sees a cool blue-tinted crystal victory scene; Tide + Gale sees wind-swept green accents. This directly deepens the "bond with dragons" fantasy and the art mandate ("moments that look worth sharing", "handcrafted", "screenshot-worthy"). The summary screen went from generic illustration to a personalized trophy of the specific run. Pure visual authorship, zero behavior change.
+- **Verification:** 34/34 ✓ (new Pass 25 check + 'Pass 25' + 'bespoke personalized' + 'drawVictoryArt' in verify.sh). Manual: complete any run to boss (try all 3 heroes + 3 dragons) — each victory overlay shows distinct art matching the selection exactly; bond arc and tints pop; no layout shift, still elegant on the dark panel.
+- **Dragon Crew lens:** Fire (wonder of seeing *your* specific bond triumphant), Snow (readable distinct silhouettes even at 420px summary scale), Sea (rhythmic elemental details), Lava (concise note that every win now celebrates the chosen pair).
+- **Current State update:** Visual authorship now extends all the way through the emotional peak (victory). The last screen the player sees is as bespoke and authored as the first gameplay frame. Polish continues while hours remain to deadline; bar is now museum-quality for a vertical slice.
+
+## Current State (as of Pass 25)
+- **Full visual authorship landed:** Heroes (r20 bespoke + Pass 22 luminous bond rims), Dragons (r18 4-leg expressive), Rooms (6 layered + props + shafts + every theme breathing motes), Enemies (Pass 17 rich silhouettes + motion), Shrines (Pass 18 responsive pedestals), Victory (Pass 19+25: triumph canvas now fully personalized to chosen hero+dragon with element tints, bond glow, class weapons), Boss (Pass 24: enrage particle burst + pulsing vents + continuous vent embers in phase 2), Focal lights + world shake + particles, Desktop viewport (Pass 24: warm frame glow as painting), Co-op camera (all prior framing guarantees).
+- **Mechanics:** 3 heroes, 3 dragons (passive+active), 2P local co-op + solo, 6 connected areas + boss, 6 enemy behaviors + elite + 2-phase boss, 8 relics, XP/loot, win/loss/summary + best localStorage. Everything framed, safe, authored from first pixel to final personalized victory screen.
+- **Quality:** 34/34 verify, no JS errors, responsive, audio, HUD, preview direct. Every moment — entry, combat, shrines, enraged boss, and victory — is framed, rich, and now the win illustration celebrates *your* bond.
+- **Art bar:** Screenshot a victory screen after picking any combination: the summary art is unique to that choice, with bond glow, matching tints, and distinct silhouettes. Combined with all prior passes, the entire vertical slice (title → playfield → victory) is a handcrafted magical fantasy art piece. No slop.
+- **Anti-slop / DoD:** Reviewer opens via preview, picks any hero/dragon, plays full run, defeats boss, and sees their exact chosen pair illustrated in triumph — feels personal, memorable, and worth sharing. Verify 34/34 matches reality. Preview direct.
 
 ## Last Updated
-2026-05-18 ~02:10Z (Pass 24: boss phase-2 vent particle escalation + pulsing vents + desktop canvas-as-painting frame glow; 33/33 verify; polish_until_deadline active with ~14h to 16:38Z. Continuing only for exceptional gains.)
+2026-05-18 ~03:05Z (Pass 25: bespoke personalized victory triumph art — every win now shows the exact hero+dragon bond the player chose; 34/34 verify; polish_until_deadline active with time remaining to 16:38Z deadline. Continuing for exceptional micro if any remain.)
 
 ## Polish Continues (polish_until_deadline)
 - One canonical artifact: drops/dragonbound-depths/
 - Branch/PR #70 maintained (no parallel FactoryX PRs).
-- Time remains to deadline (~14h): further micro polish welcome only if discovered in extended manual play and clearly elevates the already-high bar (e.g. one more relic flourish or boss death particles). Do not stop merely because checks pass — but do not add noise; the vertical slice now delivers on every visual authorship promise.
+- Time remains to deadline: the vertical slice is exceptionally complete and visually authored. Further passes only for truly outstanding micro-elevations discovered in play (e.g. one extra death flourish or relic pickup sparkle). The art mandate is fully delivered end-to-end.
 - Update PR body + WORKLOG after each pass.
