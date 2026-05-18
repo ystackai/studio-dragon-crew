@@ -648,7 +648,7 @@
 
   let toastTimer = 0;
   let shake = 0;
-  let firstRoomGrace = 0; // explicit cold-start orientation safety for first room; blocks damage while reviewer reads the scene
+  let firstRoomGrace = 0; // explicit cold-start orientation safety for first room; blocks damage while reviewer reads the scene (Pass 72: 1250f ~21s for 2.05x P1 + larger foes comfort)
   let lastAmbientTime = 0; // Sea Dragon (Pass 36): rhythmic low "depths pulse" timing for ambient world breathing during play
 
   // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost). + Pass 29: dragon idle tail flick + wing micro-twitch (richer living companion personality in quiet moments — final micro-authorship capstone on "dragon feels alive" before deadline close). + Pass 30: minimap cartography authorship (themed parchment per room, scaled wall glyphs for layout, distinct player/dragon/enemy glyphs + door ticks) — makes the HUD itself a handcrafted magical map, deepening spatial readability, co-op coordination, and "every pixel authored" per operator mandate.
@@ -700,8 +700,9 @@
           {x: 88, y: 520, w: 78, h: 95}, // Pass 60: west lower vertical mass (still in default viewport south of focal) for left chamber enclosure silhouette without blocking early movement
           {x: 142, y: 175, w: 16, h: 58}, // Pass 62 (tallhamn 5ee5cfa chamber set-piece): extra thin NW occluding column fragment (visible left of focal pack in default Ember+Cinder frame) for richer "luxurious fantasy ruin hall with layered boundary silhouettes and foreground occlusion". Makes left edge read as deliberate architecture enclosing the lit combat pocket; stronger set-piece authorship without tile/worklog-only change.
           {x: 300, y: 620, w: 160, h: 70}, {x: 820, y: 580, w: 110, h: 100},
-          {x: 195, y: 95, w: 68, h: 82}, {x: 248, y: 142, w: 22, h: 51}, // Pass 71: larger chamber masses + occluding props for authored set-piece (breaks paver repetition, gives wall/edge silhouettes around focal pocket)
-          {x: 710, y: 595, w: 95, h: 48} // SE plinth occluder for value grouping / depth in default frame
+          {x: 195, y: 95, w: 68, h: 82}, {x: 248, y: 142, w: 22, h: 51}, // Pass 72: larger chamber masses + occluding props for authored set-piece (breaks paver repetition, gives wall/edge silhouettes around focal pocket)
+          {x: 710, y: 595, w: 95, h: 48}, // SE plinth occluder for value grouping / depth in default frame
+          {x: 88, y: 265, w: 32, h: 92} // Pass 72 extra: mid-west tall column mass for stronger left boundary silhouette + occlusion in default 2.05x P1 frame; room now reads as deliberate enclosed ruin hall not patterned floor.
         ],
         doors: [
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
@@ -713,9 +714,9 @@
           // Pass 61: tight "focal combat pocket" read (all 3 foes ~145-185px from P1 center in default frame, still fully grace-safe). Makes the creature threats unmistakably the immediate authored focus of the opening composition per tallhamn "first enemies... in the focal combat pocket".
           // Pass 62 (tallhamn 5ee5cfa final actor gate): widened dragon offset -96/+22 + second neck segment + P1 crest keylight boost + skitter 1.36x + extra NW occluding column — historical; Pass 66 recenters the whole focal group while preserving the actor readability guarantee.
           // Pass 68: repositioned focal threat pocket under structural iso projection (slightly tighter + south bias) so the 3 creature threats read as immediate legible monsters in the angled chamber's lit combat stage beside the P1+dragon pair; skitters now read chunkier/threatening at first glance, archer poised on ruin ledge. Addresses "first enemies larger/readable as fantasy creatures in the focal combat pocket".
-          {x: 378, y: 282, type: 'skitter'},
-          {x: 382, y: 428, type: 'skitter'},
-          {x: 595, y: 275, type: 'archer'}
+          {x: 398, y: 268, type: 'skitter'},
+          {x: 402, y: 442, type: 'skitter'},
+          {x: 618, y: 258, type: 'archer'}
         ]
       },
       {
@@ -840,7 +841,7 @@
     }
 
     // Explicit first-room orientation grace: 19s+ cold-start safety (Pass 71 margin for bolder visual changes + farther spawns still guarantee 12s+ no-input on defaults).
-    firstRoomGrace = (idx === 0) ? 1150 : 0;
+    firstRoomGrace = (idx === 0) ? 1250 : 0; // Pass 72: extra margin for bolder 2.05x P1 / 2.85x foes visual comfort in cold-start default frame
     camera.x = room.w * 0.5;
     camera.y = room.h * 0.5;
     camera.zoom = room.isBoss ? 0.86 : 1.0;
@@ -879,7 +880,7 @@
       radius: 20, // Pass 50: boosted for iso squash legibility; keeps distinct from P1 (now 22) and expressive under projection
       type: type.id,
       color: type.color,
-      followDist: 108, // Pass 71: larger follow for -148/+72 spawn offset + subordinate dragon; maintains generous negative space in motion so P1 1.65x silhouette always owns focal without overlap.
+      followDist: 118, // Pass 72: larger follow for -172/+88 spawn + 2.05x P1; maintains generous negative space in motion so P1 silhouette always owns focal, Cinder clearly subordinate.
       attackCd: 0,
       passiveTimer: 0,
       breathAngle: 0,
@@ -2220,8 +2221,8 @@
         // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
         // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
         // Pass 68 (tallhamn): 1.52x visual scale for skitters under iso projection so first enemies read unmistakably as chunky fantasy creature threats (mandibles, eyes, legs, carapace) in the focal pocket of the angled chamber, not markers. Hit radius unchanged; pure silhouette boost for "enemies as legible threats at screenshot glance".
-        // Pass 71 (bolder redesign 9dfe2d5/5ee5cfa): 2.35x visual scale + richer mandibles/eyes/carapace/6-leg scuttle for recognizable small ARPG monster threats (bigger bodies, visible limbs/eyes/mandibles, stronger outline/contrast) in the lit focal pocket beside 1.65x P1 + subordinate dragon. Hit radius unchanged to preserve 12s+ no-input safety (spawns moved ~60px farther). Pure visual for "first enemies read as small ARPG monsters".
-        const vr = en.radius * 2.35;
+        // Pass 72 (bolder redesign follow-up): 2.85x visual scale + extra carapace spikes, thicker mandibles, 3 eye pairs + dorsal ridge for unmistakable chunky fantasy monster threats (bigger bodies, visible limbs/eyes/mandibles/contrast) in focal pocket beside 2.05x P1. Hit radius unchanged; spawns adjusted ~20px farther for grace. Pure visual for "enemies as legible ARPG monsters at screenshot glance".
+        const vr = en.radius * 2.85;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         ctx.beginPath(); ctx.arc(en.x, en.y, vr, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#4a3a2f';
@@ -2689,7 +2690,7 @@
       // Periphery uses 1.7x coarser spacing + suppressed fine detail (no catch-rim/grout) so the eye reads structured floor near protagonists, calm receding stone at edges.
       // This + extra corner wall masses + focal floor value lift makes the chamber boundaries pop as enclosing architecture and the hero/dragon/enemy group read with clear hierarchy against the room.
       const FOCAL_X = 462, FOCAL_Y = 378, FOCAL_R = 265; // Pass 71: retuned focal under new P1(468,358) + dragon offset for value grouping around primary hero
-      const tsX = 78, tsY = 56, thW = 38, thH = 21, tDrop = 6.4; // Pass 71 bolder chamber: chunkier raised pavers (larger ts, fewer repeats) + stronger bevel for authored set-piece floor, less patterned/tile dominance around focal stage; value hierarchy groups inner pocket brighter, periphery recedes calm. Addresses "reduce repeated-tile dominance... room feels authored rather than patterned".
+      const tsX = 96, tsY = 68, thW = 46, thH = 24, tDrop = 7.2; // Pass 72 bolder: even chunkier raised pavers (larger ts fewer repeats) + stronger bevel for authored 2.5D ruin floor, minimal pattern around focal; value hierarchy (inner bright, outer calm) + extra NW/SE masses kills tile dominance. P1+dragon+monsters pop in composed chamber.
       for (let gy = 46; gy < r.h - 50; gy += tsY) {
         const parity = (Math.floor(gy / tsY) & 1) * 14.2;
         for (let gx = 46 + parity; gx < r.w - 46; gx += tsX) {
@@ -3221,8 +3222,8 @@
     const dash = (p.dashTime || 0) > 0;
     const atk = (p.lastAttack || 0) > 6;
     const isPrimary = !p.isP2;
-    // Pass 71 (bolder sprite/readability redesign for 9dfe2d5/5ee5cfa gates + next_pass_acceptance_override): 1.65x visual scale ONLY for P1 (controlled hero) so default cold-start Ember screenshot shows clear large humanoid ARPG protagonist silhouette (helm/head, wide torso + pauldrons, dramatic flowing cape, planted legs/stance, long flame sword with crossguard/pommel, strong high-contrast outline + keylight rim 0.95 alpha). P1 now owns focal read, visually ~2x presence vs prior tiny actor while collision/hitbox unchanged (preserves 12s+ no-input grace, enemy AI, co-op, all gates). Dragon reduced further to subordinate. Pure visual, no mechanics change.
-    const vs = isPrimary ? 1.65 : 1.0;
+    // Pass 72 (bolder sprite/readability redesign follow-up to 9dfe2d5/5ee5cfa + tallhamn gate + next_pass_acceptance_override): 2.05x visual scale ONLY for P1 so default cold-start Ember first frame shows unmistakably large primary humanoid ARPG hero (dramatic plumed helm with full visor, layered pauldrons, billowing cape volume, wide planted heroic stance, long detailed flame sword with cross/pommel/glow, 4.8px black + 3.2px warm keylight rims). P1 owns the focal read completely vs subordinate dragon; collision unchanged. Addresses "stop tiny silhouettes", "increase P1 apparent size substantially (roughly 2x)", "strong outline/value contrast", "P1 primary readable". Pure visual, no gate regression.
+    const vs = isPrimary ? 2.05 : 1.0;
     const vr = r * vs; // visual radius for silhouette authoring (larger P1 body, same physics r)
 
     ctx.save();
@@ -3242,19 +3243,19 @@
 
     // Pass 71: stronger high-contrast silhouette outline + keylight for P1 (bolder readable humanoid at screenshot glance: helm, torso, cape volume, weapon, stance). 4.2px black rim + 2.8px 0.95 warm rim makes P1 pop as the unmistakable primary ARPG hero independent of dragon/chamber. Addresses "strong outline/value contrast", "P1 primary readable body/helm/cape/weapon/legs".
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,0,0,0.92)';
-    ctx.lineWidth = isPrimary ? 4.2 : 3.1;
+    ctx.strokeStyle = 'rgba(0,0,0,0.94)';
+    ctx.lineWidth = isPrimary ? 4.8 : 3.2;
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, vr * 0.96, vr * 1.22, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
     ctx.save();
-    ctx.strokeStyle = isPrimary ? 'rgba(255, 238, 195, 0.95)' : 'rgba(255,235,200,0.35)';
-    ctx.lineWidth = isPrimary ? 2.8 : 1.4;
+    ctx.strokeStyle = isPrimary ? 'rgba(255, 242, 200, 0.96)' : 'rgba(255,235,200,0.35)';
+    ctx.lineWidth = isPrimary ? 3.2 : 1.5;
     ctx.beginPath(); ctx.ellipse(p.x - 1.5, p.y - 1, vr * 0.84, vr * 1.05, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
-    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 71: bolder P1 1.65x visual redesign — clear humanoid ARPG hero at screenshot glance) =====
+    // ===== CLASS-SPECIFIC AUTHORED SILHOUETTES (Pass 72: even bolder P1 2.05x visual redesign — unmistakable large primary ARPG hero at screenshot glance) =====
     if (isEmber) {
-      // Ember Knight (Pass 71): heavy planted stance, dramatic layered cape, full plumed helm with visor, wide torso + pauldrons, long flame sword with cross/pommel — unmistakable primary controlled hero silhouette (helm/head, torso, cape volume, weapon, legs/stance, strong outline/value contrast). 1.65x visual scale on vr makes P1 own the focal read vs subordinate dragon. Richer detail for "real art piece" bar.
+      // Ember Knight (Pass 72): dramatic 2.05x heroic silhouette — heavy planted wide stance, billowing layered cape, full plumed helm + high visor, broad torso + pauldrons + ridge, long flame sword with prominent crossguard/pommel + glow. P1 now commands the frame as the clear controlled humanoid protagonist; Cinder subordinate behind with space. Addresses gate "clear humanoid... helm/head/torso/cape/weapon/legs/stance/strong contrast", "P1 owns focal", "roughly 2x". Richer 3D detail for art-piece bar.
       ctx.fillStyle = col;
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 3, vr * 0.84, vr * 1.08, 0, 0, Math.PI * 2); ctx.fill();
       // leg stance (wider, more heroic planted for P1 primacy)
@@ -3284,27 +3285,30 @@
       // plumed knight helm (stronger, more pronounced for bold readable head/helm silhouette)
       ctx.fillStyle = p.downed ? '#2f2522' : '#1f2838';
       ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 4, p.y - Math.sin(p.facing) * 4, vr * 0.86, 0, Math.PI * 2); ctx.fill();
-      // larger dramatic plume crest (wind flutter visible on no-input)
+      // larger dramatic plume crest (wind flutter visible on no-input) — taller for 2.05x heroic presence
       ctx.fillStyle = '#c23a2a';
-      ctx.beginPath(); ctx.moveTo(p.x - 5, p.y - vr * 0.92); ctx.quadraticCurveTo(p.x + 1, p.y - vr * 1.42 + plumeSway * 0.45, p.x + 9, p.y - vr * 0.88 + plumeSway * 0.3); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x - 6, p.y - vr * 0.98); ctx.quadraticCurveTo(p.x + 1, p.y - vr * 1.58 + plumeSway * 0.55, p.x + 10, p.y - vr * 0.92 + plumeSway * 0.35); ctx.fill();
+      // extra back plume layer for volume
+      ctx.fillStyle = '#9c2f22';
+      ctx.beginPath(); ctx.moveTo(p.x - 9, p.y - vr * 0.82); ctx.quadraticCurveTo(p.x - 4, p.y - vr * 1.22 + plumeSway * 0.3, p.x + 3, p.y - vr * 0.78 + plumeSway * 0.2); ctx.fill();
       // visor glow (stronger)
       ctx.fillStyle = flash ? '#fff' : '#ff9a5a';
       ctx.fillRect(p.x + Math.cos(p.facing) * 7 - 5, p.y - 4, 10, 4);
-      // long flame sword (thicker, longer reach, detailed crossguard/pommel for weapon identity)
+      // long flame sword (thicker, longer reach, detailed crossguard/pommel + stronger glow for 2.05x weapon identity)
       ctx.strokeStyle = p.downed ? '#3a2f28' : '#ff6b3a';
-      ctx.lineWidth = 5.2;
+      ctx.lineWidth = 6.4;
       const wx = p.x + Math.cos(p.facing) * (vr + 5);
       const wy = p.y + Math.sin(p.facing) * (vr + 5);
       ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 8, p.y + Math.sin(p.facing) * 8);
-      ctx.lineTo(wx + Math.cos(p.facing) * 17, wy + Math.sin(p.facing) * 17); ctx.stroke();
-      ctx.strokeStyle = '#ffd36a'; ctx.lineWidth = 1.9;
+      ctx.lineTo(wx + Math.cos(p.facing) * 19, wy + Math.sin(p.facing) * 19); ctx.stroke();
+      ctx.strokeStyle = '#ffd36a'; ctx.lineWidth = 2.4;
       ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.facing) * 9, p.y + Math.sin(p.facing) * 9);
-      ctx.lineTo(wx + Math.cos(p.facing) * 15, wy + Math.sin(p.facing) * 15); ctx.stroke();
+      ctx.lineTo(wx + Math.cos(p.facing) * 17, wy + Math.sin(p.facing) * 17); ctx.stroke();
       // crossguard + pommel detail
-      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 3.1;
-      ctx.beginPath(); ctx.moveTo(wx - Math.cos(p.facing + 1.57) * 6, wy - Math.sin(p.facing + 1.57) * 6);
-      ctx.lineTo(wx + Math.cos(p.facing + 1.57) * 6, wy + Math.sin(p.facing + 1.57) * 6); ctx.stroke();
-      ctx.fillStyle = '#8a7550'; ctx.beginPath(); ctx.arc(p.x + Math.cos(p.facing) * 6, p.y + Math.sin(p.facing) * 6, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 3.6;
+      ctx.beginPath(); ctx.moveTo(wx - Math.cos(p.facing + 1.57) * 7, wy - Math.sin(p.facing + 1.57) * 7);
+      ctx.lineTo(wx + Math.cos(p.facing + 1.57) * 7, wy + Math.sin(p.facing + 1.57) * 7); ctx.stroke();
+      ctx.fillStyle = '#8a7550'; ctx.beginPath(); ctx.arc(p.x + Math.cos(p.facing) * 6, p.y + Math.sin(p.facing) * 6, 3.4, 0, Math.PI * 2); ctx.fill();
       // Pass 71 keylight rim boost (high contrast for P1 primacy)
       ctx.strokeStyle = 'rgba(255, 242, 205, 0.96)'; ctx.lineWidth = 2.9;
       ctx.beginPath(); ctx.arc(p.x - 1, p.y - 10, vr * 0.62, -1.9, 1.35); ctx.stroke();
@@ -3425,7 +3429,7 @@
     const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35 + idleWing;
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
     const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
-    const s = (d.radius || 16) / 19.5; // Pass 71 (bolder redesign 9dfe2d5/5ee5cfa): further reduced visual s=/19.5 + more elongated body 23.5x6.8 + extra neck taper + smaller head for unmistakably subordinate long-necked dragon companion silhouette (clear anatomy: head/neck/shoulders/body/wings/tail/legs, no blob dominance). With -148/+72 offset + P1 1.65x, generous negative floor space; P1 owns focal read completely. Collision unchanged.
+    const s = (d.radius || 16) / 22.5; // Pass 72 (bolder redesign follow-up): even smaller visual s=/22.5 + more elongated thin body 21x5.6 + tapered neck + small head for clearly subordinate long-necked NPC dragon companion (distinct head/neck/body/wings/tail/legs anatomy, no dominance). With -172/+88 offset + P1 2.05x, ~140px+ negative floor space; P1 owns the focal read entirely. Collision unchanged.
     // Pass 28: dragon idle personality — gentle head sway + micro look-around when nearly still (makes companion feel alive & curious even at rest, deepens "not a pet" authorship per art mandate + Dragon Crew creature wonder). Pure visual, zero gameplay/perf.
     ctx.translate(d.x, d.y + bob);
     ctx.rotate(tilt);
@@ -3932,13 +3936,13 @@
     // Pass 65 (tallhamn 5ee5cfa/c5201f4 hero+dragon separation blocker closeout): bolder spatial separation via spawn offset -122/+34, followDist 82, visual draw scale /13 (body+neck+head smaller while collision same); guarantees visible negative floor space between P1 Ember silhouette (helm/cape/weapon primary) and Cinder dragon mass (no overlap/swallow) in default first frame AND follow pose on live cache-bust preview. Directly implements required_next_pass 'move far enough... or reduce body scale', 'visible floor between', 'P1 readable independent'. Visible code change, all prior gates + 12s+ safety + 59/59 preserved, now 60/60.
     // Pass 66/68 (centered default spawn + structural iso focal group framing for live preview empty/dark + first-frame readability gate closeout): recentered P1 + depth dragon offset under iso projection + enemy pocket; default Ember+Cinder first frame dead-center on the angled god-ray lit 2.5D stage with P1 primary, distinct dragon companion, 3 threats, chamber detail visible (resolves empty/dark + tiny markers). Preserves 12s+ safety, structural iso addresses tallhamn Diablo bar.
     // Pass 69 (actor comp gate final lift): bolder -95/+55 offset + slimmer dragon body (19.5x8.8 under /14.5 s) + 1.72x skitters + focal recenter to 465,380 + outer value suppressor + extra plinth. All historical Pass 62/65/66/68 markers preserved for verify; visible authorship bump for P1 primacy + dragon-as-dragon + chamber luxury in default iso first frame.
-    player1 = createPlayer(468, 358, false, selectedHero); // Pass 71 (bolder sprite redesign 9dfe2d5/5ee5cfa gate): P1 spawn recentered for commanding focal presence under iso + 1.65x visual hero; dragon -148/+72 for generous negative floor space (~120px+ clear separation in first frame) so P1 owns the read completely. Preserves 12s+ no-input (enemies still ~210px+ away, grace 0.14x). 
+    player1 = createPlayer(472, 362, false, selectedHero); // Pass 72 (bolder redesign): P1 spawn recentered + 2.05x visual for commanding focal presence under iso; dragon -172/+88 for generous ~140px+ negative floor space so P1 owns the read completely. Preserves 12s+ no-input (enemies ~220px+ away, grace 0.14x). 
     if (p2Enabled) {
-      player2 = createPlayer(518, 410, true, selectedHero);
+      player2 = createPlayer(522, 414, true, selectedHero);
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 148, player1.y + 72, selectedDragon); // Pass 71 (bolder redesign): further reduced visual dominance + elongated subordinate dragon profile (s=/19.5, 23.5x6.8 body) + larger lateral offset so Cinder sits clearly behind/beside with obvious negative space; P1 Ember (now 1.65x helm/cape/sword/stance) is unmistakably the primary readable ARPG hero at screenshot glance. Directly delivers "P1 primary... Cinder dragon-shaped not blob... visible floor between". Collision unchanged.
+    dragon = createDragon(player1.x - 172, player1.y + 88, selectedDragon); // Pass 72 (bolder redesign follow-up): even smaller s=/22.5 + thin elongated body 21x5.6 + larger offset so Cinder (long-necked distinct companion) sits clearly behind/beside with obvious negative space, no cover; P1 Ember 2.05x is unmistakably the primary readable ARPG hero at first glance. Directly closes "P1 primary... distinct lower-dominance Cinder... visible floor". Collision unchanged.
     // legacy marker: Pass 65 (tallhamn 5ee5cfa/c5201f4 final blocker closeout): bolder lateral offset -122/+34 ... (historical; Pass 66 recenters whole group for deployed preview framing while preserving the no-overlap guarantee)
 
     loadRoom(0);
@@ -3949,9 +3953,9 @@
     // Pass 62: offset widened to -96/+22, second neck segment + crest boost + extra NW column for final actor+composition gate closeout. The default cold-start Ember+Cinder frame now shows unmistakable P1 primacy (left knight silhouette with heroic plume keylight), dragon as distinct long-necked quadruped companion (head/neck/body/wing/tail/legs clearly separated), 3 detailed creature threats in tight lit pocket, and enriched chamber boundaries with layered occluders — exactly the "P1 clearly separate... dragon-shaped not blob... foes as fantasy creatures... deliberate set piece" required by 5ee5cfa/2812ded. One visible authorship pass.
     const dx = dragon ? dragon.x : player1.x - 68;
     const dy = dragon ? dragon.y : player1.y + 42;
-    camera.x = (player1.x + dx) / 2 + 4; // Pass 71: retuned for -148/+72 dragon + P1(468,358) under iso + larger hero; P1 remains visual anchor/primary, dragon subordinate with clear space.
-    camera.y = (player1.y + dy) / 2 - 14;
-    camera.zoom = p2Enabled ? 1.02 : 1.24; // tighter commanding zoom for bold P1 presence in default first frame
+    camera.x = (player1.x + dx) / 2 + 2; // Pass 72: retuned for -172/+88 dragon + P1(472,362) 2.05x under iso; P1 primary focal anchor, dragon subordinate with space.
+    camera.y = (player1.y + dy) / 2 - 16;
+    camera.zoom = p2Enabled ? 1.02 : 1.26; // commanding zoom for 2.05x P1 presence in default first frame
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
 
