@@ -280,9 +280,9 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7)
-  const LOGICAL_W = 960;
-  const LOGICAL_H = 620;
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. Directly addresses "tiny/shape-based" per operator mandate.
+  const LOGICAL_W = 1040;
+  const LOGICAL_H = 670;
   let dpr = 1;
   let touch = {
     moveActive: false,
@@ -450,7 +450,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 18,
+      radius: 20,
       hp: 100,
       maxHp: 100,
       facing: -1.2,
@@ -472,7 +472,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 16,
+      radius: 18,
       type: type.id,
       color: type.color,
       followDist: 58,
@@ -1509,11 +1509,11 @@
     avgX /= alive.length; avgY /= alive.length;
     avgVx /= alive.length; avgVy /= alive.length;
 
-    let targetZoom = room.isBoss ? 0.82 : (alive.length > 1 ? 0.94 : 1.06);
+    let targetZoom = room.isBoss ? 0.82 : (alive.length > 1 ? 1.02 : 1.18);
     if (alive.length > 1) {
       const sep = dist(alive[0].x, alive[0].y, alive[1].x, alive[1].y);
-      if (sep > 180) targetZoom = Math.max(0.78, targetZoom - 0.07);
-      if (sep > 280) targetZoom = Math.max(0.70, targetZoom - 0.05);
+      if (sep > 180) targetZoom = Math.max(0.86, targetZoom - 0.08);
+      if (sep > 280) targetZoom = Math.max(0.78, targetZoom - 0.06);
     }
     camera.zoom = lerp(camera.zoom, targetZoom, 0.09);
 
@@ -1820,12 +1820,12 @@
     ctx.save();
     ctx.globalAlpha = 0.92;
     ctx.fillStyle = 'rgba(250, 230, 195, 0.052)';
-    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 82, 0, Math.PI * 2); ctx.fill(); }
-    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 60, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 72, 0, Math.PI * 2); ctx.fill(); }
+    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 90, 0, Math.PI * 2); ctx.fill(); }
+    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 66, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 80, 0, Math.PI * 2); ctx.fill(); }
     ctx.fillStyle = 'rgba(255, 248, 215, 0.024)';
-    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 44, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 40, 0, Math.PI * 2); ctx.fill(); }
+    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 48, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 44, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
 
     // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)
@@ -1837,7 +1837,7 @@
     }
 
     // vignette + atmospheric overlay (depth, keeps edges dark so focal pop on heroes/dragon is stronger)
-    const grd = ctx.createRadialGradient(LOGICAL_W * 0.5, LOGICAL_H * 0.48, 180, LOGICAL_W * 0.5, LOGICAL_H * 0.5, 620);
+    const grd = ctx.createRadialGradient(LOGICAL_W * 0.5, LOGICAL_H * 0.48, 180, LOGICAL_W * 0.5, LOGICAL_H * 0.5, 780);
     grd.addColorStop(0, 'rgba(0,0,0,0)');
     grd.addColorStop(1, 'rgba(4, 7, 14, 0.52)');
     ctx.fillStyle = grd;
@@ -2235,9 +2235,9 @@
     // downed state bar (more visible)
     if (p.downed) {
       ctx.fillStyle = 'rgba(180, 60, 50, 0.7)';
-      ctx.fillRect(p.x - 14, p.y + r * 0.85, 28, 3.5);
+      ctx.fillRect(p.x - 15, p.y + r * 0.85, 30, 3.5);
       ctx.fillStyle = 'rgba(255,220,200,0.5)';
-      ctx.fillRect(p.x - 13, p.y + r * 0.87, 26 * (p.reviveTimer / 90 || 0), 1.5);
+      ctx.fillRect(p.x - 14, p.y + r * 0.87, 28 * (p.reviveTimer / 90 || 0), 1.5);
     }
 
     // integrated P badge (readable, not tiny text)
@@ -2254,12 +2254,12 @@
     // HP bar (tighter, with subtle border for polish)
     const hpPct = Math.max(0, p.hp / p.maxHp);
     ctx.fillStyle = 'rgba(10,15,26,0.85)';
-    ctx.fillRect(p.x - 18, p.y - r - 14, 36, 6);
+    ctx.fillRect(p.x - 20, p.y - r - 15, 40, 6);
     ctx.fillStyle = p.isP2 ? '#7fd4ff' : '#ff8a5a';
-    ctx.fillRect(p.x - 17, p.y - r - 13, 34 * hpPct, 4);
+    ctx.fillRect(p.x - 19, p.y - r - 14, 38 * hpPct, 4);
     if (hpPct < 0.35) {
       ctx.fillStyle = 'rgba(255,80,60,0.6)';
-      ctx.fillRect(p.x - 17, p.y - r - 13, 34 * hpPct, 4);
+      ctx.fillRect(p.x - 19, p.y - r - 14, 38 * hpPct, 4);
     }
   }
 
@@ -2641,7 +2641,7 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 46, player1.y - 32, selectedDragon);
+    dragon = createDragon(player1.x - 52, player1.y - 36, selectedDragon);
 
     loadRoom(0);
 

@@ -29,16 +29,16 @@ Key requirements met and exceeded:
   - Dragons: radius 16, 4 walking legs + cycle, long tail, expressive eyes/breaths/horns/crowns, bob/tilt/flap, shadows — real character.
   - Rooms: layered textures, tree trunks/vines/mushrooms, crystal facets/stalagmites, pillars/runes, lava rocks/pools/stalactites, boss dais; light shafts, atmospheric particles (Pass 6+10).
   - Effects: type-specific glowing particles (fire/ice/wind), projectile trails/glows, focal hero/dragon bloom lights, richer feedback.
-  - Desktop canvas enlarged to 1040x670 for presence; 390px mobile graceful.
+  - Desktop canvas 1040x670 logical (Pass 16: crisp 1:1 render + r20 heroes + 1.18x solo zoom for commanding, screenshot-ready presence); 390px mobile graceful.
 - **Controls + UX:** Full keyboard parity (P1 WASD/Space/Q/E, P2 Arrows/Enter/U/O), solo touch virtual stick + action pads, pause/mute/restart, overlays, no console errors.
 - **Audio:** WebAudio (attacks, hits, abilities, clears, boss, ambient) with mute persist.
-- **Verification:** 23/23 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work.
+- **Verification:** 25/25 ✓ (core files, syntax, systems, hooks, audio/HUD, 390px, visual hooks, relics, preview entrypoint, Pass 15+16). scripts/verify.sh green. Manual: full run P1+P2, all classes, 6 areas, boss, relics, summary all work.
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
 ## Verification (./scripts/verify.sh — 23/23 clean + manual)
 ```
 ./scripts/verify.sh
-... 23/23 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px, preview entrypoint
+... 25/25 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 16 framing, preview entrypoint
 ```
 Manual play (browser):
 - Load preview/index.html (or direct drop) → title → pick hero + dragon + optional P2 → ENTER.
@@ -55,6 +55,7 @@ Manual play (browser):
 - Pass 12: Dynamic focal key lights + bloom on heroes/dragon.
 - Pass 13: 5th combat room (Ember Crypt) for spec.
 - Pass 14: Preview redirect to game root.
+- Pass 16: Higher-res canvas (1040×670 logical matching CSS), larger crisp heroes/dragons (r20/18), tighter protagonist-centric camera framing (solo 1.18) — final visual authorship polish making the playable viewport unmistakably handcrafted and focal.
 
 ## Known / Limitations (transparent)
 - Pure static client-side (localStorage for best/mute; perfect for FactoryX previews).

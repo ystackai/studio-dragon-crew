@@ -67,6 +67,7 @@ verify_dragonbound() {
   check_shell "Dragonbound visual authorship hooks present" "grep -q 'drawTitleArt' $DROP/game.js && grep -q 'drawRoomBackground' $DROP/game.js && grep -q 'drawDragon' $DROP/game.js"
   check_shell "Dragonbound combat feedback hooks present" "grep -q 'telegraph' $DROP/game.js && grep -q 'particles' $DROP/game.js && grep -q 'damageEnemy' $DROP/game.js"
   check_shell "Dragonbound Pass 15 focal+impact polish present (focal in camera + world shake)" "grep -q 'Pass 15' $DROP/game.js && grep -q 'world shake for combat impact' $DROP/game.js && grep -q 'focal key lights' $DROP/game.js"
+  check_shell "Dragonbound Pass 16 higher-res canvas + tighter framing for visual presence (1040x670 + r20 + zoom 1.18)" "grep -q 'Pass 16' $DROP/game.js && grep -q '1040' $DROP/game.js && grep -q '1.18' $DROP/game.js"
   check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
   check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
   check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
@@ -77,7 +78,7 @@ verify_dragonbound() {
   echo "  3. Verify WASD + Arrows, Space/Enter, Q/U, E/O controls"
   echo "  4. Clear multiple rooms, collect relics, reach the boss"
   echo "  5. Confirm dragons visibly follow/help, HUD is readable, and no console errors appear"
-  echo "  6. Check 960px desktop and 390px mobile-width layouts"
+  echo "  6. Check 1040px desktop (crisp authored art) and 390px mobile-width layouts"
   echo
 }
 
