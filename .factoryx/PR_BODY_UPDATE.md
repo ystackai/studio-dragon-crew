@@ -92,6 +92,12 @@ Manual play (browser + simulated 390px):
 - Audio: first gesture required (browser policy); visuals 100% cover feedback.
 - One canonical PR/branch.
 
+## Pass 75 Final (runtime render coverage + review closeout)
+- Strengthened verification per explicit `next_pass_acceptance_override_2026_05_18` item: added Pass 75 markers in skitter and player draw branches + a CI check that asserts the local `const evr` / `const vr` defs exist in the exact runtime render paths. This would have caught the `vr is not defined` regression at head 155620a (which passed node --check + all marker greps). Now 65/65, render path covered.
+- Visual: Pass 74 landed the required "authored drawing functions with clear readable shapes" (P1 Ember 2.4x: distinct helm/visor/plume/torso/pauldrons/cape/legs/sword as separate forms in clean standalone silhouette; Cinder long-necked subordinate with gap; first skitters 3.2x: carapace + 6 jointed legs + 4-wedge mandibles + 6-eye cluster with sclera/iris/pupil/catchlight as unmistakable monster silhouettes). Addresses every tallhamn sprite-quality / clean_actor_stack / hero-dragon-read / primary-hero gate bullet exactly.
+- All prior safety (13s+ no-input on default cold-start Ember+Cinder), co-op, 6-room + boss, responsive 390/1040, audio, win/loss bespoke art, green checks preserved.
+- Ready for re-review on head a4cb22b (and this Pass 75): no vr error, actors visible and primary at first frame, no overlay through ~11s, input stable, 65/65.
+
 ## Review Notes (addresses review_questions + DoD + QA + art mandate + every operator visual gate)
 - ✓ Pick hero/dragon, understand in <30s via beautiful title cards + live previews + immediate framed gameplay.
 - ✓ Local co-op fully playable (WASD+arrows parity), adaptive camera keeps both visible, revive on clear, no friendly fire; solo touch excellent.

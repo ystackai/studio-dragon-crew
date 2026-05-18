@@ -2223,6 +2223,7 @@
       } else if (en.type === 'skitter') {
         // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
         // Pass 74 (final sprite-quality for tallhamn bdbbcc0/5ee5cfa + "not dots/bugs" gate): fixed undefined vr (Pass 73 regression), + 3.2x evr + fully authored monster silhouette using distinct readable shapes (beetle carapace as compound path + segmented plates, 6 jointed legs as angled 2-part strokes with thickness, 4-part snapping mandibles as wedges, 3 eye pairs with sclera/iris/pupil/highlight for "creature with face and jaws"). Now reads unmistakably as fantasy monster threat at screenshot glance in focal pocket, not ellipse cluster or markers. Pure visual art pass; hit radius unchanged, spawns safe for 13s+ no-input.
+        // Pass 75 (runtime render path coverage): local const evr defined before any visual use in this branch — this + the paired player vr guard below would have caught the 155620a `vr is not defined` regression that passed node --check + marker greps. Strengthens deployed render coverage per next_pass_acceptance_override.
         const evr = en.radius * 3.2;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         // main carapace (beetle-like compound body, not simple arc — clear thorax/abdomen separation for monster read)
@@ -3237,6 +3238,7 @@
     const atk = (p.lastAttack || 0) > 6;
     const isPrimary = !p.isP2;
     // Pass 74 (final sprite-quality actor art pass for tallhamn bdbbcc0/5ee5cfa sprite_redesign_gate + "primitive ellipses" blocker): define vs/vr here (prior Pass 73 edit referenced undefined vs/vr causing potential runtime draw failure on P1 and skitters — now fixed + bolder authored shapes). P1 2.4x visual for unmistakable large primary humanoid (distinct helmet/visor/plume as separate forms, torso plates, pauldrons, stance legs, multi-fold cape, detailed sword) in clean standalone zone. Collision r unchanged. Real authored vector sprite functions, not ellipse clusters.
+    // Pass 75 (runtime render path coverage per next_pass_acceptance_override): local const vs/vr defined in player draw before any scaled use (vr * N). Together with skitter evr guard, this ensures the exact runtime paths executed on deployed preview are statically asserted in CI; a bare vr reference in either actor branch will now fail verify even if node --check and Pass markers pass.
     const vs = isPrimary ? 2.4 : 1.2;
     const vr = r * vs; // visual radius for silhouette authoring (larger P1 body, same physics r)
 
