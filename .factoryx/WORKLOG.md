@@ -7,7 +7,7 @@
 **Preview Entrypoint:** .factoryx/preview-entrypoint → drops/dragonbound-depths/index.html  
 **PR:** https://github.com/ystackai/studio-dragon-crew/pull/70 (maintained throughout; #70)  
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish_until_deadline)  
-**Current Head (local):** <pending new commit after Pass 59> (Pass 59 visible focal value + skitter mandible/ridge polish for tallhamn final art gate; will push + post retest comment with exact cache-bust URL + first-frame/10s+/smoke/55/55 per payload override)  
+**Current Head (local):** 64648b8 (Pass 59 visible focal value + skitter mandible/ridge polish for tallhamn final art gate pushed; retest comment with exact cache-bust URL + first-frame/12s+/smoke/55/55 posted on PR #70 per payload)  
 
 ## Status (as of last sync)
 - **Verification:** 55/55 ✓ (./scripts/verify.sh all Dragonbound Pass 15–59 + core + responsive + audio + co-op + 6 rooms + boss + relics + preview entrypoint; Pass 59 visible focal value boost + skitter mandible/ridge detail for final tallhamn art gate polish)
