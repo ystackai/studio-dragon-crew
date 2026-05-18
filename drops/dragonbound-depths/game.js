@@ -2467,6 +2467,26 @@
     // dragon companion (beautiful, alive)
     if (dragon) drawDragon(ctx, dragon);
 
+    // Pass 85 (pre-deadline bond authorship for operator art mandate "bespoke dragons", "creature wonder", "moments worth sharing" + lingering "Cinder subordinate with negative space" notes): subtle glowing ember tether arc drawn in the generous visible floor gap between P1 knight (primary) and subordinate long-necked Cinder dragon. Low-alpha, slow pulse, curved to follow the "beside/behind" offset under iso. Tiny ember nodes at the ends sell the bonded companion fantasy at first screenshot glance without any silhouette overlap, value flattening, or competition with god rays/actors. Pure draw elevation in the exact default cold-start Ember+Cinder focal pocket; changes the live playfield composition as required for visual gate closure. Zero gameplay/collision/safety impact; preserves 13s+ no-input + all prior authorship.
+    if (player1 && dragon && currentRoomIdx === 0) {
+      const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0018;
+      const mx = (player1.x + dragon.x) * 0.5 + 8;
+      const my = (player1.y + dragon.y) * 0.5 - 4;
+      const pulse = 0.55 + Math.sin(t * 1.25) * 0.38;
+      ctx.save();
+      ctx.globalAlpha = 0.16 * pulse;
+      ctx.strokeStyle = '#ffaa66';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(player1.x - 9, player1.y + 7);
+      ctx.quadraticCurveTo(mx - 14, my + 11, dragon.x + 15, dragon.y - 1);
+      ctx.stroke();
+      ctx.fillStyle = '#ffcc88';
+      ctx.beginPath(); ctx.arc(player1.x - 9, player1.y + 7, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(dragon.x + 15, dragon.y - 1, 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
     // players (on top for hero primacy under iso)
     drawPlayer(ctx, player1, selectedHero);
     if (player2 && p2Enabled) drawPlayer(ctx, player2, selectedHero);
