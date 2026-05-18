@@ -678,9 +678,11 @@
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
         ],
         spawns: [
-          {x: 195, y: 125, type: 'skitter'},
-          {x: 590, y: 510, type: 'skitter'},
-          {x: 920, y: 235, type: 'archer'}
+          // Pass 32: safer first-room entry spawns (spread to periphery, >220px clearance from player cold-start 360,340).
+          // Gives reviewer 3-5s readable window to see P1+dragon+foes+room before any contact; addresses "first Grove enemy spawns too close" + instant-loss monitor blocker.
+          {x: 180, y: 160, type: 'skitter'},
+          {x: 1050, y: 190, type: 'archer'},
+          {x: 980, y: 620, type: 'skitter'}
         ]
       },
       {
@@ -1947,11 +1949,14 @@
   // ==================== DRAW ====================
   function draw() {
     if (!ctx || !room) return;
+    // Pass 32: root camera save/restore balance + setTransform guard (fixes live preview first-frame empty/off-camera + transform accumulation per urgent_root_cause_2026-05-18).
+    // Always reset to identity first so clear + all overlays are reliable even if prior frame had error or unbalanced state.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.save();
     ctx.fillStyle = '#0a0f1a';
     ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
-    // camera transform
+    // camera transform (world space)
     const scale = camera.zoom;
     const ox = LOGICAL_W * 0.5 - camera.x * scale;
     const oy = LOGICAL_H * 0.5 - camera.y * scale;
@@ -2408,6 +2413,9 @@
     if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
+    // Pass 32: restore the root camera save() so vignette, screen rumble, and touch controls are drawn in true screen space (LOGICAL_W/H identity).
+    // This balances the save at top of draw() (the one before camera translate/scale) and eliminates accumulation that caused "dark/empty first frame" and off-camera player in deployed preview.
+    ctx.restore();
 
     // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)
     if (shake > 0) {
@@ -2449,6 +2457,35 @@
       const gy = (i * 41 + (i % 7) * 13) % (r.h - 30) + 15;
       ctx.fillRect(gx, gy, 2, 2);
     }
+
+    // Pass 32: Diablo-style isometric/top-down ARPG floor composition (angled diamond planes + dual 28deg grid lines).
+    // Gives immediate "handcrafted fantasy combat room" read vs prior flat dark rect/minimap. Visual only (gameplay stays ortho); strong silhouettes pop against composed depth + focal lighting.
+    // Subtle parchment-like tile cues, boundary bevel, brighter center for screenshot-worthy first-frame authorship (addresses operator_diablo_isometric_blocker + visual review "not tiny dark flat").
+    ctx.save();
+    ctx.strokeStyle = (r.theme === 'crystal' || r.theme === 'sanctum') ? 'rgba(160,210,255,0.055)' : 'rgba(185,160,110,0.06)';
+    ctx.lineWidth = 1.6;
+    const isoA = 0.48; // ~28deg shear angle factor for diamond read
+    // primary diamond grid (one direction)
+    for (let d = -120; d < r.w + r.h; d += 68) {
+      ctx.beginPath();
+      ctx.moveTo(d, 0);
+      ctx.lineTo(d + r.h * isoA, r.h);
+      ctx.stroke();
+    }
+    // secondary crossed direction (forms diamond tiles)
+    for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
+      ctx.beginPath();
+      ctx.moveTo(0, d);
+      ctx.lineTo(r.w, d - r.w * isoA);
+      ctx.stroke();
+    }
+    // outer room boundary bevel (angled plane edge for depth)
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.rect(14, 14, r.w - 28, r.h - 28);
+    ctx.stroke();
+    ctx.restore();
 
     // ===== RICH LAYERED DEPTH + AUTHORED PROPS + LIGHTING (Pass 10 visual authorship) =====
     // Foreground/mid props, light shafts, architectural detail per theme for screenshot-worthy rooms.
