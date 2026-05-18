@@ -451,7 +451,7 @@
     return {
       x, y,
       vx: 0, vy: 0,
-      radius: 11,
+      radius: 16,
       type: type.id,
       color: type.color,
       followDist: 58,
@@ -2091,124 +2091,149 @@
     const t = performance.now();
     const flap = Math.sin((d.wingPhase || 0) * 0.9) * 0.7 + Math.sin(t / 420) * 0.35;
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
-    const tilt = Math.max(-0.18, Math.min(0.18, (d.vx || 0) * 0.022));
+    const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
+    const s = (d.radius || 16) / 11; // scale for larger authored dragon (Pass 9)
     ctx.translate(d.x, d.y + bob);
     ctx.rotate(tilt);
 
-    // body (subtle type accent)
-    let bodyCol = d.color;
+    const bodyCol = d.color;
+
+    // soft shadow for companion weight
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.ellipse(-2, 11 * s, 13 * s, 5 * s, 0, 0, Math.PI * 2); ctx.fill();
+
+    // ===== LARGER BESPOKE DRAGON BODY + LEGS (character, not pet) =====
+    // main body mass (scaled, rounder for presence)
     ctx.fillStyle = bodyCol;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 17, 8.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 1, 19 * s, 10.5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
+    // belly highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.ellipse(-1, 3, 13 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.fill();
 
-    // type-specific body detail / rim (luminous bespoke)
-    if (d.type === 'cinder') {
-      ctx.fillStyle = 'rgba(255,110,50,0.35)';
-      ctx.beginPath(); ctx.ellipse(-2, 0.5, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
-      // ember flecks
-      ctx.fillStyle = 'rgba(255,160,70,0.6)';
-      ctx.beginPath(); ctx.arc(-8, 2, 1.8, 0, 6.28); ctx.fill();
-      ctx.beginPath(); ctx.arc(4, -3, 1.4, 0, 6.28); ctx.fill();
-    } else if (d.type === 'rime') {
-      ctx.strokeStyle = 'rgba(230,245,255,0.55)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.ellipse(0, 0, 15.5, 7.8, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = 'rgba(200,235,255,0.4)';
-      ctx.beginPath(); ctx.arc(-5, -2, 2.2, 0, 6.28); ctx.fill();
-    } else {
-      // gale: wind-swept highlights
-      ctx.strokeStyle = 'rgba(210,255,195,0.4)';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(-9, -4); ctx.quadraticCurveTo(-2, -7, 7, -3); ctx.stroke();
+    // 4 legs with simple walk cycle (tied to flap + bob for life)
+    const legPhase = (d.wingPhase || 0) * 1.6 + t * 0.004;
+    const legCol = d.type === 'cinder' ? '#3a2a22' : (d.type === 'rime' ? '#2a3a4a' : '#1f3a2f');
+    ctx.fillStyle = legCol;
+    for (let li = 0; li < 4; li++) {
+      const lx = -11 * s + li * 7.5 * s;
+      const ly = 6 * s + Math.sin(legPhase + li * 1.3) * (1.2 + (li % 2) * 0.5);
+      const lLen = 5.5 * s + (li > 1 ? 1 : 0);
+      ctx.beginPath(); ctx.ellipse(lx, ly + lLen * 0.6, 2.8 * s, 3.8 * s, (li % 2 ? 0.6 : -0.6) + tilt * 0.5, 0, Math.PI * 2); ctx.fill();
+      // tiny claw
+      ctx.fillStyle = '#1a1f2a';
+      ctx.beginPath(); ctx.arc(lx + (li > 1 ? 1.5 : -1) * s, ly + lLen * 1.1, 1.1 * s, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = legCol;
     }
 
-    // head (position offset for life)
-    const hx = 15.5;
-    const hy = -1.2 + Math.sin(t / 380) * 0.4;
-    ctx.fillStyle = bodyCol;
-    ctx.beginPath();
-    ctx.arc(hx, hy, 7.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // type head accents
+    // type body rim / scales (richer)
     if (d.type === 'cinder') {
-      // small back-swept horns
+      ctx.fillStyle = 'rgba(255,110,50,0.32)';
+      ctx.beginPath(); ctx.ellipse(-3, 1.5, 11 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,160,70,0.55)';
+      for (let i = 0; i < 4; i++) ctx.beginPath(), ctx.arc(-7 + i * 5, -1 + (i % 2), 1.6 * s, 0, 6.28), ctx.fill();
+    } else if (d.type === 'rime') {
+      ctx.strokeStyle = 'rgba(200,235,255,0.5)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(0, 0, 17 * s, 9 * s, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(180,230,255,0.35)';
+      ctx.beginPath(); ctx.arc(-6, -2, 2.4 * s, 0, 6.28); ctx.fill();
+    } else {
+      ctx.strokeStyle = 'rgba(195,255,185,0.38)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(-10 * s, -3); ctx.quadraticCurveTo(-2, -6 * s, 8 * s, -2); ctx.stroke();
+    }
+
+    // head (larger, offset, expressive)
+    const hx = 17 * s;
+    const hy = -1.5 + Math.sin(t / 340) * 0.6;
+    ctx.fillStyle = bodyCol;
+    ctx.beginPath(); ctx.arc(hx, hy, 9 * s, 0, Math.PI * 2); ctx.fill();
+    // jaw line for character
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.arc(hx + 2 * s, hy + 2 * s, 5.5 * s, 0, Math.PI * 2); ctx.fill();
+
+    // type head accents (horns, crown, crest)
+    if (d.type === 'cinder') {
       ctx.fillStyle = '#3a2a22';
-      ctx.beginPath(); ctx.moveTo(hx - 1, hy - 6); ctx.lineTo(hx + 4, hy - 12); ctx.lineTo(hx + 2, hy - 5); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(hx - 2, hy + 5); ctx.lineTo(hx + 3, hy + 10); ctx.lineTo(hx + 1, hy + 5); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hx - 1, hy - 7 * s); ctx.lineTo(hx + 5, hy - 14 * s); ctx.lineTo(hx + 3, hy - 6 * s); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hx - 3, hy + 6 * s); ctx.lineTo(hx + 4, hy + 12 * s); ctx.lineTo(hx + 1, hy + 5 * s); ctx.fill();
+      // ember nostril glow
+      ctx.fillStyle = 'rgba(255,120,50,0.8)';
+      ctx.beginPath(); ctx.arc(hx + 6 * s, hy - 1, 1.3 * s, 0, 6.28); ctx.fill();
     } else if (d.type === 'rime') {
-      ctx.fillStyle = 'rgba(220,245,255,0.7)';
-      ctx.beginPath(); ctx.arc(hx - 3, hy - 4, 2.8, 0, 6.28); ctx.fill();
+      ctx.fillStyle = 'rgba(210,245,255,0.75)';
+      ctx.beginPath(); ctx.arc(hx - 4 * s, hy - 5 * s, 3 * s, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx + 1 * s, hy - 6 * s, 2.2 * s, 0, 6.28); ctx.fill(); // crown spikes
     } else {
-      // gale crest tuft
-      ctx.strokeStyle = 'rgba(195,255,180,0.7)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(hx - 4, hy - 6); ctx.lineTo(hx - 1, hy - 11); ctx.stroke();
+      ctx.strokeStyle = 'rgba(180,255,170,0.75)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(hx - 5 * s, hy - 7 * s); ctx.lineTo(hx - 1, hy - 13 * s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx - 2, hy - 5 * s); ctx.lineTo(hx + 3, hy - 10 * s); ctx.stroke();
     }
 
-    // wing (animated flap, type styled)
-    const wingLift = -14 - flap * 5.5;
-    ctx.strokeStyle = d.type === 'cinder' ? 'rgba(255,140,80,0.28)' : (d.type === 'rime' ? 'rgba(200,235,255,0.32)' : 'rgba(195,255,185,0.30)');
-    ctx.lineWidth = d.type === 'gale' ? 7 : 8.5;
+    // wing (larger flap, type styled, primary + secondary)
+    const wingLift = -15 * s - flap * 6.5 * s;
+    ctx.strokeStyle = d.type === 'cinder' ? 'rgba(255,140,80,0.26)' : (d.type === 'rime' ? 'rgba(190,235,255,0.30)' : 'rgba(180,255,175,0.28)');
+    ctx.lineWidth = d.type === 'gale' ? 8 * s : 9.5 * s;
     ctx.beginPath();
-    ctx.moveTo(-5, -1.5);
-    ctx.quadraticCurveTo(-18, wingLift, -2, -10 - flap * 0.8);
+    ctx.moveTo(-6 * s, -1);
+    ctx.quadraticCurveTo(-20 * s, wingLift, -3 * s, -11 * s - flap * 0.9);
     ctx.stroke();
-    // secondary feather for gale
     if (d.type === 'gale') {
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(-3, -2);
-      ctx.quadraticCurveTo(-13, wingLift * 0.7, 1, -7);
-      ctx.stroke();
+      ctx.lineWidth = 4.5 * s;
+      ctx.beginPath(); ctx.moveTo(-4 * s, -1); ctx.quadraticCurveTo(-14 * s, wingLift * 0.65, 2 * s, -8 * s); ctx.stroke();
     }
+    // wing membrane fill for mass
+    ctx.fillStyle = d.type === 'cinder' ? 'rgba(255,90,40,0.08)' : 'rgba(160,220,255,0.07)';
+    ctx.beginPath(); ctx.moveTo(-4 * s, 0); ctx.quadraticCurveTo(-17 * s, wingLift * 0.8, -1 * s, -8 * s); ctx.lineTo(-2 * s, 2); ctx.fill();
 
-    // eye (blink + gaze toward breath/target)
-    const blink = (d.blinkCd || 40) < 9;
-    const gaze = (d.breathAngle || 0) * 0.12;
+    // eye (larger, blink, gaze, expressive)
+    const blink = (d.blinkCd || 40) < 8;
+    const gaze = (d.breathAngle || 0) * 0.1;
     ctx.fillStyle = '#f8fbff';
-    ctx.beginPath(); ctx.arc(hx + 3.5 + gaze * 0.6, hy - 0.8, blink ? 0.9 : 2.35, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = d.type === 'rime' ? '#1e3a4a' : '#1a2233';
-    ctx.beginPath(); ctx.arc(hx + 4 + gaze, hy - 0.7, blink ? 0.4 : 1.15, 0, Math.PI * 2); ctx.fill();
-    // catchlight
+    ctx.beginPath(); ctx.arc(hx + 4 * s + gaze * 0.5, hy - 1.2, blink ? 1.1 * s : 2.7 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = d.type === 'rime' ? '#0f2a3a' : '#111a2a';
+    ctx.beginPath(); ctx.arc(hx + 4.5 * s + gaze, hy - 0.9, blink ? 0.5 * s : 1.35 * s, 0, Math.PI * 2); ctx.fill();
     if (!blink) {
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.beginPath(); ctx.arc(hx + 3.8 + gaze * 0.5, hy - 1.4, 0.7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath(); ctx.arc(hx + 4.2 * s + gaze * 0.4, hy - 1.6, 0.8 * s, 0, Math.PI * 2); ctx.fill();
     }
 
-    // breath active (more expressive cone + core)
+    // breath / active ability (stronger, identity clear)
     if (d.breathActive > 0) {
       const ba = d.breathAngle || 0;
-      const ba2 = ba + Math.sin(t / 90) * 0.04;
-      const breathCol = d.type === 'cinder' ? 'rgba(255, 130, 55, 0.55)' : (d.type === 'rime' ? 'rgba(155, 225, 255, 0.48)' : 'rgba(195, 250, 180, 0.42)');
+      const ba2 = ba + Math.sin(t / 85) * 0.035;
+      const breathCol = d.type === 'cinder' ? 'rgba(255, 125, 50, 0.48)' : (d.type === 'rime' ? 'rgba(140, 225, 255, 0.42)' : 'rgba(175, 250, 170, 0.38)');
       ctx.fillStyle = breathCol;
-      for (let i = 0; i < 3; i++) {
-        const spread = (i - 1) * 0.38;
+      for (let i = 0; i < 4; i++) {
+        const spread = (i - 1.5) * 0.32;
         ctx.beginPath();
-        ctx.moveTo(hx + 5, hy);
-        ctx.lineTo(hx + 24 + Math.cos(ba2 + spread) * 30, hy + Math.sin(ba2 + spread) * 28);
-        ctx.lineTo(hx + 24 + Math.cos(ba2 - spread) * 30, hy + Math.sin(ba2 - spread) * 28);
+        ctx.moveTo(hx + 6 * s, hy - 1);
+        ctx.lineTo(hx + 26 * s + Math.cos(ba2 + spread) * 32 * s, hy + Math.sin(ba2 + spread) * 29 * s);
+        ctx.lineTo(hx + 26 * s + Math.cos(ba2 - spread) * 32 * s, hy + Math.sin(ba2 - spread) * 29 * s);
         ctx.fill();
       }
-      // bright core
-      ctx.fillStyle = d.type === 'cinder' ? 'rgba(255,200,120,0.7)' : 'rgba(230,250,255,0.6)';
-      ctx.beginPath();
-      ctx.arc(hx + 18, hy + Math.sin(ba2) * 4, 4.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = d.type === 'cinder' ? 'rgba(255,205,110,0.75)' : 'rgba(220,250,255,0.65)';
+      ctx.beginPath(); ctx.arc(hx + 19 * s, hy + Math.sin(ba2) * 3, 5 * s, 0, Math.PI * 2); ctx.fill();
     }
 
-    // tail (wavy, type styled)
-    const tailWave = Math.sin(t / 260 + (d.wingPhase || 0) * 0.3) * 2.2;
-    ctx.strokeStyle = d.color;
-    ctx.lineWidth = 4.8;
+    // tail (longer, integrated, wavy, type detail)
+    const tailWave = Math.sin(t / 240 + (d.wingPhase || 0) * 0.28) * 2.8;
+    ctx.strokeStyle = bodyCol;
+    ctx.lineWidth = 5.2 * s;
     ctx.beginPath();
-    ctx.moveTo(-13, 0.5);
-    ctx.quadraticCurveTo(-24, 7 + tailWave * 0.3, -29, 3 + tailWave);
+    ctx.moveTo(-14 * s, 1.5);
+    ctx.quadraticCurveTo(-26 * s, 8 + tailWave * 0.4, -34 * s, 4 + tailWave);
     ctx.stroke();
+    // tail tip flair
     if (d.type === 'cinder') {
-      ctx.fillStyle = 'rgba(255,100,40,0.5)';
-      ctx.beginPath(); ctx.arc(-28, 3 + tailWave, 2.8, 0, 6.28); ctx.fill();
+      ctx.fillStyle = 'rgba(255,95,35,0.6)';
+      ctx.beginPath(); ctx.arc(-33 * s, 4 + tailWave, 3.2 * s, 0, 6.28); ctx.fill();
+    } else if (d.type === 'rime') {
+      ctx.fillStyle = 'rgba(190,235,255,0.5)';
+      ctx.beginPath(); ctx.arc(-33 * s, 4 + tailWave, 2.4 * s, 0, 6.28); ctx.fill();
     }
 
     ctx.restore();
