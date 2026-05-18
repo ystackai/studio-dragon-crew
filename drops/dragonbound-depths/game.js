@@ -2762,6 +2762,25 @@
           ctx.beginPath(); ctx.arc(g[0], g[1], tw * 3.6, 0, Math.PI * 2); ctx.fill();
         }
       });
+      // Pass 42: slow vertical light pillars + orbiting prism refractions (deeper precious cavern authorship in Crystal Hollow; vertical shafts + facet catch-lights make the 2nd area feel like a living jewel box of magic, matching grove god-ray + crypt ember depth for consistent handcrafted vertical slice feel across all rooms. Pure visual, re-uses t, zero cost/collision. Snow Dragon + Fire Dragon lens: elevates "atmospheric world detail" and "screenshot-worthy" moments in every transition per art mandate.)
+      for (let p = 0; p < 2; p++) {
+        const px = 280 + p * 580;
+        const ph = 0.07 + Math.sin(t * 0.65 + p * 1.3) * 0.025;
+        ctx.fillStyle = `rgba(135, 205, 255, ${ph})`;
+        ctx.fillRect(px, 90, 42, 510);
+        ctx.fillStyle = `rgba(185, 230, 255, ${ph * 1.7})`;
+        ctx.fillRect(px + 14, 140, 14, 360);
+      }
+      ctx.fillStyle = 'rgba(255, 255, 245, 0.6)';
+      for (let o = 0; o < 3; o++) {
+        const oa = t * 0.42 + o * 2.05;
+        const ox = 355 + Math.cos(oa) * (155 + o * 38);
+        const oy = 310 + Math.sin(oa * 0.75 + o) * 88;
+        ctx.beginPath(); ctx.arc(ox, oy, 1.65, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(195, 235, 255, 0.32)';
+        ctx.beginPath(); ctx.arc(ox, oy, 3.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 245, 0.6)';
+      }
     }
     if (r.theme === 'fissure') {
       // rising heat motes + ember trails — dangerous, alive, warm depth
