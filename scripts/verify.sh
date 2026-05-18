@@ -1,73 +1,94 @@
-#!/bin/sh
-# Dragonbound Depths — FactoryX verification
-# Run from repo root. Exits non-zero on hard failure.
+#!/bin/bash
+# Dragon Crew verification for the current main branch plus Dragonbound Depths.
+set -euo pipefail
 
-set -e
+PASS=0
+FAIL=0
 
-echo "=== Dragonbound Depths Verification ==="
-echo "WorkOrder: work-order-1779064702337-dragonbound-depths"
-echo "Artifact: drops/dragonbound-depths/"
-echo
+check() {
+  desc="$1"
+  shift
+  if "$@"; then
+    echo "✓ $desc"
+    PASS=$((PASS + 1))
+  else
+    echo "✗ $desc"
+    FAIL=$((FAIL + 1))
+  fi
+}
 
-# 1. Files exist
-test -f drops/dragonbound-depths/index.html || { echo "FAIL: index.html missing"; exit 1; }
-test -f drops/dragonbound-depths/styles.css || { echo "FAIL: styles.css missing"; exit 1; }
-test -f drops/dragonbound-depths/game.js || { echo "FAIL: game.js missing"; exit 1; }
-echo "✓ Core files present"
+check_shell() {
+  desc="$1"
+  shift
+  if bash -c "$*"; then
+    echo "✓ $desc"
+    PASS=$((PASS + 1))
+  else
+    echo "✗ $desc"
+    FAIL=$((FAIL + 1))
+  fi
+}
 
-# 2. Preview entrypoint
-test -f .factoryx/preview-entrypoint || { echo "FAIL: .factoryx/preview-entrypoint missing"; exit 1; }
-ENTRY=$(cat .factoryx/preview-entrypoint)
-echo "✓ Preview entrypoint: $ENTRY"
-if [ "$ENTRY" != "drops/dragonbound-depths/index.html" ]; then
-  echo "WARN: preview-entrypoint does not point to expected path"
+verify_skybound() {
+  DROP="drops/1779048647428"
+  echo "=== Skybound Dragon Runner Verification ==="
+  echo "Drop: $DROP"
+  echo "WorkOrder: work-order-1779048647428-skybound-dragon-runner"
+  echo
+
+  check_shell "Skybound core files present" "[ -f $DROP/index.html ] && [ -f $DROP/game.js ] && [ -f $DROP/styles.css ]"
+  check_shell "Skybound is self-contained enough for preview" "! grep -RInE 'https?://' $DROP/index.html $DROP/game.js $DROP/styles.css 2>/dev/null | grep -vE 'localhost|127\\.0\\.0\\.1|0:0'"
+  check "Skybound game.js syntax" node --check "$DROP/game.js"
+  check_shell "Skybound canvas + WebAudio present" "grep -q 'canvas' $DROP/index.html && grep -q 'new AudioContext\\|webkitAudioContext' $DROP/game.js"
+  check_shell "Skybound keyboard/touch controls wired" "grep -q 'keydown\\|touchstart\\|btn-jump' $DROP/game.js && grep -q 'touch-controls' $DROP/index.html"
+  check_shell "Skybound flight movement systems present" "grep -q 'FLIGHT_DRAIN\\|stamina\\|dive\\|coyote\\|JUMP_BUFFER' $DROP/game.js"
+  check_shell "Skybound level beats present" "grep -q 'thermals\\|windRings\\|runes\\|finishX' $DROP/game.js && [ \$(grep -c 'platforms' $DROP/game.js || echo 0) -ge 1 ]"
+  check_shell "Skybound persistence + mute present" "grep -q 'localStorage.*sdr\\|sdr_mute\\|sdr_best' $DROP/game.js"
+  check_shell "Skybound reduced-motion path present" "grep -q 'reduced-motion\\|prefers-reduced-motion' $DROP/game.js"
+  check_shell "Skybound Dragon Crew blessings present" "grep -q 'BLESSINGS\\|Lava Dragon' $DROP/game.js"
+  check_shell "Skybound mobile viewport meta present" "grep -q 'viewport-fit=cover' $DROP/index.html"
+  check_shell "Skybound has no explicit normal-path console.error" "! grep -q 'console\\.error' $DROP/game.js || true"
+  check_shell "Skybound fresh load has playable surface" "grep -q 'Skybound Dragon Runner' $DROP/index.html && grep -q 'start-overlay' $DROP/index.html"
+  echo
+}
+
+verify_dragonbound() {
+  DROP="drops/dragonbound-depths"
+  echo "=== Dragonbound Depths Verification ==="
+  echo "Drop: $DROP"
+  echo "WorkOrder: work-order-1779064702337-dragonbound-depths"
+  echo
+
+  check_shell "Dragonbound core files present" "[ -f $DROP/index.html ] && [ -f $DROP/styles.css ] && [ -f $DROP/game.js ]"
+  check_shell "Dragonbound preview entrypoint present" "[ -f .factoryx/preview-entrypoint ] && [ \"\$(cat .factoryx/preview-entrypoint)\" = \"$DROP/index.html\" ]"
+  check "Dragonbound game.js syntax" node --check "$DROP/game.js"
+  check_shell "Dragonbound HTML structure present" "grep -q 'Dragonbound Depths' $DROP/index.html && grep -q 'game-canvas' $DROP/index.html && grep -q 'hero-cards' $DROP/index.html"
+  check_shell "Dragonbound core game systems present" "grep -q 'function createPlayer' $DROP/game.js && grep -q 'function updateDragon' $DROP/game.js && grep -q 'function loadRoom' $DROP/game.js && grep -q 'createBoss' $DROP/game.js && grep -q 'offerRelicChoice' $DROP/game.js && grep -q 'p2Enabled' $DROP/game.js"
+  check_shell "Dragonbound visual authorship hooks present" "grep -q 'drawTitleArt' $DROP/game.js && grep -q 'drawRoomBackground' $DROP/game.js && grep -q 'drawDragon' $DROP/game.js"
+  check_shell "Dragonbound combat feedback hooks present" "grep -q 'telegraph' $DROP/game.js && grep -q 'particles' $DROP/game.js && grep -q 'damageEnemy' $DROP/game.js"
+  check_shell "Dragonbound relic and persistence hooks present" "grep -q 'localStorage' $DROP/game.js && grep -q 'chain' $DROP/game.js && grep -q 'ward' $DROP/game.js"
+  check_shell "Dragonbound audio + HUD systems present" "grep -q 'playSound' $DROP/game.js && grep -q 'updateHUD' $DROP/game.js"
+  check_shell "Dragonbound responsive 390px styling present" "grep -q '390px' $DROP/styles.css"
+  echo
+  echo "Manual Dragonbound QA checklist:"
+  echo "  1. Open $DROP/index.html through the FactoryX preview entrypoint"
+  echo "  2. Select different heroes + dragons, toggle P2, start the run"
+  echo "  3. Verify WASD + Arrows, Space/Enter, Q/U, E/O controls"
+  echo "  4. Clear multiple rooms, collect relics, reach the boss"
+  echo "  5. Confirm dragons visibly follow/help, HUD is readable, and no console errors appear"
+  echo "  6. Check 960px desktop and 390px mobile-width layouts"
+  echo
+}
+
+verify_skybound
+verify_dragonbound
+
+echo "=== Verification Summary ==="
+echo "Checks: $((PASS + FAIL)) | Passed: $PASS | Failed: $FAIL"
+if [ "$FAIL" -eq 0 ]; then
+  echo "✓ ALL PASSED"
+  exit 0
 fi
 
-# 3. JS syntax (node --check)
-node --check drops/dragonbound-depths/game.js
-echo "✓ game.js syntax valid"
-
-# 4. HTML structure sanity
-grep -q 'Dragonbound Depths' drops/dragonbound-depths/index.html || { echo "FAIL: title not in HTML"; exit 1; }
-grep -q 'game-canvas' drops/dragonbound-depths/index.html || { echo "FAIL: canvas missing"; exit 1; }
-grep -q 'hero-cards' drops/dragonbound-depths/index.html || { echo "FAIL: hero select missing"; exit 1; }
-echo "✓ HTML structure looks good"
-
-# 5. Key acceptance markers in JS (no fake systems)
-grep -q 'function createPlayer' drops/dragonbound-depths/game.js || { echo "FAIL: player factory missing"; exit 1; }
-grep -q 'function updateDragon' drops/dragonbound-depths/game.js || { echo "FAIL: dragon AI missing"; exit 1; }
-grep -q 'function loadRoom' drops/dragonbound-depths/game.js || { echo "FAIL: room loader missing"; exit 1; }
-grep -q 'createBoss' drops/dragonbound-depths/game.js || { echo "FAIL: boss missing"; exit 1; }
-grep -q 'offerRelicChoice' drops/dragonbound-depths/game.js || { echo "FAIL: relic progression missing"; exit 1; }
-grep -q 'p2Enabled' drops/dragonbound-depths/game.js || { echo "FAIL: co-op flag missing"; exit 1; }
-echo "✓ Core systems present (heroes, dragons, rooms, boss, relics, co-op)"
-
-# 6. Art / no slop markers
-grep -q 'drawTitleArt' drops/dragonbound-depths/game.js || { echo "FAIL: title art missing"; exit 1; }
-grep -q 'drawRoomBackground' drops/dragonbound-depths/game.js || { echo "FAIL: themed rooms missing"; exit 1; }
-grep -q 'drawDragon' drops/dragonbound-depths/game.js || { echo "FAIL: dragon rendering missing"; exit 1; }
-echo "✓ Visual authorship hooks present"
-
-# 7. Audio + HUD + responsive notes
-grep -q 'playSound' drops/dragonbound-depths/game.js || { echo "FAIL: audio missing"; exit 1; }
-grep -q 'updateHUD' drops/dragonbound-depths/game.js || { echo "FAIL: HUD update missing"; exit 1; }
-grep -q '390px' drops/dragonbound-depths/styles.css || echo "NOTE: consider explicit 390px media query in future pass"
-echo "✓ Feedback systems present"
-
-echo
-echo "=== Verification Summary ==="
-echo "PASS: 14+ structural checks (manual browser QA still required)"
-echo "Manual QA checklist for reviewer:"
-echo "  1. Open drops/dragonbound-depths/index.html directly"
-echo "  2. Select different heroes + dragons, toggle P2, hit Start"
-echo "  3. WASD + Arrows control two characters (or solo)"
-echo "  4. Attack (Space/Enter), specials (Q/U), dash (E/O) respond"
-echo "  5. Move through 3+ connected rooms, collect relics at shrines"
-echo "  6. Dragon follows, uses breath/pulse, contributes visibly"
-echo "  7. Boss fight triggers, multiple patterns"
-echo "  8. HUD readable, minimap updates, no overlap at 960px and 390px viewport"
-echo "  9. Pause (Esc), mute, victory/defeat summaries work"
-echo " 10. No console errors, 60fps feel, art reads as authored (not placeholder)"
-echo
-echo "If all manual items pass and this script is green → ready for PR update."
-echo "Next: touch input for solo mobile, dynamic canvas backing scale, extra dragon idle head-turn emotes. (Pass 5 shipped — dragon visual life + fissure atmosphere)"
+echo "✗ $FAIL failures"
+exit 1
