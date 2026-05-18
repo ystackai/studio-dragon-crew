@@ -1712,37 +1712,76 @@
     // dragon companion (beautiful, alive)
     if (dragon) drawDragon(ctx, dragon);
 
-    // projectiles
+    // projectiles (glowing + trails for satisfying feedback)
     projectiles.forEach(pr => {
-      ctx.fillStyle = pr.color || '#fff';
+      const pc = pr.color || '#fff';
+      const prr = pr.radius || 5;
       if (pr.kind === 'spear') {
         ctx.save();
         ctx.translate(pr.x, pr.y);
         ctx.rotate(Math.atan2(pr.vy, pr.vx));
-        ctx.fillRect(-7, -1.5, 14, 3);
+        // glow trail
+        ctx.fillStyle = 'rgba(110,230,170,0.3)';
+        ctx.fillRect(-18, -2, 22, 4);
+        ctx.fillStyle = pc;
+        ctx.fillRect(-7, -1.8, 16, 3.6);
         ctx.fillStyle = '#fff8';
-        ctx.fillRect(3, -2.5, 5, 5);
+        ctx.fillRect(4, -2.8, 6, 5.6);
         ctx.restore();
       } else {
-        ctx.beginPath(); ctx.arc(pr.x, pr.y, pr.radius, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.beginPath(); ctx.arc(pr.x - pr.vx * 0.3, pr.y - pr.vy * 0.3, pr.radius * 0.5, 0, Math.PI * 2); ctx.fill();
+        // glow ring + core + motion trail
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        ctx.beginPath(); ctx.arc(pr.x, pr.y, prr * 1.7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = pc;
+        ctx.beginPath(); ctx.arc(pr.x, pr.y, prr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.arc(pr.x - pr.vx * 0.35, pr.y - pr.vy * 0.35, prr * 0.55, 0, Math.PI * 2); ctx.fill();
+        // fast trail line
+        if (Math.hypot(pr.vx, pr.vy) > 2.5) {
+          ctx.strokeStyle = pc;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(pr.x - pr.vx * 1.4, pr.y - pr.vy * 1.4); ctx.lineTo(pr.x, pr.y); ctx.stroke();
+        }
       }
     });
 
-    // particles (expressive)
+    // particles (amplified expressive effects — glow, type shapes, impact rings)
     particles.forEach(pt => {
       const alpha = pt.life / pt.maxLife;
-      ctx.globalAlpha = alpha * 0.95 + 0.05;
+      const sz = pt.size * (0.55 + alpha * 0.7);
+      ctx.globalAlpha = alpha * 0.9 + 0.08;
+      const col = pt.color || '#fff';
       if (pt.type === 'dmg' && pt.dmg) {
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 11px system-ui';
+        ctx.font = 'bold 12px system-ui';
         ctx.fillText(pt.dmg, pt.x, pt.y);
+      } else if (pt.type === 'fire' || pt.type === 'cleave') {
+        // fiery / cleave: multi glow + core
+        ctx.fillStyle = 'rgba(255,120,40,0.25)';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz * 2.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz * 1.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff8';
+        ctx.beginPath(); ctx.arc(pt.x - pt.vx * 0.2, pt.y - pt.vy * 0.2, sz * 0.5, 0, Math.PI * 2); ctx.fill();
+      } else if (pt.type === 'ice') {
+        // ice shards: sharp + glow
+        ctx.fillStyle = 'rgba(170,230,255,0.3)';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz * 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#e0f8ff'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pt.x - sz * 0.8, pt.y); ctx.lineTo(pt.x + sz * 0.8, pt.y); ctx.stroke();
+      } else if (pt.type === 'wind') {
+        // wind: curved streak
+        ctx.strokeStyle = col;
+        ctx.lineWidth = sz * 0.7;
+        ctx.beginPath(); ctx.moveTo(pt.x - pt.vx * 1.2, pt.y - pt.vy * 1.2); ctx.lineTo(pt.x + pt.vx * 0.3, pt.y + pt.vy * 0.3); ctx.stroke();
       } else {
-        ctx.fillStyle = pt.color;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, pt.size * (0.6 + alpha * 0.6), 0, Math.PI * 2);
-        ctx.fill();
+        // default + spark: soft glow + core
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz * 1.9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, sz, 0, Math.PI * 2); ctx.fill();
       }
     });
     ctx.globalAlpha = 1;
