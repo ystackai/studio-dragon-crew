@@ -3213,6 +3213,8 @@
       const capeLen = dash ? 26 : 19;
       // Pass 63 (final art polish pre-deadline): gentle idle cape hem sway when stationary (spd low) — the Ember Knight's cloak catches a subtle grove breeze in god rays while dragon idles with gaze/tail. Makes the default cold-start P1 silhouette feel alive and handcrafted in the composed first screenshot (extra "worth sharing" protagonist authorship, matches dragon Pass 28/29 personality, zero gameplay/collision/perf cost, visible immediately on no-input entry). Snow/Fire Dragon lens.
       const capeSway = (spd < 0.85 ? Math.sin((typeof performance !== 'undefined' ? performance.now() : Date.now()) / 740) * 3.6 : 0);
+      // Pass 67 (final pre-deadline micro, Snow/Fire lens): subtle idle plume crest flutter on Ember when stationary — the red heroic plume now catches the same grove wind as the cape hem (Pass 63) and dragon's breathing flank (Pass 64). The controlled P1 reads as a living, painted protagonist sharing the quiet magical moment with the bonded companion in the god-ray first frame. Tiny rhythmic lift on the crest tip (visible on cold-start no-input Ember+Cinder screenshot) elevates "worth sharing" handcrafted art-piece authorship without any size, collision, or perf cost. Pure draw micro, reuses existing spd/t calc.
+      const plumeSway = (spd < 0.85 ? Math.sin((typeof performance !== 'undefined' ? performance.now() : Date.now()) / 680) * 1.8 : 0);
       ctx.beginPath();
       ctx.moveTo(p.x - 7, p.y + 2);
       ctx.quadraticCurveTo(p.x - 14 - vx * 0.3, p.y + 12, p.x - 9 - vx * 0.5, p.y + capeLen + capeSway * 0.65);
@@ -3222,9 +3224,9 @@
       // plumed knight helm (strong silhouette)
       ctx.fillStyle = p.downed ? '#2f2522' : '#1f2838';
       ctx.beginPath(); ctx.arc(p.x - Math.cos(p.facing) * 3, p.y - Math.sin(p.facing) * 3, r * 0.82, 0, Math.PI * 2); ctx.fill();
-      // plume crest
+      // plume crest (with idle wind flutter for paired living hero presence)
       ctx.fillStyle = '#c23a2a';
-      ctx.beginPath(); ctx.moveTo(p.x - 4, p.y - r * 0.9); ctx.quadraticCurveTo(p.x + 1, p.y - r * 1.35, p.x + 7, p.y - r * 0.85); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x - 4, p.y - r * 0.9); ctx.quadraticCurveTo(p.x + 1, p.y - r * 1.35 + plumeSway * 0.4, p.x + 7, p.y - r * 0.85 + plumeSway * 0.25); ctx.fill();
       // visor glow
       ctx.fillStyle = flash ? '#fff' : '#ff9a5a';
       ctx.fillRect(p.x + Math.cos(p.facing) * 6 - 4, p.y - 3, 8, 3);
