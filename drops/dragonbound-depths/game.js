@@ -1828,8 +1828,6 @@
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 40, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
 
-    ctx.restore();
-
     // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)
     if (shake > 0) {
       const ox = (Math.random() - 0.5) * shake;
