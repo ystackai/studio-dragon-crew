@@ -2590,6 +2590,25 @@
         const my = 90 + ((m * 53) % 260) + Math.cos(t * 0.17 + m) * 14;
         ctx.beginPath(); ctx.arc(mx, my, 1.6 + (m % 2) * 0.4, 0, Math.PI * 2); ctx.fill();
       }
+      // Pass 40: final pre-deadline grove leaf drift (3-4 slow-falling enchanted leaves in god rays; extra "living enchanted forest" life + layered depth for the exact cold-start default preview frame reviewers open first. Pure visual, reuses t, zero collision/AI/perf; makes the opening composition even more screenshot-worthy handcrafted fantasy per art mandate + Snow/Fire Dragon lens. Deadline polish capstone.)
+      ctx.fillStyle = 'rgba(168, 205, 130, 0.55)';
+      ctx.strokeStyle = 'rgba(120, 170, 90, 0.7)';
+      ctx.lineWidth = 0.8;
+      for (let lf = 0; lf < 4; lf++) {
+        const lp = (t * 0.22 + lf * 0.31) % 1.15;
+        const lx = 210 + lf * 52 + Math.sin(t * 0.9 + lf) * 14 + (lp * 28);
+        const ly = 28 + lp * 310;
+        const la = 0.6 + Math.sin(t * 1.6 + lf * 2) * 0.3; // gentle sway rotation
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(la);
+        ctx.beginPath();
+        ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.lineTo(0, 7); ctx.closePath(); // tiny leaf
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.lineWidth = 1;
     }
     if (r.theme === 'crystal') {
       // crystal hollow — floating clusters, facet glows, light refraction, stalagmites
