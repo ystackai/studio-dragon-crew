@@ -1771,67 +1771,152 @@
   }
 
   function drawRoomBackground(ctx, r) {
-    // base floor
-    ctx.fillStyle = r.theme === 'crystal' ? '#112233' : (r.theme === 'sanctum' ? '#18122a' : '#121a2a');
+    // base floor (slightly brighter for focal readability + handcrafted feel, still moody)
+    ctx.fillStyle = r.theme === 'crystal' ? '#13283a' : (r.theme === 'sanctum' ? '#1f1833' : (r.theme === 'fissure' ? '#1a1a24' : (r.theme === 'boss' ? '#0f0a0a' : '#162033')));
     ctx.fillRect(0, 0, r.w, r.h);
 
-    // tile / texture suggestion
-    ctx.fillStyle = r.theme === 'crystal' ? 'rgba(140, 190, 255, 0.035)' : 'rgba(212, 175, 119, 0.025)';
-    for (let x = 36; x < r.w; x += 58) {
-      for (let y = 28; y < r.h; y += 58) {
-        ctx.fillRect(x, y, 42, 42);
+    // layered ground texture (multi pass for depth, not flat)
+    ctx.fillStyle = r.theme === 'crystal' ? 'rgba(130, 185, 255, 0.028)' : 'rgba(200, 170, 110, 0.022)';
+    for (let x = 28; x < r.w; x += 52) {
+      for (let y = 22; y < r.h; y += 52) {
+        ctx.fillRect(x + (y % 3) * 3, y, 38, 38);
       }
     }
+    // fine grain for bespoke floor
+    ctx.fillStyle = 'rgba(255,255,255,0.014)';
+    for (let i = 0; i < 180; i++) {
+      const gx = (i * 67) % (r.w - 40) + 20;
+      const gy = (i * 41 + (i % 7) * 13) % (r.h - 30) + 15;
+      ctx.fillRect(gx, gy, 2, 2);
+    }
 
-    // theme accents
+    // ===== RICH LAYERED DEPTH + AUTHORED PROPS + LIGHTING (Pass 10 visual authorship) =====
+    // Foreground/mid props, light shafts, architectural detail per theme for screenshot-worthy rooms.
+    const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0011;
+
     if (r.theme === 'grove') {
-      ctx.fillStyle = 'rgba(70, 110, 70, 0.18)';
-      ctx.fillRect(80, 80, 180, 220);
-      ctx.fillRect(920, 480, 140, 160);
+      // moonlit forest ruin — layered canopy, trunks, roots, hanging moss, soft god rays
+      ctx.fillStyle = 'rgba(55, 95, 55, 0.22)';
+      ctx.fillRect(60, 60, 160, 280); ctx.fillRect(940, 420, 180, 220);
+      // tree trunks (strong silhouettes)
+      ctx.fillStyle = '#1f2a1f';
+      ctx.fillRect(95, 70, 22, 210); ctx.fillRect(135, 95, 18, 175);
+      ctx.fillRect(980, 380, 26, 240); ctx.fillRect(1035, 410, 20, 190);
+      // canopy blobs
+      ctx.fillStyle = 'rgba(40, 80, 40, 0.35)';
+      ctx.beginPath(); ctx.arc(105, 55, 48, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(1000, 370, 55, 0, Math.PI * 2); ctx.fill();
+      // hanging vines / moss (layered depth)
+      ctx.strokeStyle = 'rgba(70, 115, 55, 0.45)';
+      ctx.lineWidth = 2.5;
+      for (let v = 0; v < 5; v++) {
+        const vx = 85 + v * 11 + (v % 2) * 30;
+        ctx.beginPath(); ctx.moveTo(vx, 95); ctx.quadraticCurveTo(vx - 4, 160 + Math.sin(t + v) * 6, vx + 3, 230); ctx.stroke();
+      }
+      // soft light shafts from canopy breaks (focal brightening)
+      ctx.fillStyle = 'rgba(180, 210, 160, 0.07)';
+      ctx.beginPath(); ctx.moveTo(180, 20); ctx.lineTo(310, 380); ctx.lineTo(340, 380); ctx.lineTo(210, 20); ctx.fill();
+      ctx.fillStyle = 'rgba(160, 200, 140, 0.05)';
+      ctx.beginPath(); ctx.moveTo(880, 30); ctx.lineTo(820, 420); ctx.lineTo(850, 420); ctx.lineTo(910, 30); ctx.fill();
+      // glowing mushrooms (magical touch)
+      ctx.fillStyle = 'rgba(140, 220, 120, 0.55)';
+      ctx.beginPath(); ctx.arc(280, 310, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(720, 540, 4.5, 0, Math.PI * 2); ctx.fill();
     }
     if (r.theme === 'crystal') {
-      ctx.fillStyle = 'rgba(120, 180, 255, 0.12)';
-      ctx.fillRect(200, 120, 80, 160);
-      ctx.fillRect(880, 300, 110, 90);
-      // crystal spikes
-      ctx.fillStyle = 'rgba(170, 210, 255, 0.25)';
-      ctx.beginPath(); ctx.moveTo(340, 90); ctx.lineTo(380, 210); ctx.lineTo(310, 210); ctx.fill();
+      // crystal hollow — floating clusters, facet glows, light refraction, stalagmites
+      ctx.fillStyle = 'rgba(90, 150, 210, 0.14)';
+      ctx.fillRect(180, 80, 110, 190); ctx.fillRect(860, 260, 140, 130);
+      // crystal clusters (layered, multi-point)
+      ctx.fillStyle = 'rgba(160, 210, 255, 0.32)';
+      const crystals = [[320, 85], [370, 165], [895, 290], [950, 340], [260, 520]];
+      crystals.forEach((c, i) => {
+        const tw = 0.7 + Math.sin(t * 1.8 + i) * 0.3;
+        ctx.beginPath(); ctx.moveTo(c[0], c[1] - 22 * tw); ctx.lineTo(c[0] - 11, c[1] + 14); ctx.lineTo(c[0] + 12, c[1] + 14); ctx.fill();
+        ctx.fillStyle = 'rgba(200, 240, 255, 0.5)';
+        ctx.beginPath(); ctx.arc(c[0], c[1] - 4, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(160, 210, 255, 0.32)';
+      });
+      // stalagmites / floor crystals
+      ctx.fillStyle = 'rgba(120, 180, 230, 0.25)';
+      ctx.beginPath(); ctx.moveTo(140, 620); ctx.lineTo(165, 540); ctx.lineTo(190, 620); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(1050, 580); ctx.lineTo(1075, 510); ctx.lineTo(1100, 580); ctx.fill();
+      // refracted light shafts (serene, precious)
+      ctx.fillStyle = 'rgba(170, 220, 255, 0.08)';
+      ctx.beginPath(); ctx.moveTo(420, 10); ctx.lineTo(380, 520); ctx.lineTo(410, 520); ctx.lineTo(450, 10); ctx.fill();
     }
     if (r.theme === 'sanctum') {
-      ctx.fillStyle = 'rgba(120, 90, 160, 0.14)';
-      ctx.fillRect(160, 300, 120, 200);
-    }
-    if (r.theme === 'boss') {
-      ctx.fillStyle = 'rgba(80, 30, 20, 0.3)';
-      ctx.fillRect(120, 100, r.w - 240, r.h - 200);
-      // lava seams
-      ctx.strokeStyle = 'rgba(255, 90, 50, 0.25)';
-      ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(180, 200); ctx.quadraticCurveTo(400, 480, 820, 310); ctx.stroke();
+      // cursed sanctum — carved pillars, rune floor, broken arches, quiet magic
+      ctx.fillStyle = 'rgba(100, 75, 140, 0.16)';
+      ctx.fillRect(140, 220, 90, 240);
+      // tall carved pillars (foreground/mid layers)
+      ctx.fillStyle = '#2a2238';
+      ctx.fillRect(120, 140, 28, 380); ctx.fillRect(980, 110, 32, 420);
+      ctx.fillStyle = 'rgba(150, 120, 190, 0.25)';
+      ctx.fillRect(124, 160, 20, 60); ctx.fillRect(984, 130, 24, 70);
+      // floor runes (awakened when cleared, subtle always)
+      ctx.strokeStyle = 'rgba(165, 130, 220, 0.22)';
+      ctx.lineWidth = 1.5;
+      for (let rr = 0; rr < 3; rr++) {
+        const rx = 280 + rr * 280;
+        ctx.beginPath(); ctx.arc(rx, 480 + (rr - 1) * 30, 28, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rx - 18, 480); ctx.lineTo(rx + 18, 480); ctx.stroke();
+      }
+      // hanging chains / tattered banners for atmosphere
+      ctx.strokeStyle = 'rgba(80, 60, 90, 0.5)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(220, 120); ctx.lineTo(225, 310); ctx.stroke();
     }
     if (r.theme === 'fissure') {
-      ctx.fillStyle = 'rgba(120, 50, 30, 0.22)';
-      ctx.fillRect(140, 180, 200, 120);
-      ctx.fillRect(780, 320, 160, 90);
-      ctx.strokeStyle = 'rgba(255, 110, 40, 0.3)';
-      ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(90, 300); ctx.quadraticCurveTo(320, 520, 680, 380); ctx.stroke();
-      ctx.fillStyle = 'rgba(255, 140, 50, 0.18)';
-      ctx.beginPath(); ctx.arc(420, 410, 38, 0, Math.PI * 2); ctx.fill();
-      // extra lava seams + glow vents for depth
-      ctx.strokeStyle = 'rgba(255, 160, 60, 0.22)';
+      // lava fissure — jagged rocks, lava pools with specular, heat vents, stalactites
+      ctx.fillStyle = 'rgba(90, 40, 25, 0.28)';
+      ctx.fillRect(100, 130, 180, 160); ctx.fillRect(820, 280, 170, 110);
+      // jagged rock outcrops (layered)
+      ctx.fillStyle = '#2a2520';
+      ctx.beginPath(); ctx.moveTo(85, 180); ctx.lineTo(140, 95); ctx.lineTo(195, 185); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(880, 310); ctx.lineTo(940, 240); ctx.lineTo(1000, 320); ctx.fill();
+      // lava pools + specular highlight (alive)
+      ctx.fillStyle = 'rgba(255, 90, 30, 0.22)';
+      ctx.beginPath(); ctx.arc(310, 480, 46, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(780, 390, 32, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255, 180, 80, 0.35)';
+      ctx.beginPath(); ctx.arc(295, 470, 18, 0, Math.PI * 2); ctx.fill(); // specular
+      // heat shimmer lines + rising vents
+      ctx.strokeStyle = 'rgba(255, 140, 60, 0.18)';
+      ctx.lineWidth = 2;
+      for (let h = 0; h < 4; h++) {
+        const hx = 220 + h * 190;
+        ctx.beginPath(); ctx.moveTo(hx, 520); ctx.quadraticCurveTo(hx + 8, 420, hx - 4, 310); ctx.stroke();
+      }
+      // ceiling stalactites
+      ctx.fillStyle = '#2f2722';
+      ctx.beginPath(); ctx.moveTo(260, 20); ctx.lineTo(275, 85); ctx.lineTo(290, 20); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(820, 25); ctx.lineTo(835, 70); ctx.lineTo(850, 25); ctx.fill();
+    }
+    if (r.theme === 'boss') {
+      // maw of ash — central dais, ash pillars, lava fissures, oppressive but magical focal
+      ctx.fillStyle = 'rgba(70, 25, 18, 0.38)';
+      ctx.fillRect(80, 80, r.w - 160, r.h - 160);
+      // grand pillars + central raised platform
+      ctx.fillStyle = '#1f1814';
+      ctx.fillRect(140, 90, 36, 280); ctx.fillRect(1180, 100, 40, 260);
+      ctx.fillRect(620, 620, 140, 80); // dais
+      ctx.fillStyle = 'rgba(255, 80, 30, 0.2)';
+      ctx.fillRect(640, 635, 100, 12);
+      // radiating ash cracks on floor
+      ctx.strokeStyle = 'rgba(120, 50, 30, 0.4)';
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(180, 520); ctx.quadraticCurveTo(290, 610, 410, 540); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(760, 210); ctx.quadraticCurveTo(880, 280, 970, 240); ctx.stroke();
-      ctx.fillStyle = 'rgba(255, 90, 30, 0.12)';
-      ctx.beginPath(); ctx.arc(280, 580, 26, 0, 6.28); ctx.fill();
-      ctx.beginPath(); ctx.arc(850, 260, 19, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(690, 660); ctx.lineTo(420, 480); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(690, 660); ctx.lineTo(980, 510); ctx.stroke();
+      // drifting heavier ash already in atm section; add bone/rib props for menace
+      ctx.strokeStyle = 'rgba(90, 70, 60, 0.35)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(280, 480); ctx.quadraticCurveTo(320, 520, 355, 470); ctx.stroke();
     }
 
-    // ===== Atmospheric life & luminous detail (Pass 6 visual authorship) =====
-    // Handcrafted moments: fireflies in grove, crystal glints, rising fissure embers, awakened runes.
-    // Uses world-space time anim so rooms feel alive and screenshot-worthy without clutter or cost.
-    const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0012;
+    // ===== Atmospheric life & luminous detail (Pass 6 + Pass 10) =====
+    // Handcrafted moments: fireflies, glints, embers, runes — now layered with new props/shafts above.
+    // t already declared in depth props block for unified timing.
     if (r.theme === 'grove') {
       // drifting firefly motes — soft, magical, wonder
       ctx.fillStyle = 'rgba(205, 235, 165, 0.32)';
