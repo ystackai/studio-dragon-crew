@@ -602,7 +602,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot).
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry). + Pass 21: 3-foe gentle first room + entry bond particle burst for authored welcome. + Pass 22: magical bond rim lights + boosted focal halos for stronger protagonist presence, silhouette pop, and warm focal composition (no gameplay change). + Pass 23: Ember Crypt atmospheric embers + theme mote consistency for deeper handcrafted environmental life and screenshot depth in every room. + Pass 24: phase-2 boss vent particle escalation + pulsing lava vents + desktop canvas frame glow for final enraged-maw visual authorship and "painting viewport" presence. + Pass 25: bespoke personalized victory triumph art — hero + dragon silhouettes + element accents + bond glow in summary illustration reflect the exact chosen bond for unique, memorable win moments that feel handcrafted to the player's selection. + Pass 26: authored personalized defeat illustration (symmetric bond art, cool defiant palette for emotional closure on loss). + Pass 27: relic pickup faceted gem authorship (orbiting glint + 4 facets + soft aura for every reward orb to feel like a tiny handcrafted treasure, consistent with shrine gems and operator art mandate — no generic loot). + Pass 28: dragon idle personality head sway + gaze wander (gentle curious look-arounds when still for living companion authorship; deepens creature wonder without any gameplay cost).
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -2822,6 +2822,10 @@
     const bob = Math.sin(t / 310) * 1.15 + (d.vy || 0) * 0.04;
     const tilt = Math.max(-0.22, Math.min(0.22, (d.vx || 0) * 0.018));
     const s = (d.radius || 16) / 11; // scale for larger authored dragon (Pass 9)
+    // Pass 28: dragon idle personality — gentle head sway + micro look-around when nearly still (makes companion feel alive & curious even at rest, deepens "not a pet" authorship per art mandate + Dragon Crew creature wonder). Pure visual, zero gameplay/perf.
+    const speed = Math.hypot(d.vx || 0, d.vy || 0);
+    const idle = Math.max(0, 1 - Math.min(1, speed / 0.85));
+    const idleSway = Math.sin(t / 920) * 1.15 * idle + Math.sin(t / 1340) * 0.45 * idle;
     ctx.translate(d.x, d.y + bob);
     ctx.rotate(tilt);
 
@@ -2874,8 +2878,8 @@
       ctx.beginPath(); ctx.moveTo(-10 * s, -3); ctx.quadraticCurveTo(-2, -6 * s, 8 * s, -2); ctx.stroke();
     }
 
-    // head (larger, offset, expressive)
-    const hx = 17 * s;
+    // head (larger, offset, expressive; Pass 28: + idleSway lean for personality when still)
+    const hx = 17 * s + idleSway * 0.65;
     const hy = -1.5 + Math.sin(t / 340) * 0.6;
     ctx.fillStyle = bodyCol;
     ctx.beginPath(); ctx.arc(hx, hy, 9 * s, 0, Math.PI * 2); ctx.fill();
@@ -2918,9 +2922,11 @@
     ctx.fillStyle = d.type === 'cinder' ? 'rgba(255,90,40,0.08)' : 'rgba(160,220,255,0.07)';
     ctx.beginPath(); ctx.moveTo(-4 * s, 0); ctx.quadraticCurveTo(-17 * s, wingLift * 0.8, -1 * s, -8 * s); ctx.lineTo(-2 * s, 2); ctx.fill();
 
-    // eye (larger, blink, gaze, expressive)
+    // eye (larger, blink, gaze, expressive; Pass 28: idle gaze wander for curious living companion when not acting)
     const blink = (d.blinkCd || 40) < 8;
-    const gaze = (d.breathAngle || 0) * 0.1;
+    const activeGaze = (d.breathAngle || 0) * 0.1;
+    const idleGaze = idle * Math.sin(t / 680) * 0.7; // tiny look-around
+    const gaze = activeGaze + idleGaze;
     ctx.fillStyle = '#f8fbff';
     ctx.beginPath(); ctx.arc(hx + 4 * s + gaze * 0.5, hy - 1.2, blink ? 1.1 * s : 2.7 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = d.type === 'rime' ? '#0f2a3a' : '#111a2a';
