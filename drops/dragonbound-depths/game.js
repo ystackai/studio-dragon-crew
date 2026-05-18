@@ -2531,8 +2531,9 @@
       ctx.stroke();
     }
     // Pass 43 core visual read (operator_diablo_isometric_review_blocker fix): tile relief + raised edge highlights for true 3D diamond floor planes (not flat diagonal lines). Light offset "facet" strokes give each tile a visible raised lip/edge so the floor reads as handcrafted isometric ARPG combat surface with depth and walkable facets immediately on first frame.
-    ctx.strokeStyle = 'rgba(225,210,160,0.042)';
-    ctx.lineWidth = 0.95;
+    // Pass 44: micro elevation — slightly stronger facet relief alpha + line for even crisper 3D tile pop on the opening frame (still subtle, keeps moody fantasy but makes the diamond planes and protagonist silhouettes read instantly at screenshot glance per the exact review demand for "visible floor planes/edges" and "legible at screenshot glance").
+    ctx.strokeStyle = 'rgba(225,210,160,0.055)';
+    ctx.lineWidth = 1.05;
     for (let d = -120; d < r.w + r.h; d += 68) {
       ctx.beginPath();
       ctx.moveTo(d + 2.5, 2.5);
@@ -2561,17 +2562,18 @@
       // Pass 43 core visual read elevation (addresses operator_diablo_isometric_review_blocker_2026_05_18_head_a883f0d + required_next_pass "stronger 3/4/diamond-space composition, visible floor planes/edges, wall/prop height or extrusion cues, and a brighter readable combat pocket around P1 + dragon"):
       // 1. Wall height extrusion cue: dark perimeter bands create vertical enclosure "ruin walls rising around the diamond floor" so boundaries read as 3D architecture immediately, not flat lines.
       // 2. Brighter focal combat pocket (warm radial light pool centered on default player spawn 360,340 + dragon offset): makes the exact opening focal area (P1+dragon+first foes) a lit readable "stage" against moody grove edges — screenshot the default Ember+Cinder frame and the protagonists pop legibly without HUD.
-      ctx.fillStyle = 'rgba(0,0,0,0.13)';
+      ctx.fillStyle = 'rgba(0,0,0,0.16)';
       ctx.fillRect(0, 0, r.w, 42); ctx.fillRect(0, r.h - 42, r.w, 42);
       ctx.fillRect(0, 0, 42, r.h); ctx.fillRect(r.w - 42, 0, 42, r.h);
       // focal pocket light (subtle, layered, no perf; drawn early so grid/prop sit on lit stage)
+      // Pass 44: stronger pocket intensity (0.22/0.11) + slightly larger outer for even more commanding readable combat "stage" framing the default P1+dragon+foes on the 3D diamond floor — directly elevates the "brighter readable combat pocket around P1 + dragon" requirement from the operator_diablo review while preserving moody atmosphere and all prior god-ray/mote/grace/leaf layers.
       ctx.save();
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = 0.22;
       ctx.fillStyle = '#b4e8a8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 285, 195, -0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.08;
+      ctx.beginPath(); ctx.ellipse(370, 305, 295, 205, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.11;
       ctx.fillStyle = '#d4f8c8';
-      ctx.beginPath(); ctx.ellipse(370, 305, 175, 122, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(370, 305, 182, 128, -0.08, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
       // moonlit forest ruin — layered canopy, trunks, roots, hanging moss, soft god rays
       ctx.fillStyle = 'rgba(55, 95, 55, 0.22)';
