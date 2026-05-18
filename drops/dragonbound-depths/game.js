@@ -344,6 +344,27 @@
         ]
       },
       {
+        id: 'fissure',
+        name: 'Lava Fissure',
+        theme: 'fissure',
+        w: 1240, h: 780,
+        walls: [
+          {x: 110, y: 110, w: 90, h: 160}, {x: 860, y: 90, w: 140, h: 70},
+          {x: 280, y: 510, w: 130, h: 80}, {x: 920, y: 420, w: 80, h: 150}
+        ],
+        doors: [
+          {to: 2, x: 0, y: 320, w: 22, h: 80, dir: 'west'},
+          {to: 4, x: 600, y: 0, w: 80, h: 22, dir: 'north'}
+        ],
+        spawns: [
+          {x: 220, y: 240, type: 'burrow'},
+          {x: 460, y: 180, type: 'drake'},
+          {x: 680, y: 340, type: 'archer'},
+          {x: 820, y: 520, type: 'skitter'},
+          {x: 380, y: 580, type: 'wisp'}
+        ]
+      },
+      {
         id: 'boss',
         name: 'The Maw of Ash',
         theme: 'boss',
@@ -434,6 +455,10 @@
       base.hp = 72; base.maxHp = 72; base.radius = 18; base.speed = 0.7; base.shielded = true; base.elite = true;
     } else if (type === 'wisp') {
       base.hp = 27; base.maxHp = 27; base.radius = 11; base.speed = 1.1; base.ranged = true; base.shootCd = 55; base.phase = 0;
+    } else if (type === 'burrow') {
+      base.hp = 34; base.maxHp = 34; base.radius = 10; base.speed = 1.6; base.burrowCd = rand(80, 140); base.underground = false;
+    } else if (type === 'drake') {
+      base.hp = 29; base.maxHp = 29; base.radius = 12; base.speed = 2.1; base.ranged = false; base.diveCd = 70; base.elite = true;
     }
     base.baseSpeed = base.speed || 1.2;
     return base;
@@ -965,6 +990,33 @@
           playSound('enemy-shot', 0.35);
         }
 
+        // burrower ambush
+        if (en.type === 'burrow') {
+          en.burrowCd -= 1;
+          if (en.burrowCd <= 0) {
+            en.underground = !en.underground;
+            en.burrowCd = en.underground ? 48 : rand(90, 160);
+            if (!en.underground) {
+              // emerge damage
+              players.forEach(pl => { if (dist(pl.x, pl.y, en.x, en.y) < 38) damagePlayer(pl, 8, en.x, en.y); });
+              for (let k=0; k<6; k++) particles.push(createParticle(en.x, en.y, rand(-2,2), rand(-2,2), 14, '#8a5a3a', 3, 'death'));
+            }
+          }
+          if (en.underground) { en.vx *= 0.3; en.vy *= 0.3; }
+        }
+
+        // drake dive charge
+        if (en.type === 'drake') {
+          en.diveCd -= 1;
+          if (en.diveCd <= 0 && best < 280) {
+            en.diveCd = 95;
+            const da = angle(en.x, en.y, tx, ty);
+            en.vx = Math.cos(da) * 5.8;
+            en.vy = Math.sin(da) * 5.8;
+            players.forEach(pl => { if (dist(pl.x, pl.y, en.x, en.y) < 44) damagePlayer(pl, 10, en.x, en.y); });
+          }
+        }
+
         if (best < (en.radius + 18) && !en.ranged) {
           // melee hit
           players.forEach(pl => {
@@ -1369,6 +1421,24 @@
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = 'rgba(190, 140, 255, 0.6)';
         ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 1.6, 0, Math.PI * 2); ctx.fill();
+      } else if (en.type === 'burrow') {
+        if (!en.underground) {
+          ctx.fillStyle = flash ? '#fff' : '#4a3a2a';
+          ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#2a2118';
+          ctx.fillRect(en.x - 3, en.y - 2, 6, 4);
+        } else {
+          ctx.fillStyle = 'rgba(60, 40, 30, 0.3)';
+          ctx.beginPath(); ctx.arc(en.x, en.y, en.radius * 0.7, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (en.type === 'drake') {
+        ctx.fillStyle = flash ? '#fff' : '#2f3a3a';
+        ctx.beginPath(); ctx.ellipse(en.x, en.y, en.radius * 1.3, en.radius * 0.7, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#1f2a2a';
+        ctx.beginPath(); ctx.arc(en.x + 8, en.y - 3, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#6a8a7a';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(en.x - 6, en.y); ctx.lineTo(en.x - 16, en.y - 8); ctx.stroke();
       }
       ctx.restore();
 
@@ -1480,6 +1550,16 @@
       ctx.strokeStyle = 'rgba(255, 90, 50, 0.25)';
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(180, 200); ctx.quadraticCurveTo(400, 480, 820, 310); ctx.stroke();
+    }
+    if (r.theme === 'fissure') {
+      ctx.fillStyle = 'rgba(120, 50, 30, 0.22)';
+      ctx.fillRect(140, 180, 200, 120);
+      ctx.fillRect(780, 320, 160, 90);
+      ctx.strokeStyle = 'rgba(255, 110, 40, 0.3)';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(90, 300); ctx.quadraticCurveTo(320, 520, 680, 380); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 140, 50, 0.18)';
+      ctx.beginPath(); ctx.arc(420, 410, 38, 0, Math.PI * 2); ctx.fill();
     }
 
     // boundary glow

@@ -203,13 +203,15 @@ h1 {
 /* GAME */
 #game-container {
   position: relative;
-  width: 960px;
-  height: 620px;
+  width: min(960px, 98vw);
+  height: min(620px, calc(98vw * 0.645));
+  max-height: 92vh;
   border: 1px solid rgba(212, 175, 119, 0.2);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
   background: #0a0f1a;
+  aspect-ratio: 960 / 620;
 }
 
 #game-canvas {
