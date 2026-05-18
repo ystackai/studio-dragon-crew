@@ -3097,6 +3097,36 @@
           }
         }
       });
+      // Pass 88 (pre-deadline foreground layering + diorama authorship for operator art mandate "layered environments", "foreground/background layering", "composed chamber", "worth sharing" + to give the P1+dragon+foes focal pocket a deliberate "stage" read as viewer peers down the 3/4 hall over near-field reclaimed roots): 3 low mossy root/ledge clusters drawn "in front" (higher y under iso) of the default Ember+Cinder spawn pocket (centered ~468,355). Slow gentle organic sway on tips + inner facet glints catching the god rays from above. Creates near-camera framing mass that makes the protagonists + first foes sit deeper in the handcrafted ruin diorama, enhancing the "looking down into an authored 3/4 fantasy ARPG set piece" composition at cold-start screenshot glance without any actor occlusion. Pure visual draw in game.js (reuses t), zero gameplay/collision/safety/verify impact. Visible first-frame playfield diff in lower focal of Grove opening (new layered silhouette interplay), preserves 13s+ no-input + 71/71.
+      ctx.strokeStyle = 'rgba(38, 52, 32, 0.65)';
+      ctx.lineWidth = 2.8;
+      const fgRoots = [
+        {x: 335, y: 482, count: 4, phase: 1.2, len: 38},
+        {x: 428, y: 501, count: 3, phase: 3.7, len: 29},
+        {x: 522, y: 489, count: 5, phase: 0.4, len: 44}
+      ];
+      fgRoots.forEach((rc, ri) => {
+        for (let k = 0; k < rc.count; k++) {
+          const sway = Math.sin(t * 0.61 + rc.phase + k * 1.9) * (2.8 + (k % 2) * 1.1);
+          const rx = rc.x + k * 4.8;
+          ctx.beginPath();
+          ctx.moveTo(rx, rc.y);
+          ctx.quadraticCurveTo(rx + sway * 0.4, rc.y + rc.len * 0.55, rx + sway * 0.7, rc.y + rc.len);
+          ctx.stroke();
+          // tiny barb / rootlet tip
+          ctx.fillStyle = 'rgba(95, 118, 72, 0.72)';
+          ctx.beginPath();
+          ctx.arc(rx + sway * 0.6, rc.y + rc.len - 0.8, 1.6, 0, Math.PI * 2);
+          ctx.fill();
+          // facet glint catching overhead god rays (3D integration with shafts)
+          if ((ri + k) % 2 === 0) {
+            ctx.fillStyle = 'rgba(205, 235, 165, 0.58)';
+            ctx.beginPath();
+            ctx.arc(rx + sway * 0.25, rc.y + rc.len * 0.62, 0.9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
       ctx.lineWidth = 1;
     }
     if (r.theme === 'crystal') {
