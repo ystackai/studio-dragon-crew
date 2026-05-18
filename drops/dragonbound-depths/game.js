@@ -2519,6 +2519,13 @@
       ctx.fillStyle = 'rgba(140, 220, 120, 0.55)';
       ctx.beginPath(); ctx.arc(280, 310, 6, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(720, 540, 4.5, 0, Math.PI * 2); ctx.fill();
+      // Pass 33: subtle drifting magical motes (slow floating light specks for "living enchanted air" in first room + every grove visit; makes the authored viewport feel handcrafted and alive even at rest, screenshot depth per art mandate + Snow Dragon polish lens)
+      ctx.fillStyle = 'rgba(195, 235, 170, 0.18)';
+      for (let m = 0; m < 4; m++) {
+        const mx = 140 + ((m * 97) % 380) + Math.sin(t * 0.21 + m * 1.7) * 18;
+        const my = 90 + ((m * 53) % 260) + Math.cos(t * 0.17 + m) * 14;
+        ctx.beginPath(); ctx.arc(mx, my, 1.6 + (m % 2) * 0.4, 0, Math.PI * 2); ctx.fill();
+      }
     }
     if (r.theme === 'crystal') {
       // crystal hollow — floating clusters, facet glows, light refraction, stalagmites
@@ -2541,6 +2548,13 @@
       // refracted light shafts (serene, precious)
       ctx.fillStyle = 'rgba(170, 220, 255, 0.08)';
       ctx.beginPath(); ctx.moveTo(420, 10); ctx.lineTo(380, 520); ctx.lineTo(410, 520); ctx.lineTo(450, 10); ctx.fill();
+      // Pass 33: drifting crystal motes (ethereal floating glints in the hollow; enriches the first ARPG read with magical atmosphere and depth for screenshot moments)
+      ctx.fillStyle = 'rgba(180, 230, 255, 0.22)';
+      for (let m = 0; m < 3; m++) {
+        const mx = 220 + ((m * 131) % 420) + Math.sin(t * 0.26 + m * 2.1) * 22;
+        const my = 70 + ((m * 67) % 180) + Math.cos(t * 0.19 + m * 0.8) * 11;
+        ctx.beginPath(); ctx.arc(mx, my, 1.4 + (m % 2) * 0.5, 0, Math.PI * 2); ctx.fill();
+      }
     }
     if (r.theme === 'sanctum') {
       // cursed sanctum — carved pillars, rune floor, broken arches, quiet magic
@@ -2576,6 +2590,13 @@
       ctx.fillStyle = 'rgba(255, 110, 40, 0.16)';
       ctx.beginPath(); ctx.arc(380, 620, 22, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(820, 590, 18, 0, Math.PI * 2); ctx.fill();
+      // Pass 33: slow rising ember motes (warm drifting sparks in the crypt; consistent living atmosphere across all 5+ rooms so every transition feels authored and wondrous, not empty)
+      ctx.fillStyle = 'rgba(255, 160, 90, 0.15)';
+      for (let m = 0; m < 3; m++) {
+        const mx = 180 + ((m * 87) % 520) + Math.sin(t * 0.14 + m) * 16;
+        const my = 420 + ((m * 41) % 140) - Math.cos(t * 0.11 + m * 1.3) * 9; // rising bias
+        ctx.beginPath(); ctx.arc(mx, my, 1.3 + (m % 2) * 0.35, 0, Math.PI * 2); ctx.fill();
+      }
     }
     if (r.theme === 'fissure') {
       // lava fissure — jagged rocks, lava pools with specular, heat vents, stalactites
