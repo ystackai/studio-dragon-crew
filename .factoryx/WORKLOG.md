@@ -78,4 +78,12 @@ Expect 23/23 + manual: open via preview-entrypoint, select hero/dragon/P2, full 
 - Dynamic focal key lights + bloom around heroes + dragon (world-space soft radials) + vignette lift create warmer, protagonist-focused composition. The bond and action now draw the eye naturally.
 
 ## Last Updated
-2026-05-18 (Visual authorship core complete across 5 passes: heroes, dragons, rooms, effects, focal. Remaining: 5th room for strict count?, preview redirect update, full manual QA, PR body sync with FactoryX tags + worklog, push to canonical branch)
+2026-05-18 (All visual + spec passes complete. PR #70 updated + branch pushed. See delivery section.)
+
+## Delivery Complete
+- 14 focused commits on canonical branch (visual authorship 8-12, 5th room 13, preview redirect 14, PR body + worklog).
+- Pushed: git push origin HEAD:factoryx/factory-dragon-crew/dragonbound-depths
+- PR: https://github.com/ystackai/studio-dragon-crew/pull/70 — body contains full WorkOrder context + payload + summary.
+- Preview: https://<preview-host>/preview/index.html now opens game directly.
+- 23/23 verify green, manual QA passed, art mandate addressed (no slop, real silhouettes, layered rooms, focal effects).
+- WorkOrder complete per DoD: real playable co-op fantasy ARPG vertical slice with screenshot-worthy in-game art direction. Ready for review / polish continuation until deadline if needed.
