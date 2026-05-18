@@ -1168,6 +1168,16 @@
             if (r.id === 'ward') { wardCharges = 1; }
             if (r.id === 'dragonheart' && dragon) { dragon.attackCd = Math.floor(dragon.attackCd * 0.5); }
           }
+          // extra particles for satisfying relic pickup pop (visual authorship)
+          for (let i = 0; i < 8; i++) {
+            const a = rand(0, 6.28);
+            const sp = 1.6 + Math.random();
+            particles.push(createParticle(
+              pu.x + Math.cos(a) * 5, pu.y + Math.sin(a) * 5,
+              Math.cos(a) * sp, Math.sin(a) * sp - 0.5,
+              14 + rand(0, 8), '#d4af77', 2.1, 'spark'
+            ));
+          }
         }
         pu.life = 0;
         playSound('pickup', 0.5);
@@ -1332,22 +1342,33 @@
     const alive = [player1, player2].filter(pl => pl && !pl.downed);
     if (!alive.length) return;
 
-    let avgX = 0, avgY = 0;
-    alive.forEach(pl => { avgX += pl.x; avgY += pl.y; });
-    avgX /= alive.length;
-    avgY /= alive.length;
+    let avgX = 0, avgY = 0, avgVx = 0, avgVy = 0;
+    alive.forEach(pl => { avgX += pl.x; avgY += pl.y; avgVx += (pl.vx || 0); avgVy += (pl.vy || 0); });
+    avgX /= alive.length; avgY /= alive.length;
+    avgVx /= alive.length; avgVy /= alive.length;
 
-    const targetZoom = room.isBoss ? 0.82 : (alive.length > 1 ? 0.94 : 1.06);
-    camera.zoom = lerp(camera.zoom, targetZoom, 0.08);
+    let targetZoom = room.isBoss ? 0.82 : (alive.length > 1 ? 0.94 : 1.06);
+    if (alive.length > 1) {
+      const sep = dist(alive[0].x, alive[0].y, alive[1].x, alive[1].y);
+      if (sep > 180) targetZoom = Math.max(0.78, targetZoom - 0.07);
+      if (sep > 280) targetZoom = Math.max(0.70, targetZoom - 0.05);
+    }
+    camera.zoom = lerp(camera.zoom, targetZoom, 0.09);
+
+    // predictive lead + adaptive follow for soft catch-up when dashing apart
+    const lead = 18;
+    let cx = avgX + avgVx * lead * 0.018;
+    let cy = avgY + avgVy * lead * 0.018;
+    const curDist = dist(camera.x, camera.y, avgX, avgY);
+    const followT = (curDist > 95 || Math.hypot(avgVx, avgVy) > 2.4) ? 0.20 : (curDist > 45 ? 0.135 : 0.095);
+    cx = lerp(camera.x, cx, followT);
+    cy = lerp(camera.y, cy, followT);
 
     // soft bounds so players don't vanish off edges
     const viewW = canvas.width / camera.zoom;
     const viewH = canvas.height / camera.zoom;
-    let cx = lerp(camera.x, avgX, 0.12);
-    let cy = lerp(camera.y, avgY, 0.12);
-
-    cx = clamp(cx, viewW * 0.5 - 40, room.w - viewW * 0.5 + 40);
-    cy = clamp(cy, viewH * 0.5 - 40, room.h - viewH * 0.5 + 40);
+    cx = clamp(cx, viewW * 0.5 - 48, room.w - viewW * 0.5 + 48);
+    cy = clamp(cy, viewH * 0.5 - 48, room.h - viewH * 0.5 + 48);
 
     camera.x = cx;
     camera.y = cy;
