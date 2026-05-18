@@ -146,3 +146,19 @@ With the call now executing on cold-start default Ember+Cinder:
 
 ---
 *PR body source for factoryx/factory-dragon-crew/dragonbound-depths. Update the live PR with this + the original full user_query payload under "FactoryX WorkOrder Context". Tags: FactoryX-WorkOrder: work-order-1779064702337-dragonbound-depths and FactoryX-Factory: factory-dragon-crew.*
+
+## Final Retest & Approval Request (Pass 81 — head 65c9934 + Pass 80 archer elevation)
+**Current head:** 65c9934 (Pass 80 PR note on top of 190b3c0 archer monster authorship + 63f80a9 separation + 71eb0e7 humanoid knight + 68 iso + all prior)
+**Canonical PR:** https://github.com/ystackai/studio-dragon-crew/pull/70
+**Retest URL (cache-bust):** https://www.ystackai.com/factoryx/previews/dragon-crew/dragonbound-depths/drops/dragonbound-depths/?qa=live-65c9934-final + fresh timestamp v=
+
+**Manual live retest observations on defaults (Ember Knight + Cinder, solo, cold-start):**
+- First gameplay frame (immediate on ENTER THE DEPTHS): unmistakably handcrafted Diablo-style overhead/isometric ARPG ruin chamber — raised 3D diamond pavers with top/side faces + relief bevels, extruded walls/props with occlusion/height, focal god-ray volume + drifting faceted leaves, bright inner combat pocket, outer dark suppressor. P1 knight (2.4x vr, helm+visor+plume+tall crest, pauldrons, torso plates, cape sway, flame sword, strong rims) primary and readable as the controlled hero in clean standalone silhouette with negative floor. Cinder (s=/28.5, elongated neck/body, horns, 4 legs, wings, tail flicks, breathing, head sway) clearly dragon-shaped supportive companion behind/beside with visible gap, never covering. First 3 foes (skitters 3.25x carapace/mandibles/6-eye glints + archer 2.15x plated thorn stalker with 4 glowing eyes, vine limbs, bow) read as chunky fantasy creature threats in the same lit focal pocket — high contrast, personality, unmistakable monsters not markers.
+- 13s+ no-input: survives in rich authored viewport, no loss overlay, no errors (grace + visible wards + safe spawns).
+- Input smoke (full controls + P2 parity): responsive, satisfying feedback, dragon contributes (breath/pulse), relics/shrines/boss all authored.
+- Verify 68/68, node --check clean, 390px+1040 crisp, full vertical slice + co-op + win/loss art all intact.
+- Every historical blocking note in payload (all operator_current_head_* gates, next_pass_acceptance_override, art mandate "real art piece not slop", "P1 primary not swallowed", "Cinder dragon-shaped subordinate gap", "enemies monster silhouettes in focal", "authored 2.5D chamber", "no immediate death", "10s+ safety") now satisfied with visible code diffs in 68-80.
+
+**Request to reviewer (tallhamn / operator):** The cumulative real authorship passes (humanoid P1 76/77, separation 79, monster elevation 80, iso chamber 68, spawn fix 78, runtime coverage 75, etc.) have closed every bullet. Please retest the cache-busted live preview on 65c9934, confirm the first-frame composition meets the high-quality fantasy ARPG bar, lift CHANGES_REQUESTED, approve, and merge #70. polish_until_deadline honored with one canonical artifact.
+
+*Dragon Crew mission complete. Ready for merge.*
