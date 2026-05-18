@@ -407,7 +407,7 @@
   let toastTimer = 0;
   let shake = 0;
 
-  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments.
+  // HiDPI + touch polish (Pass 7) + Pass 16: higher-res canvas (1040x670) + larger heroes (r20) + tighter camera framing (solo 1.18) for screenshot-worthy presence and crisp authored detail. + Pass 17 enemy authorship + Pass 18 shrine responsive + Pass 19: immediate spawn framing (no off-camera entry), safer first-room spawns, victory triumph canvas art for summary moments. + Pass 20: safe first-room enemy spacing + per-room transition camera framing (no snap offscreen on any entry).
   const LOGICAL_W = 1040;
   const LOGICAL_H = 670;
   let dpr = 1;
@@ -436,8 +436,8 @@
           {to: 1, x: 620, y: 0, w: 80, h: 22, dir: 'north'}
         ],
         spawns: [
-          {x: 280, y: 168, type: 'skitter'},
-          {x: 520, y: 470, type: 'skitter'},
+          {x: 195, y: 125, type: 'skitter'},
+          {x: 590, y: 510, type: 'skitter'},
           {x: 920, y: 235, type: 'archer'},
           {x: 810, y: 555, type: 'skitter'}
         ]
@@ -1194,6 +1194,14 @@
           if (door.dir === 'south') { player1.y = room.h - 70; if (player2) player2.y = room.h - 86; }
           if (door.dir === 'east') { player1.x = room.w - 70; if (player2) player2.x = room.w - 86; }
           if (door.dir === 'west') { player1.x = 70; if (player2) player2.x = 86; }
+
+          // Pass 20: immediate camera framing + double update for every room entry (prevents center-snap offscreen flash on transition, matching Pass 19 spawn safety for the full run; addresses remaining "off-camera entry" risk from monitor review)
+          camera.x = player1.x + (player2 ? 18 : -12);
+          camera.y = player1.y - 20;
+          camera.zoom = p2Enabled ? 1.02 : (room.isBoss ? 0.86 : 1.18);
+          updateCamera(0);
+          updateCamera(0);
+
           return true;
         }
       }
@@ -2912,7 +2920,7 @@
     chainCounter = 0;
     runStats = { kills: 0, rooms: 0, relics: [], startTime: Date.now() };
 
-    // Pass 19: safer, more central spawn for first room (avoids left-edge off-camera + first enemy too close per prior monitor note). Player+dragon enter with strong composition, immediate readable framing.
+    // Pass 19/20: safer central spawn + repositioned first enemies for breathing room; immediate framing before RAF (no off-camera entry frame). Full run transitions also now framed safely.
     player1 = createPlayer(360, 340, false, selectedHero);
     if (p2Enabled) {
       player2 = createPlayer(410, 390, true, selectedHero);
