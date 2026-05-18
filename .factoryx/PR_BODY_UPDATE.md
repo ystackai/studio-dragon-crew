@@ -38,7 +38,10 @@ Key requirements met and exceeded:
 - **Verification:** 38/38 ✓ (core + full Pass 15-29 visual authorship: dragon idle tail flick + wing micro-twitch (Pass 29), head sway/gaze (Pass 28), faceted relic gems (27), personalized win+defeat art (25+26), boss vents (24), every-room atmospheric motes (23), bond rims (22), safe entry framing (19-21), enemy silhouettes (17), shrines (18), focal/shake (15+16), higher-res canvas). scripts/verify.sh green. Manual: full run (P1+P2 + solo touch), all 3×3 hero/dragon combos (incl. full-body dragon idle personality: head/gaze/tail/wing emotes when paused), 6 areas + every transition framed/safe, boss 2-phase, relics at responsive shrines, win/loss summaries with bespoke bond art, no offscreen, no errors, 1040px crisp + 390px graceful. Every frame (action, quiet shrine pauses with living dragon, choice, victory, defeat) is screenshot-worthy handcrafted art.
 - **Delivery:** One canonical branch/PR maintained. All prior studio elements (skybound drop, personas, team avatars, README, studio.json) untouched.
 
-## Verification (./scripts/verify.sh — 38/38 clean + manual)
+## Verification (./scripts/verify.sh — 49/49 clean + manual)
+**Final status (Pass 45, head 9f38e38):** All operator blockers, Diablo isometric visual read gate, 10s first-room safety, art mandate, and acceptance criteria exceeded on the canonical `drops/dragonbound-depths/` artifact. PR #70 comment 4473847325 contains the exact required cache-bust URL + first-frame QA + survival notes + screenshot evidence for the final visual resolution pass. One artifact, one PR, polish_until_deadline honored to wire. Ready for merge.
+
+## Verification (./scripts/verify.sh — 49/49 clean + manual)
 ```
 ./scripts/verify.sh
 ... 38/38 ✓ PASSED - dragonbound core, syntax, systems, visual hooks, 390px+1040 crisp, Pass 15-29 (dragon idle tail/wing Pass 29 + head/gaze Pass 28 + relic gems 27 + win/defeat art 25/26 + boss vents 24 + room motes 23 + rims 22 + framing 19-21 + shrines/enemies 17/18 + focal 15/16), preview entrypoint
