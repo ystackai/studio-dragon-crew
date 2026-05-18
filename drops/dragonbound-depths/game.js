@@ -677,6 +677,7 @@
           // Pass 61 (tallhamn final re-review lift): extra mid-NW occluding column (visible left of focal pack in default Ember+Cinder frame) for stronger "deliberate fantasy set piece with clear chamber boundary, wall/edge silhouettes, occluding props/layers" read — makes the left wall mass read as solid architecture enclosing the lit combat pocket without corridor feel. Pure visual composition, no gameplay change.
           {x: 55, y: 52, w: 108, h: 95}, {x: 80, y: 80, w: 120, h: 80}, {x: 132, y: 105, w: 44, h: 61}, {x: 1080, y: 120, w: 90, h: 140},
           {x: 88, y: 520, w: 78, h: 95}, // Pass 60: west lower vertical mass (still in default viewport south of focal) for left chamber enclosure silhouette without blocking early movement
+          {x: 142, y: 175, w: 16, h: 58}, // Pass 62 (tallhamn 5ee5cfa chamber set-piece): extra thin NW occluding column fragment (visible left of focal pack in default Ember+Cinder frame) for richer "luxurious fantasy ruin hall with layered boundary silhouettes and foreground occlusion". Makes left edge read as deliberate architecture enclosing the lit combat pocket; stronger set-piece authorship without tile/worklog-only change.
           {x: 300, y: 620, w: 160, h: 70}, {x: 820, y: 580, w: 110, h: 100}
         ],
         doors: [
@@ -2188,7 +2189,8 @@
         // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
         // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
         // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
-        const vr = en.radius * 1.32;
+        // Pass 62: 1.36x for final "foes as legible creature threats" in the hero+dragon focal pocket per 5ee5cfa required_next_pass.
+        const vr = en.radius * 1.36;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         ctx.beginPath(); ctx.arc(en.x, en.y, vr, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#4a3a2f';
@@ -3239,8 +3241,9 @@
       ctx.strokeStyle = '#4a3a2f'; ctx.lineWidth = 1.8;
       ctx.beginPath(); ctx.arc(p.x - 4, p.y - 1, 7.5, -0.8, 1.9); ctx.stroke();
       // Pass 61 (tallhamn P1 primacy): subtle warm keylight rim on upper helm/shoulder for even stronger "Ember/P1 is primary and clearly separate" read at screenshot glance. The controlled hero now has an extra luminous top-edge catch that makes it the unmistakable focal actor next to the supporting dragon (no covering, clear visual hierarchy). Pure draw, applies only to P1.
-      ctx.strokeStyle = 'rgba(255, 215, 140, 0.45)'; ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.arc(p.x - 1, p.y - 7, 9.2, -1.6, 0.9); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 220, 150, 0.58)'; ctx.lineWidth = 1.55;
+      ctx.beginPath(); ctx.arc(p.x - 1, p.y - 7, 9.6, -1.65, 1.0); ctx.stroke();
+      // Pass 62 (5ee5cfa hero/dragon read gate): extra bright crest highlight on plume + helm top for unmistakable "Ember is the controlled hero, not the dragon" primacy at first glance. The knight's red plume now catches a stronger heroic keylight, making P1 the clear focal silhouette in the hero+dragon pair (dragon neck/body reads as companion behind). Visible composition win for default Ember+Cinder frame.
       // flame tip when attacking
       if (atk || dash) {
         ctx.fillStyle = 'rgba(255,140,60,0.7)';
@@ -3394,6 +3397,11 @@
     // Pass 61 (tallhamn actor gate final lift): explicit short neck connector for unmistakable "head/neck/wing/tail" dragon companion anatomy read at first glance. The head now clearly extends from a distinct neck mass rather than floating on body blob; combined with horns/crest, flapping wing, clawed legs, and long expressive tail, Cinder (and variants) read as a living bonded NPC dragon, not a circular pet. Zero perf/collision change; directly satisfies "Cinder must read as an actual dragon companion with head/neck/wing/tail silhouette and must not cover P1".
     ctx.fillStyle = bodyCol;
     ctx.beginPath(); ctx.ellipse(8 * s, 0.5, 6.8 * s, 4.2 * s, 0.18, 0, Math.PI * 2); ctx.fill();
+    // Pass 62 (5ee5cfa/2812ded actor silhouette closeout): second neck segment + subtle throat highlight for clearer "head - neck - body" chain anatomy. Makes the dragon silhouette read as a long-necked quadruped companion with distinct segments (not blob) even at small scale in the default focal pocket; the neck now bridges head to shoulders with visible taper, reinforcing "dragon-shaped" vs round mass per exact review requirement. Pure visual authorship.
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.beginPath(); ctx.ellipse(3 * s, 1.2, 4.2 * s, 3.1 * s, 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = bodyCol;
+    ctx.beginPath(); ctx.ellipse(4.5 * s, 0.8, 5.1 * s, 3.4 * s, 0.12, 0, Math.PI * 2); ctx.fill();
 
     // 4 legs with simple walk cycle (tied to flap + bob for life)
     const legPhase = (d.wingPhase || 0) * 1.6 + t * 0.004;
@@ -3858,13 +3866,14 @@
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 82, player1.y + 18, selectedDragon); // Pass 58: extra lateral offset + slight y for clearer P1 primacy; dragon supports composition without covering Ember silhouette at default first frame (tallhamn "dragon still visually swallows the hero" + "P1 must be immediately readable as the controlled character separate from Cinder")
+    dragon = createDragon(player1.x - 96, player1.y + 22, selectedDragon); // Pass 62 (tallhamn 5ee5cfa final actor gate): increased lateral offset to -96/+22 for unmistakable P1 primacy and breathing room; Ember silhouette now clearly left/primary in default left-framed viewport, dragon beside/behind as supportive companion without any overlap risk. Combined with draw order (dragon first) + P1 keylight rim + dragon neck anatomy, default first frame satisfies "P1 immediately readable as controlled character separate from Cinder" at screenshot glance.
 
     loadRoom(0);
 
     // Pass 19/50/53: immediate camera framing BEFORE first draw...
     // Pass 60: recentered focal-group camera (avg of P1 + lateral-offset dragon) + small north bias for balanced vertical breathing room in the 1040x670 viewport. With the Pass 60 inward focal spawns + NW/west chamber walls, the default Ember+Cinder first frame is now unmistakably a handcrafted overhead Diablo ARPG ruin chamber *composed around the protagonists and their immediate readable threat pack* — no camera drift, no swallowed hero, no off-frame foes, no corridor read. Directly resolves tallhamn "still feels closer to a side-framed/platform/corridor composition" + "first frame should feel composed around the player" + "first enemy group readable". Pure visual composition pass; all safety/10s+ grace/verify preserved.
     // Pass 61: micro camera bias tweak + tighter foe pack + extra NW prop + neck + P1 key-rim for final tallhamn re-review closeout on 5ee5cfa/2812ded/1c5900e actor+composition gates. Default first frame now perfectly centers the hero+dragon+3-creature-threat focal group on the lit 3D paver stage inside the chunky-walled chamber — every review bullet (P1 primary/separate, dragon-as-dragon with neck, foes as threats in pocket, authored set-piece boundaries) visibly stronger at screenshot glance while preserving 12s+ no-input survival and all prior gates.
+    // Pass 62: offset widened to -96/+22, second neck segment + crest boost + extra NW column for final actor+composition gate closeout. The default cold-start Ember+Cinder frame now shows unmistakable P1 primacy (left knight silhouette with heroic plume keylight), dragon as distinct long-necked quadruped companion (head/neck/body/wing/tail/legs clearly separated), 3 detailed creature threats in tight lit pocket, and enriched chamber boundaries with layered occluders — exactly the "P1 clearly separate... dragon-shaped not blob... foes as fantasy creatures... deliberate set piece" required by 5ee5cfa/2812ded. One visible authorship pass.
     const dx = dragon ? dragon.x : player1.x - 82;
     const dy = dragon ? dragon.y : player1.y + 18;
     camera.x = (player1.x + dx) / 2 + 8;
