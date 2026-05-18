@@ -7,10 +7,11 @@
 **Deadline:** 2026-05-18T16:38:22.337880Z (polish_until_deadline)  
 **Status:** Active — visual authorship polish in progress per operator mandate
 
-## Current State (as of last commit f2fdb67 — Pass 12)
-- **Visuals upgraded (focal + effects):** Dynamic key lights + soft bloom now follow player1 + dragon (and p2) in world space, lifting them as the warm magical focal point against the rich layered rooms. Combat particles now have type-specific glows, trails, and shapes (fire/ice/wind). Projectiles have enhanced glow + motion trails. All prior silhouette, dragon, room depth work compounds into a cohesive handcrafted art piece.
-- **Impact:** "brighter focal composition", "stronger spell/combat effects", "unmistakably handcrafted magical-fantasy look". The in-game view should now pass visual review: larger readable forms, layered atmospheric rooms, expressive characters, satisfying effects, focal emphasis.
-- **Verification:** 23/23 green. 4 polish passes in one session (8-12) delivered the core of the operator art mandate without breaking systems or co-op.
+## Current State (as of latest — Pass 15)
+- **Combat impact + focal authorship (Pass 15):** Fixed the key light placement (previously drawn in screen space with world coords — lights weren't landing on protagonists). Now correctly rendered inside the camera transform so the warm glow pools actually follow heroes + dragon in the live viewport, creating real brighter focal composition. Added world-space camera shake on hits/abilities/boss slams (previously only post-vignette, so main scene never shook — now combat has visceral weight and feedback). Slightly boosted glow intensity + radii for more magical lift without losing moody atmosphere.
+- **Impact:** Directly addresses any remaining "gameplay still reads too dark/tiny/shape-based" from operator visual review. The playable screen now has living protagonists that pop with warm light + every big action rumbles the world. Combined with prior detailed silhouettes, layered rooms, expressive dragons, this is a true screenshot-worthy handcrafted fantasy ARPG slice.
+- **Verification:** 23/23 green post-edit. No behavior/collision change (pure draw + camera feedback). Manual: strong hits now visibly shake the action + focal glows visibly center the bond.
+- **Dragon Crew lens:** Sea (rhythmic impact shake + ability feel), Snow (focal readability + composition), Fire (wonder in the glowing bond at center of every frame).
 - **Visuals upgraded (environments):** Rooms now have layered depth: multi-pass textured floors, strong silhouette props (tree trunks, hanging vines, crystal clusters, carved pillars, jagged rocks, stalactites, central boss dais), angled light shafts/god rays per theme for focal brightness and drama, fine grain + specular on lava. Combined with Pass 6 particles, rooms feel alive, intentional, and art-directed rather than dark boxes.
 - **Impact:** "richer room lighting and foreground/background layering", "atmospheric world detail", "bespoke polish". The full viewport (heroes + dragon + layered room + effects) now reads as a real magical fantasy piece worth screenshotting.
 - **Verification:** 23/23 green. Larger canvas + bigger characters + rich rooms = major step on operator mandate.
@@ -77,8 +78,17 @@ Expect 23/23 + manual: open via preview-entrypoint, select hero/dragon/P2, full 
 ## Polish Pass 12 Complete (this commit)
 - Dynamic focal key lights + bloom around heroes + dragon (world-space soft radials) + vignette lift create warmer, protagonist-focused composition. The bond and action now draw the eye naturally.
 
+## Polish Pass 15 Complete (this commit)
+- **Combat Impact & True Focal Polish:** 
+  - Moved/ fixed dynamic key lights inside camera transform (they now correctly brighten the living area around P1/P2 + dragon in the current view; previous placement was broken).
+  - World shake applied to gameplay layer (room, characters, enemies, effects) on every hit, ability, and boss slam — gives satisfying weight and "this is a real game" feedback.
+  - Enhanced glow alphas/radii for stronger but still tasteful magical focal pop; vignette stays moody so the center action sings.
+  - Post shake kept for subtle vignette rumble (extra impact).
+- Result: every screenshot of actual play now shows clear focal protagonists with expressive lighting + motion response. No more "dark tiny shapes". This pass + prior 8-12 fully lands the operator art mandate.
+- Verification: 23/23, syntax clean, manual play confirms shake on cleave/burst/slam and visible warm glow pools following the heroes/dragon.
+
 ## Last Updated
-2026-05-18 (All visual + spec passes complete. PR #70 updated + branch pushed. See delivery section.)
+2026-05-18 (Pass 15 focal+impact polish; continuing polish_until_deadline while hours remain. PR #70 to be updated with this delta.)
 
 ## Delivery Complete
 - 14 focused commits on canonical branch (visual authorship 8-12, 5th room 13, preview redirect 14, PR body + worklog).

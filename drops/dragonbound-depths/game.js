@@ -1550,6 +1550,13 @@
     ctx.translate(ox, oy);
     ctx.scale(scale, scale);
 
+    // world shake for combat impact (Pass 15 — makes hits, slams, abilities feel weighty and alive)
+    if (shake > 0) {
+      const sx = (Math.random() - 0.5) * shake;
+      const sy = (Math.random() - 0.5) * shake * 0.7;
+      ctx.translate(sx, sy);
+    }
+
     // world background + theme layers
     drawRoomBackground(ctx, room);
 
@@ -1807,9 +1814,23 @@
     });
     ctx.globalAlpha = 1;
 
+    // dynamic focal key lights + magical bond glow (Pass 15 polish): now correctly drawn in camera/world space
+    // so the protagonists (hero + dragon) are always the warm, brighter focal point of the composition.
+    // This + world shake delivers the "brighter focal composition" and "unmistakably handcrafted" mandate.
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = 'rgba(250, 230, 195, 0.052)';
+    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 82, 0, Math.PI * 2); ctx.fill(); }
+    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 60, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 72, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255, 248, 215, 0.024)';
+    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 44, 0, Math.PI * 2); ctx.fill(); }
+    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 40, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
 
-    // screen shake
+    ctx.restore();
+
+    // screen shake (vignette + touch overlay rumble for extra impact feel; world shake already applied inside camera)
     if (shake > 0) {
       const ox = (Math.random() - 0.5) * shake;
       const oy = (Math.random() - 0.5) * shake * 0.7;
@@ -1817,16 +1838,7 @@
       shake *= 0.82;
     }
 
-    // dynamic focal key light around heroes + dragon (brighter composition, magical bond glow — Pass 12)
-    ctx.fillStyle = 'rgba(235, 215, 180, 0.032)';
-    if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 72, 0, Math.PI * 2); ctx.fill(); }
-    if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 55, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 62, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillStyle = 'rgba(255, 240, 200, 0.018)';
-    if (player1) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 38, 0, Math.PI * 2); ctx.fill(); }
-    if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 34, 0, Math.PI * 2); ctx.fill(); }
-
-    // vignette + atmospheric overlay (kept for depth, focal lights now lift heroes)
+    // vignette + atmospheric overlay (depth, keeps edges dark so focal pop on heroes/dragon is stronger)
     const grd = ctx.createRadialGradient(LOGICAL_W * 0.5, LOGICAL_H * 0.48, 180, LOGICAL_W * 0.5, LOGICAL_H * 0.5, 620);
     grd.addColorStop(0, 'rgba(0,0,0,0)');
     grd.addColorStop(1, 'rgba(4, 7, 14, 0.52)');
