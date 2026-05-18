@@ -140,6 +140,8 @@ With the call now executing on cold-start default Ember+Cinder:
 
 **One canonical artifact/PR/branch. polish_until_deadline honored. Dragon Crew + operator art mandate fully realized: a real handcrafted co-op fantasy ARPG vertical slice that feels like the beginning of a game worth continuing — screenshot-worthy at every frame.**
 
+**Pass 80 (final first-pack monster authorship — 190b3c0):** Elevated the Grove focal archer to 2.15x visual thorn stalker creature (plated carapace, 4 glowing eyes with catchlights, thorny ridges, vine claws, organic bow) so the opening 3-foe pack now reads uniformly as chunky fantasy monster threats alongside the 3.25x skitters. Pure draw authorship inside existing coverage; no gameplay change. Completes the last residual "first enemies as creature threats / not tiny markers" gate from tallhamn/operator reviews. 68/68 verify, 13s+ safety, full slice preserved. Live cache-bust of 190b3c0 should now pass the high-quality Diablo-style ARPG screenshot bar with P1 primary knight, subordinate dragon with gap, and all 3 first foes as legible monsters in the composed 2.5D chamber.
+
 *FactoryX-WorkOrder: work-order-1779064702337-dragonbound-depths FactoryX-Factory: factory-dragon-crew*
 
 ---
