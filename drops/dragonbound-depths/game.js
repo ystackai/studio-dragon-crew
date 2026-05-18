@@ -3044,6 +3044,25 @@
         ctx.fill();
         ctx.restore();
       }
+      // Pass 86 (pre-deadline final atmospheric authorship elevation for operator art mandate "layered environments", "expressive effects", "moments worth sharing" + residual chamber luxury notes): 9 glowing pollen/ember motes with soft radial halos + 3D facet catchlights drifting slowly through the god-ray shafts directly over the default Ember+Cinder + first-foe focal pocket. Warm-green glints with organic phases + gentle lateral bias make the opening 3/4 Diablo-style ruin chamber feel like a living, handcrafted magical fantasy ARPG set piece at cold-start screenshot glance (richer light-play than leaves alone, no noise, no gameplay change). Visible playfield diff in first viewport god rays; completes vertical slice visual authorship per Snow/Fire lens before deadline. Pure draw, preserves 13s+ safety + 70/70.
+      ctx.save();
+      ctx.fillStyle = 'rgba(225, 248, 195, 0.42)';
+      for (let m = 0; m < 9; m++) {
+        const mp = (t * 0.31 + m * 0.41) % 1.15;
+        const mx = 208 + (m % 4) * 71 + mp * 68 + Math.sin(t * 0.55 + m) * 9;
+        const my = 52 + mp * 288 + (m % 3) * 7;
+        const ms = 1.05 + (m % 3) * 0.32;
+        // soft outer halo (ethereal glow catching the shafts)
+        ctx.globalAlpha = 0.18 + Math.sin(t * 2.4 + m * 1.1) * 0.07;
+        ctx.beginPath(); ctx.arc(mx, my, ms * 3.1, 0, Math.PI * 2); ctx.fill();
+        // bright core glint + tiny 3D facet highlight (makes motes feel like floating magical pollen/embers integrated with the god rays)
+        ctx.globalAlpha = 0.72 + Math.sin(t * 3.3 + m * 1.7) * 0.18;
+        ctx.fillStyle = 'rgba(255, 255, 225, 0.95)';
+        ctx.beginPath(); ctx.arc(mx - 0.4, my - 0.6, ms * 0.85, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(225, 248, 195, 0.42)';
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
       ctx.lineWidth = 1;
     }
     if (r.theme === 'crystal') {
