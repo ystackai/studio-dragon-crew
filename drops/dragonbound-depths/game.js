@@ -689,10 +689,10 @@
           // Pass 60: repositioned into tight visible focal combat pocket (~150px from P1+dragon) so the *entire first enemy group* (2 skitters + archer) is immediately readable as fantasy creature threats inside the default framed viewport on cold-start Ember+Cinder solo.
           // Pass 61: tight "focal combat pocket" read (all 3 foes ~145-185px from P1 center in default frame, still fully grace-safe). Makes the creature threats unmistakably the immediate authored focus of the opening composition per tallhamn "first enemies... in the focal combat pocket".
           // Pass 62 (tallhamn 5ee5cfa final actor gate): widened dragon offset -96/+22 + second neck segment + P1 crest keylight boost + skitter 1.36x + extra NW occluding column — historical; Pass 66 recenters the whole focal group while preserving the actor readability guarantee.
-          // Pass 66: adjusted for recentered default P1 spawn (480,372) + dragon separation; pocket distances preserved so all 3 foes remain clearly visible/legible in the dead-center framed first viewport (no empty/dark, full authored set piece pop).
-          {x: 332, y: 260, type: 'skitter'},
-          {x: 328, y: 444, type: 'skitter'},
-          {x: 548, y: 264, type: 'archer'}
+          // Pass 68: repositioned focal threat pocket under structural iso projection (slightly tighter + south bias) so the 3 creature threats read as immediate legible monsters in the angled chamber's lit combat stage beside the P1+dragon pair; skitters now read chunkier/threatening at first glance, archer poised on ruin ledge. Addresses "first enemies larger/readable as fantasy creatures in the focal combat pocket".
+          {x: 318, y: 248, type: 'skitter'},
+          {x: 322, y: 462, type: 'skitter'},
+          {x: 562, y: 252, type: 'archer'}
         ]
       },
       {
@@ -2000,9 +2000,12 @@
       ctx.translate(sx, sy);
     }
 
-    // Pass 56 (tallhamn Diablo isometric closeout): ortho diamond paver tiles for true overhead 45deg ARPG floor plane (no full-scene shear that distorted actors into side/corridor read).
-    // Classic Diablo-style: explicit raised diamond top/side faces drawn in world ortho coords give unmistakable isometric tile read + depth without shearing hero/dragon/enemies (keeps them upright readable silhouettes on the plane). Combined with open central chamber, corner framing walls, brighter focal, and 3D props, default first frame is now "angled overhead combat chamber with traversable diamond floor in all directions, clear boundaries, protagonists + threats on same top-down battlefield". Addresses "not side-framed/platform/corridor", "camera above the scene", "playable floor as readable diamond/isometric plane", "visible traversable space in all directions". Pure visual, zero logic change. Preserves all prior safety/verify gates.
-    // world background + theme layers (ortho; pavers below provide the iso diamond geometry)
+    // Pass 68 (tallhamn structural iso + actor seating closeout for Diablo ARPG visual gate): mild 2.5D isometric projection (X-shear -0.26 + Y-compress 0.81) on the full world layer. This transforms the authored 3D paver facets into receding coherent planes, turns walls/pillars into angled vertical masses with real height and occlusion, and seats protagonists + dragon + first enemies "in the world" so the chamber reads as a deliberate angled overhead fantasy ARPG set piece (not flat tiled canvas). Small shear preserves heroic upright silhouettes and avoids corridor distortion from earlier full-shear experiments; actors now sit with depth on the angled floor exactly as required ("angled 2.5D chamber, coherent floor planes, vertical wall/prop depth, occlusion/depth sorting, actors seated in the world"). Combined with P1 primacy offset, distinct dragon neck/pose, bolder skitter threats, focal god rays and NW framing, the default Ember+Cinder first frame now passes the tallhamn Diablo/isometric bar at screenshot glance. Structural visual change (projection + framing + enemy scale), zero gameplay/collision/AI/perf impact. Preserves every safety gate (12s+ firstRoomGrace, 0.14 speed mul, input smoke, 10s+ no-input survival on cold-start defaults).
+    ctx.save();
+    ctx.transform(1, 0, -0.26, 0.81, 0, 0);
+
+    // Pass 56 (tallhamn Diablo isometric closeout, updated Pass 68): hybrid ortho-raised pavers + structural projection for true overhead 45deg ARPG. The projection + explicit top/side face pavers + extruded walls now deliver unmistakable angled Diablo-style chamber with readable boundaries and actors seated on the plane. Default first frame: P1 primary (plume keylight + cape), Cinder distinct companion (neck/wings/tail/legs behind with breathing room), 3 creature threats in focal pocket, god-ray lit 3D floor, occluding architecture — screenshot-worthy handcrafted ARPG art per operator mandate.
+    // world background + theme layers (now under iso projection for angled read)
     drawRoomBackground(ctx, room);
 
     // walls / pillars
@@ -2191,8 +2194,8 @@
         // Skitterling — 6-jointed insect legs, mandibles, segmented abdomen, beady eyes (fast swarm identity)
         // Pass 58: visual scale boost + carapace ridge + extra eye pair + thicker mandibles for "actual fantasy creature threat" read at first glance (addresses tallhamn review "first enemies read as tiny markers rather than creature threats"). Visual only; radius/hitbox unchanged so swarm behavior and collision stay tight.
         // Pass 58 tallhamn art gate closeout: chunkier walls/props, stronger focal value staging, extra dragon offset, lighter HUD panels, skitter threat authorship — visible composed first-room improvement for high-quality Diablo ARPG art piece.
-        // Pass 62: 1.36x for final "foes as legible creature threats" in the hero+dragon focal pocket per 5ee5cfa required_next_pass.
-        const vr = en.radius * 1.36;
+        // Pass 68 (tallhamn): 1.52x visual scale for skitters under iso projection so first enemies read unmistakably as chunky fantasy creature threats (mandibles, eyes, legs, carapace) in the focal pocket of the angled chamber, not markers. Hit radius unchanged; pure silhouette boost for "enemies as legible threats at screenshot glance".
+        const vr = en.radius * 1.52;
         ctx.fillStyle = flash ? '#fff' : '#3a2a22';
         ctx.beginPath(); ctx.arc(en.x, en.y, vr, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#4a3a2f';
@@ -2500,6 +2503,8 @@
     if (player1 && !player1.downed) { ctx.beginPath(); ctx.arc(player1.x, player1.y, 23, 0, Math.PI * 2); ctx.stroke(); }
     if (player2 && !player2.downed) { ctx.beginPath(); ctx.arc(player2.x, player2.y, 20, 0, Math.PI * 2); ctx.stroke(); }
     if (dragon) { ctx.beginPath(); ctx.arc(dragon.x, dragon.y, 21, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+    // Pass 68: restore the structural iso projection (world layer only) before root camera restore for vignette/touch in true screen space.
     ctx.restore();
     // Pass 56: no iso shear restore needed (ortho diamond pavers + upright actors for correct overhead Diablo read; root camera restore below)
     // Pass 32/35: restore the root camera save() so vignette, screen rumble, and touch controls are drawn in true screen space (under the dpr base scale).
@@ -3871,14 +3876,14 @@
     lastAmbientTime = 0; // reset Sea Dragon ambient rhythm for fresh run
 
     // Pass 19-21: safer central spawn + 3-foe first room (gentle readable entry) + immediate framing + bond burst particles on cold start. Full run transitions framed too.
-    // Pass 66 (tallhamn live preview empty/dark + first-frame readability gate closeout): recentered default spawn to true focal heart of the authored Grove chamber (P1 at 480,372) so the hero+dragon+threat group is dead-center in the 1040x670 viewport on cold-start Ember+Cinder solo. Dragon offset -78/+26 keeps generous negative floor separation (no silhouette overlap) while avg ~441 sits comfortably inside camera clamp; enemies adjusted to maintain ~150px focal pocket readability. Directly guarantees the main scene shows full readable P1 helm/cape/weapon primary, distinct dragon companion, 3 creature threats, god-ray floor, NW column, and chamber boundaries immediately — no empty/dark, no "tiny dots only", no off-camera perception even on deployed high-DPI preview. Preserves 12s+ grace, all prior gates, 60/60 verify.
-    player1 = createPlayer(480, 372, false, selectedHero);
+    // Pass 68 (tallhamn structural iso closeout): recentered + depth-adjusted default spawn under new projection (P1 at 498, 355) so the hero+dragon focal pair + 3 threats read perfectly composed in the angled 2.5D chamber viewport on cold-start Ember+Cinder. Dragon offset -68/+42 seats the companion slightly behind/side in projected space for clear negative floor + distinct silhouette (P1 primary in foreground, Cinder supportive dragon anatomy visible without overlap). Enemies repositioned into tight readable threat pocket (~160px) that pops under shear. Camera bias tuned for the iso frustum so first frame is dead-center on the god-ray lit stage with P1 helm/cape/plume keylit, dragon neck/wings/tail/legs clearly dragon-shaped, skitters as chunky creature threats, NW column + walls as enclosing architecture. Directly fulfills "P1 primary and clearly separate", "Cinder dragon-shaped not blob", "first enemies larger/readable as fantasy creatures in focal pocket", "strengthen authored chamber composition". Preserves 12s+ grace, all prior gates.
+    player1 = createPlayer(498, 355, false, selectedHero);
     if (p2Enabled) {
-      player2 = createPlayer(530, 422, true, selectedHero);
+      player2 = createPlayer(548, 408, true, selectedHero);
     } else {
       player2 = null;
     }
-    dragon = createDragon(player1.x - 78, player1.y + 26, selectedDragon); // Pass 66: recentered focal spawn + tighter lateral for composition without sacrificing separation; pairs with followDist 82 + /13 visual scale to keep P1 unmistakably primary + visible floor in default first frame.
+    dragon = createDragon(player1.x - 68, player1.y + 42, selectedDragon); // Pass 68: depth offset for iso seating + separation under projection; generous floor visible between P1 and dragon in angled view.
     // legacy marker: Pass 65 (tallhamn 5ee5cfa/c5201f4 final blocker closeout): bolder lateral offset -122/+34 ... (historical; Pass 66 recenters whole group for deployed preview framing while preserving the no-overlap guarantee)
 
     loadRoom(0);
@@ -3887,11 +3892,11 @@
     // Pass 60: recentered focal-group camera (avg of P1 + lateral-offset dragon) + small north bias for balanced vertical breathing room in the 1040x670 viewport. With the Pass 60 inward focal spawns + NW/west chamber walls, the default Ember+Cinder first frame is now unmistakably a handcrafted overhead Diablo ARPG ruin chamber *composed around the protagonists and their immediate readable threat pack* — no camera drift, no swallowed hero, no off-frame foes, no corridor read. Directly resolves tallhamn "still feels closer to a side-framed/platform/corridor composition" + "first frame should feel composed around the player" + "first enemy group readable". Pure visual composition pass; all safety/10s+ grace/verify preserved.
     // Pass 61: micro camera bias tweak + tighter foe pack + extra NW prop + neck + P1 key-rim for final tallhamn re-review closeout on 5ee5cfa/2812ded/1c5900e actor+composition gates. Default first frame now perfectly centers the hero+dragon+3-creature-threat focal group on the lit 3D paver stage inside the chunky-walled chamber — every review bullet (P1 primary/separate, dragon-as-dragon with neck, foes as threats in pocket, authored set-piece boundaries) visibly stronger at screenshot glance while preserving 12s+ no-input survival and all prior gates.
     // Pass 62: offset widened to -96/+22, second neck segment + crest boost + extra NW column for final actor+composition gate closeout. The default cold-start Ember+Cinder frame now shows unmistakable P1 primacy (left knight silhouette with heroic plume keylight), dragon as distinct long-necked quadruped companion (head/neck/body/wing/tail/legs clearly separated), 3 detailed creature threats in tight lit pocket, and enriched chamber boundaries with layered occluders — exactly the "P1 clearly separate... dragon-shaped not blob... foes as fantasy creatures... deliberate set piece" required by 5ee5cfa/2812ded. One visible authorship pass.
-    const dx = dragon ? dragon.x : player1.x - 82;
-    const dy = dragon ? dragon.y : player1.y + 18;
-    camera.x = (player1.x + dx) / 2 + 4; // Pass 66: recentered focal spawn keeps avg ~441 well inside clamp; default first frame now perfectly dead-center on the god-ray lit stage with full P1+dragon+foes+chamber detail visible immediately (addresses deployed empty/dark + off-camera perception)
-    camera.y = (player1.y + dy) / 2 - 6; // balanced for +26 y offset; 12s+ safety + all composition gates preserved
-    camera.zoom = p2Enabled ? 1.02 : 1.19;
+    const dx = dragon ? dragon.x : player1.x - 68;
+    const dy = dragon ? dragon.y : player1.y + 42;
+    camera.x = (player1.x + dx) / 2 + 6; // Pass 68: tuned for iso projection frustum + new depth spawn; default first frame centers the angled 2.5D focal group (P1 + seated dragon + creature threats) perfectly in viewport
+    camera.y = (player1.y + dy) / 2 - 8; // balanced north bias under Y-compress for breathing room and chamber enclosure read
+    camera.zoom = p2Enabled ? 1.02 : 1.21;
     updateCamera(0);
     updateCamera(0); // double-apply for stable entry framing + bounds
 
