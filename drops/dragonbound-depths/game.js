@@ -1700,6 +1700,77 @@
       ctx.beginPath(); ctx.arc(850, 260, 19, 0, 6.28); ctx.fill();
     }
 
+    // ===== Atmospheric life & luminous detail (Pass 6 visual authorship) =====
+    // Handcrafted moments: fireflies in grove, crystal glints, rising fissure embers, awakened runes.
+    // Uses world-space time anim so rooms feel alive and screenshot-worthy without clutter or cost.
+    const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.0012;
+    if (r.theme === 'grove') {
+      // drifting firefly motes — soft, magical, wonder
+      ctx.fillStyle = 'rgba(205, 235, 165, 0.32)';
+      for (let i = 0; i < 8; i++) {
+        const seed = i * 1.618;
+        const px = 90 + ((seed * 67 + t * 22) % (r.w - 180));
+        const py = 110 + ((seed * 41 + t * 31) % 210) + Math.sin(t * 0.9 + seed) * 18;
+        const s = 1.15 + Math.sin(t * 1.7 + i) * 0.35;
+        ctx.beginPath(); ctx.arc(px, py, s, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(175, 215, 140, 0.07)';
+        ctx.beginPath(); ctx.arc(px, py, s * 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(205, 235, 165, 0.32)';
+      }
+    }
+    if (r.theme === 'crystal') {
+      // luminous twinkling crystal glints — serene, precious
+      const glints = [[355, 105], [395, 195], [915, 265], [285, 570]];
+      glints.forEach((g, i) => {
+        const tw = Math.sin(t * 2.4 + i * 2.1) * 0.5 + Math.sin(t * 5.3 + i * 0.7) * 0.25 + 0.75;
+        if (tw > 0.35) {
+          ctx.fillStyle = 'rgba(225, 245, 255, 0.75)';
+          ctx.beginPath(); ctx.arc(g[0], g[1], tw * 1.9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(200, 235, 255, 0.18)';
+          ctx.beginPath(); ctx.arc(g[0], g[1], tw * 3.6, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+    }
+    if (r.theme === 'fissure') {
+      // rising heat motes + ember trails — dangerous, alive, warm depth
+      for (let i = 0; i < 11; i++) {
+        const seed = i * 0.97 + 2.3;
+        const rise = ((t * 46 + seed * 29) % 195);
+        const px = 95 + ((seed * 31) % (r.w - 190)) + Math.sin(t * 0.6 + i) * 11;
+        const py = 640 - rise;
+        const ss = 1.0 + Math.sin(t * 2.1 + seed) * 0.28;
+        ctx.fillStyle = 'rgba(255, 135, 55, 0.48)';
+        ctx.beginPath(); ctx.arc(px, py, ss, 0, Math.PI * 2); ctx.fill();
+        if (i % 3 !== 0) {
+          ctx.fillStyle = 'rgba(255, 175, 85, 0.22)';
+          ctx.beginPath(); ctx.arc(px + 1, py - 7, ss * 1.55, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+    if (r.theme === 'sanctum' && roomCleared) {
+      // awakened rune lines — quiet magic, post-clear reward feel
+      ctx.strokeStyle = 'rgba(185, 145, 255, 0.38)';
+      ctx.lineWidth = 1.8;
+      for (let i = 0; i < 4; i++) {
+        const rx = 175 + i * 235;
+        const ry = 265 + Math.sin(t * 0.8 + i * 1.3) * 5.5;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.quadraticCurveTo(rx + 22, ry - 11, rx + 44, ry + 4);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1.2;
+    }
+    if (r.theme === 'boss') {
+      // drifting ash & ember flecks around the maw — oppressive yet magical
+      ctx.fillStyle = 'rgba(120, 60, 40, 0.25)';
+      for (let i = 0; i < 6; i++) {
+        const px = 180 + ((i * 191 + t * 14) % (r.w - 360));
+        const py = 160 + ((i * 73 + t * 19) % (r.h - 320)) + Math.sin(t + i * 2) * 14;
+        ctx.beginPath(); ctx.arc(px, py, 1.3 + (i % 2), 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
     // boundary glow
     ctx.strokeStyle = 'rgba(212, 175, 119, 0.08)';
     ctx.lineWidth = 18;
