@@ -2282,30 +2282,53 @@
         ctx.beginPath(); ctx.arc(en.x + 9.5, en.y - 2.0, 0.4, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(en.x + 9.5, en.y + 1.4, 0.4, 0, Math.PI * 2); ctx.fill();
       } else if (en.type === 'archer') {
-        // Thorn Archer — hooded cloak, quiver, bow with tension telegraph (ranged identity)
+        // Thorn Archer — Pass 80 (final first-pack monster authorship elevation for residual "tiny foes / not strong monster silhouettes" notes from tallhamn pre-79 reviews + operator art mandate "first enemies read as creature threats... unmistakable monster silhouettes in the focal combat pocket"): 2.15x visual scale (collision radius 12 unchanged, consistent with P1 2.4x vr + skitter 3.25x evr) + fully upgraded creature silhouette. Now a corrupted thorn stalker: plated carapace hood, 4 glowing multi-eyes with catchlights (hostile personality), thorny vine limbs, clawed feet, living bow as body extension — pairs with the 3.25x skitters to make the entire Grove opening 3-foe pack read as distinct fantasy monster threats at screenshot glance, not markers or small humanoids. Pure authored vector art per Snow/Fire lens and "real art piece not slop" mandate. No gameplay, spawn, or safety impact; 13s+ no-input preserved.
+        const avr = en.radius * 2.15;
         ctx.fillStyle = flash ? '#fff' : '#2f3a2a';
-        ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2); ctx.fill();
-        // cloak/hood
+        // main plated carapace body (beetle-plant hybrid monster, not simple circle)
+        ctx.beginPath(); ctx.ellipse(en.x, en.y + 1, avr * 0.95, avr * 0.82, 0.08, 0, Math.PI * 2); ctx.fill();
+        // dorsal thorny plates (3D ridges for silhouette identity)
         ctx.fillStyle = '#1f2a1f';
-        ctx.beginPath(); ctx.ellipse(en.x - 1, en.y + 1, 7, 11, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillRect(en.x - 2, en.y - 9, 5, 18);
-        // legs
-        ctx.fillStyle = '#2a3228';
-        ctx.fillRect(en.x - 4, en.y + 8, 3, 6); ctx.fillRect(en.x + 2, en.y + 8, 3, 6);
-        // quiver
-        ctx.fillStyle = '#3a2f22';
-        ctx.fillRect(en.x - 9, en.y - 1, 3, 9);
-        // bow + string (drawn when about to shoot)
-        const drawT = (en.shootCd || 60) < 28 ? 0.7 : 0.2;
-        ctx.strokeStyle = '#8a9a7a'; ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.moveTo(en.x + 7, en.y - 7); ctx.quadraticCurveTo(en.x + 16 + drawT * 3, en.y, en.x + 7, en.y + 7); ctx.stroke();
-        ctx.strokeStyle = 'rgba(140,160,120,0.6)'; ctx.lineWidth = 0.9;
-        ctx.beginPath(); ctx.moveTo(en.x + 8, en.y - 6); ctx.lineTo(en.x + 8, en.y + 6); ctx.stroke();
-        // arrow nock when tense
-        if (drawT > 0.5) {
-          ctx.strokeStyle = '#a8b89a'; ctx.lineWidth = 1.3;
-          ctx.beginPath(); ctx.moveTo(en.x + 17, en.y); ctx.lineTo(en.x + 23, en.y - 0.5); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(en.x - 1, en.y - 2.5, avr * 0.68, avr * 0.52, 0.12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#3a4a2f';
+        for (let ti = 0; ti < 3; ti++) {
+          ctx.beginPath(); ctx.moveTo(en.x - avr * 0.38 + ti * avr * 0.32, en.y - avr * 0.32); ctx.lineTo(en.x - avr * 0.22 + ti * avr * 0.32, en.y - avr * 0.68); ctx.lineTo(en.x - avr * 0.06 + ti * avr * 0.32, en.y - avr * 0.32); ctx.fill();
         }
+        // 4 glowing hostile eyes (clustered under plated brow — clear "creature with intent" read)
+        ctx.fillStyle = '#aaff88';
+        ctx.beginPath(); ctx.arc(en.x - avr * 0.28, en.y - avr * 0.18, 1.9, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + avr * 0.12, en.y - avr * 0.24, 1.7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#88dd55';
+        ctx.beginPath(); ctx.arc(en.x - avr * 0.08, en.y + avr * 0.02, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + avr * 0.32, en.y - avr * 0.05, 1.4, 0, Math.PI * 2); ctx.fill();
+        // pupils + catchlight (alive, targeting)
+        ctx.fillStyle = '#112200';
+        ctx.beginPath(); ctx.arc(en.x - avr * 0.25, en.y - avr * 0.15, 0.65, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + avr * 0.15, en.y - avr * 0.21, 0.55, 0, Math.PI * 2); ctx.fill();
+        // clawed vine legs (jointed monster stance, dynamic)
+        ctx.strokeStyle = '#2a3a22'; ctx.lineWidth = 2.3;
+        ctx.beginPath(); ctx.moveTo(en.x - avr * 0.48, en.y + avr * 0.55); ctx.lineTo(en.x - avr * 0.72, en.y + avr * 1.05); ctx.lineTo(en.x - avr * 0.52, en.y + avr * 1.32); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(en.x + avr * 0.48, en.y + avr * 0.55); ctx.lineTo(en.x + avr * 0.68, en.y + avr * 1.0); ctx.lineTo(en.x + avr * 0.48, en.y + avr * 1.28); ctx.stroke();
+        // claws
+        ctx.fillStyle = '#1a2a15';
+        ctx.beginPath(); ctx.arc(en.x - avr * 0.52, en.y + avr * 1.35, 1.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.x + avr * 0.48, en.y + avr * 1.31, 1.2, 0, Math.PI * 2); ctx.fill();
+        // living thorn bow (organic extension of carapace, tense telegraph)
+        const drawT = (en.shootCd || 60) < 28 ? 0.75 : 0.25;
+        ctx.strokeStyle = '#5a6a4a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(en.x + avr * 0.55, en.y - avr * 0.48); ctx.quadraticCurveTo(en.x + avr * 1.32 + drawT * avr * 0.18, en.y + avr * 0.08, en.x + avr * 0.55, en.y + avr * 0.52); ctx.stroke();
+        // bowstring
+        ctx.strokeStyle = 'rgba(140,160,120,0.7)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(en.x + avr * 0.65, en.y - avr * 0.32); ctx.lineTo(en.x + avr * 0.65, en.y + avr * 0.38); ctx.stroke();
+        if (drawT > 0.5) {
+          ctx.strokeStyle = '#c8d8aa'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(en.x + avr * 1.2, en.y + avr * 0.03); ctx.lineTo(en.x + avr * 1.5, en.y); ctx.stroke();
+        }
+        // thorned quiver (back detail)
+        ctx.fillStyle = '#3a2f22';
+        ctx.fillRect(en.x - avr * 0.92, en.y - avr * 0.18, avr * 0.2, avr * 0.82);
+        ctx.fillStyle = '#4a3f32';
+        ctx.fillRect(en.x - avr * 0.85, en.y + avr * 0.08, avr * 0.11, avr * 0.48);
       } else if (en.type === 'brute') {
         // Shield Brute (elite) — horned helm, plate, spiked shield, greaves (tank identity)
         ctx.fillStyle = flash ? '#fff' : '#3f3a32';
