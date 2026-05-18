@@ -2525,53 +2525,59 @@
     // Gives immediate "handcrafted fantasy combat room" read vs prior flat dark rect/minimap. Visual only (gameplay stays ortho); strong silhouettes pop against composed depth + focal lighting.
     // Subtle parchment-like tile cues, boundary bevel, brighter center for screenshot-worthy first-frame authorship (addresses operator_diablo_isometric_blocker + visual review "not tiny dark flat").
     ctx.save();
-    ctx.strokeStyle = (r.theme === 'crystal' || r.theme === 'sanctum') ? 'rgba(160,210,255,0.055)' : 'rgba(185,160,110,0.06)';
-    ctx.lineWidth = 1.6;
-    const isoA = 0.48; // ~28deg shear angle factor for diamond read
-    // primary diamond grid (one direction)
-    for (let d = -120; d < r.w + r.h; d += 68) {
-      ctx.beginPath();
-      ctx.moveTo(d, 0);
-      ctx.lineTo(d + r.h * isoA, r.h);
-      ctx.stroke();
+    const isoA = 0.48; // ~28deg shear angle factor for diamond read (scoped for non-grove grid reliefs)
+    // Pass 57: for Grove (first viewport), suppress the old sheared diagonal grid lines entirely — the explicit raised diamond pavers (below) now provide the true overhead isometric floor read without competing texture or "corridor" suggestion from angled lines. Other rooms retain subtle grid for continuity; Grove is the critical default frame for the tallhamn Diablo mandate.
+    if (r.theme !== 'grove') {
+      ctx.strokeStyle = (r.theme === 'crystal' || r.theme === 'sanctum') ? 'rgba(160,210,255,0.055)' : 'rgba(185,160,110,0.06)';
+      ctx.lineWidth = 1.6;
+      // primary diamond grid (one direction)
+      for (let d = -120; d < r.w + r.h; d += 68) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d + r.h * isoA, r.h);
+        ctx.stroke();
+      }
+      // secondary crossed direction (forms diamond tiles)
+      for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
+        ctx.beginPath();
+        ctx.moveTo(0, d);
+        ctx.lineTo(r.w, d - r.w * isoA);
+        ctx.stroke();
+      }
     }
-    // secondary crossed direction (forms diamond tiles)
-    for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
-      ctx.beginPath();
-      ctx.moveTo(0, d);
-      ctx.lineTo(r.w, d - r.w * isoA);
-      ctx.stroke();
-    }
-    // Pass 43 core visual read (operator_diablo_isometric_review_blocker fix): tile relief + raised edge highlights for true 3D diamond floor planes (not flat diagonal lines). Light offset "facet" strokes give each tile a visible raised lip/edge so the floor reads as handcrafted isometric ARPG combat surface with depth and walkable facets immediately on first frame.
-    // Pass 44: micro elevation — slightly stronger facet relief alpha + line for even crisper 3D tile pop on the opening frame (still subtle, keeps moody fantasy but makes the diamond planes and protagonist silhouettes read instantly at screenshot glance per the exact review demand for "visible floor planes/edges" and "legible at screenshot glance").
-    ctx.strokeStyle = 'rgba(225,210,160,0.105)';
-    ctx.lineWidth = 1.08;
-    for (let d = -120; d < r.w + r.h; d += 68) {
-      ctx.beginPath();
-      ctx.moveTo(d + 2.5, 2.5);
-      ctx.lineTo(d + r.h * isoA + 2.5, r.h + 2.5);
-      ctx.stroke();
-    }
-    for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
-      ctx.beginPath();
-      ctx.moveTo(2.5, d + 1.5);
-      ctx.lineTo(r.w + 2.5, d - r.w * isoA + 1.5);
-      ctx.stroke();
-    }
-    // Pass 45: paired depth shadow on facet edges + masonry wall height texture (core visual read elevation to fully close operator_diablo_isometric_review_blocker_2026_05_18_head_a883f0d + review "unmistakably top-down/isometric ARPG"). Each raised tile lip now has opposing low-alpha shadow for true bevel volume (top catch + side recede = 3D diamond planes pop at screenshot glance). Wall bands gain 9 vertical stonework ticks per side + warm coping cap line so "ruin walls rising around the diamond floor" read with clear architectural height and enclosure — the combat pocket is now inside a handcrafted 3D chamber, not flat lines. Combined with focal pocket, protagonist silhouette rims, god rays, and grace wards, the default Ember+Cinder first frame delivers the exact "stronger 3/4/diamond-space composition + visible floor planes/edges + wall/prop height cues + brighter readable pocket" + "hero/dragon/first foes legible at glance" the blocking review required. Pure draw, zero gameplay/collision/perf change.
-    ctx.strokeStyle = 'rgba(95,80,55,0.032)';
-    ctx.lineWidth = 0.7;
-    for (let d = -120; d < r.w + r.h; d += 68) {
-      ctx.beginPath();
-      ctx.moveTo(d - 1.8, -1.8);
-      ctx.lineTo(d + r.h * isoA - 1.8, r.h - 1.8);
-      ctx.stroke();
-    }
-    for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
-      ctx.beginPath();
-      ctx.moveTo(-1.8, d - 1.2);
-      ctx.lineTo(r.w - 1.8, d - r.w * isoA - 1.2);
-      ctx.stroke();
+    // Pass 43/44/45 relief + shadow lines gated for grove (Pass 57): the explicit large raised pavers now own the isometric floor read for the critical first viewport; old line cues would compete and dilute the "real geometry" read. Perimeter masonry/wall height cues (below) remain for all rooms.
+    if (r.theme !== 'grove') {
+      // Pass 43 core visual read (operator_diablo_isometric_review_blocker fix): tile relief + raised edge highlights for true 3D diamond floor planes (not flat diagonal lines). Light offset "facet" strokes give each tile a visible raised lip/edge so the floor reads as handcrafted isometric ARPG combat surface with depth and walkable facets immediately on first frame.
+      // Pass 44: micro elevation — slightly stronger facet relief alpha + line for even crisper 3D tile pop on the opening frame (still subtle, keeps moody fantasy but makes the diamond planes and protagonist silhouettes read instantly at screenshot glance per the exact review demand for "visible floor planes/edges" and "legible at screenshot glance").
+      ctx.strokeStyle = 'rgba(225,210,160,0.105)';
+      ctx.lineWidth = 1.08;
+      for (let d = -120; d < r.w + r.h; d += 68) {
+        ctx.beginPath();
+        ctx.moveTo(d + 2.5, 2.5);
+        ctx.lineTo(d + r.h * isoA + 2.5, r.h + 2.5);
+        ctx.stroke();
+      }
+      for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
+        ctx.beginPath();
+        ctx.moveTo(2.5, d + 1.5);
+        ctx.lineTo(r.w + 2.5, d - r.w * isoA + 1.5);
+        ctx.stroke();
+      }
+      // Pass 45: paired depth shadow on facet edges + masonry wall height texture (core visual read elevation to fully close operator_diablo_isometric_review_blocker_2026_05_18_head_a883f0d + review "unmistakably top-down/isometric ARPG"). Each raised tile lip now has opposing low-alpha shadow for true bevel volume (top catch + side recede = 3D diamond planes pop at screenshot glance). Wall bands gain 9 vertical stonework ticks per side + warm coping cap line so "ruin walls rising around the diamond floor" read with clear architectural height and enclosure — the combat pocket is now inside a handcrafted 3D chamber, not flat lines. Combined with focal pocket, protagonist silhouette rims, god rays, and grace wards, the default Ember+Cinder first frame delivers the exact "stronger 3/4/diamond-space composition + visible floor planes/edges + wall/prop height cues + brighter readable pocket" + "hero/dragon/first foes legible at glance" the blocking review required. Pure draw, zero gameplay/collision/perf change.
+      ctx.strokeStyle = 'rgba(95,80,55,0.032)';
+      ctx.lineWidth = 0.7;
+      for (let d = -120; d < r.w + r.h; d += 68) {
+        ctx.beginPath();
+        ctx.moveTo(d - 1.8, -1.8);
+        ctx.lineTo(d + r.h * isoA - 1.8, r.h - 1.8);
+        ctx.stroke();
+      }
+      for (let d = -80; d < r.w + r.h * 1.2; d += 62) {
+        ctx.beginPath();
+        ctx.moveTo(-1.8, d - 1.2);
+        ctx.lineTo(r.w - 1.8, d - r.w * isoA - 1.2);
+        ctx.stroke();
+      }
     }
     // outer room boundary bevel (angled plane edge for depth) + Pass 43 wall extrusion cue: extra outer shadow band sells vertical wall height around the diamond floor (enclosed ruin chamber, not flat arena)
     ctx.strokeStyle = 'rgba(255,255,255,0.07)';
@@ -2620,8 +2626,8 @@
       // Full 3D tessellation + bright rims only in central playable chamber (~280px radius around default spawn 360,340).
       // Periphery uses 1.7x coarser spacing + suppressed fine detail (no catch-rim/grout) so the eye reads structured floor near protagonists, calm receding stone at edges.
       // This + extra corner wall masses + focal floor value lift makes the chamber boundaries pop as enclosing architecture and the hero/dragon/enemy group read with clear hierarchy against the room.
-      const FOCAL_X = 360, FOCAL_Y = 340, FOCAL_R = 282;
-      const tsX = 28.5, tsY = 20.5, thW = 14.2, thH = 8.2, tDrop = 3.6;
+      const FOCAL_X = 360, FOCAL_Y = 340, FOCAL_R = 310;
+      const tsX = 62, tsY = 44, thW = 31, thH = 17.5, tDrop = 5.2; // Pass 57: larger readable raised diamonds for unmistakable overhead Diablo ARPG floor plane at first glance (no more small noisy texture; clear top/side bevel geometry reads as 3D pavers from above)
       for (let gy = 46; gy < r.h - 50; gy += tsY) {
         const parity = (Math.floor(gy / tsY) & 1) * 14.2;
         for (let gx = 46 + parity; gx < r.w - 46; gx += tsX) {
