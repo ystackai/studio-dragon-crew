@@ -375,6 +375,43 @@ function updateDriftPad() {
     }
 }
 
+// === Dragon Crew Asset Skill Smoke: generated MMAudio sfx (user-gesture safe, graceful fallback) ===
+let dragonSfxBuffer = null;
+let dragonSfxLoaded = false;
+
+function loadDragonSfx() {
+    if (dragonSfxLoaded) return;
+    dragonSfxLoaded = true;
+    const url = '/assets/dragon-breath-sfx.wav';
+    fetch(url).then(r => {
+        if (!r.ok) throw new Error('asset 404');
+        return r.arrayBuffer();
+    }).then(buf => {
+        window._dragonSfxArrayBuffer = buf; // stash for decode on gesture (audioCtx may not exist yet)
+    }).catch(e => {
+        console.warn('[dragon-crew-smoke] sfx fetch skipped (graceful):', e.message);
+    });
+}
+
+function playDragonSfx() {
+    if (!audioCtx) return;
+    const buf = window._dragonSfxArrayBuffer;
+    if (!buf) return;
+    try {
+        audioCtx.decodeAudioData(buf.slice(0), decoded => {
+            dragonSfxBuffer = decoded;
+            const src = audioCtx.createBufferSource();
+            src.buffer = dragonSfxBuffer;
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.55;
+            src.connect(gain).connect(audioCtx.destination);
+            src.start();
+        }, err => console.warn('[dragon-crew-smoke] decode failed (silent):', err));
+    } catch (e) {
+        // silent graceful fallback — no crash, audio stays silent if blocked/decode fails
+    }
+}
+
 // === Main loop ===
 function frame(now) {
     const dt = (now - prevFrameTime) / 1000;
@@ -435,6 +472,9 @@ function init() {
          };
     });
 
+     // Dragon Crew asset smoke: preload generated sfx (decode on first gesture)
+    loadDragonSfx();
+
      // Input listeners — touch + mouse, <50ms lat
     canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
     canvas.addEventListener('pointermove', onPointerMove, { passive: false });
@@ -446,6 +486,11 @@ function init() {
     canvas.addEventListener('pointerdown', () => {
         if (!audioStarted) { initAudio(); audioStarted = true; }
         playPulseSound();
+        // Dragon Crew smoke: play generated MMAudio sfx (once per session is enough for smoke; graceful if fails)
+        if (!window._dragonSfxPlayed) {
+            window._dragonSfxPlayed = true;
+            playDragonSfx();
+        }
     }, { passive: true });
 
      // HUD elements
