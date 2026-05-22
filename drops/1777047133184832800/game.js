@@ -382,7 +382,7 @@ let dragonSfxLoaded = false;
 function loadDragonSfx() {
     if (dragonSfxLoaded) return;
     dragonSfxLoaded = true;
-    const url = '/assets/dragon-breath-sfx.wav';
+    const url = '/public/assets/dragon-breath-sfx.wav';
     fetch(url).then(r => {
         if (!r.ok) throw new Error('asset 404');
         return r.arrayBuffer();

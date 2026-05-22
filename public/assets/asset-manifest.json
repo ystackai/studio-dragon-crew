@@ -9,7 +9,7 @@
     {
       "id": "dragon-icon",
       "kind": "image",
-      "path": "/assets/dragon-icon.png",
+      "path": "/public/assets/dragon-icon.png",
       "tool": "Flux",
       "backend": "comfyui",
       "prompt": "friendly elemental dragon portrait icon 256x256 for UI button, Dragon Crew style, welcoming no horror",
@@ -23,7 +23,7 @@
     {
       "id": "dragon-breath-sfx",
       "kind": "audio",
-      "path": "/assets/dragon-breath-sfx.wav",
+      "path": "/public/assets/dragon-breath-sfx.wav",
       "tool": "MMAudio",
       "backend": "mmaudio",
       "prompt": "short magical whoosh sound for breath attack feedback, clean, browser playable",
