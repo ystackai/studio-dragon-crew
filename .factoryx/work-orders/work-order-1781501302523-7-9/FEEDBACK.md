@@ -181,3 +181,7 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Prior play notes (p3/p5/p7/p8/p15/p25b etc) stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat; first screen living playable gauntlet with obvious launch on gesture. The verification hardening makes the preview robust for FactoryX harnesses.
 - No new issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (check-7 sim + idle p29). Would ship for human review.
 
+
+## Pass 29b (2026-06-15, small launch polish)
+- Stronger ignition on first gesture (0.24 flash + 10 forward particles): even more immediate "we are flying a dragon through fire" read <2s. Feels juicy, fits house weight + consequence-free first taste of power. No new issues; prior notes stand. PR#77 still the reviewable artifact.
+

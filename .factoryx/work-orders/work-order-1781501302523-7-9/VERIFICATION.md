@@ -477,3 +477,9 @@
 - Checklist re-sign-off: verification actually ran (real browser + harness copy + short budget + post-interaction state); prior blocker class (pre-screenshot timeout on check-7) produces contentful + observable ready gauntlet + signals. All other Game Feel / size / no-net / first-screen=playable / audio-gate items hold unchanged.
 - Sign-off: ready for push + PR#77 re-report. No new blockers.
 
+
+### Pass 29b — Post-polish re-verify (tiny launch juice)
+- Real Chromium direct load + dump-dom on edited index: exit 0; zero game errors; title + sentinel + hook present; new launch flash=0.24 + 10-particle wake code confirmed in DOM.
+- Fresh idle screenshot 116kB captured. All prior verification (check-7 contentful under short budget, p29 instrument SUCCESS, no errors) carries forward; this micro change only affects the initial ready→playing transition burst (already exercised in prior instruments via surge paths).
+- Sign-off: clean, no regression.
+

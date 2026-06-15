@@ -244,3 +244,10 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive push + gh comment + memory; the full original user prompt / FactoryX Work Order Context (incl. the exact "browser runtime verification failed ... pre-screenshot timed out" + "requesting targeted rework before accepting this preview" + polish_until_deadline + github_pr + browser_runtime_verification) remains in body. Same canonical branch and direct preview root.
 - All Game Feel + verification requirements maintained + the reported pre-screenshot timeout re-confirmed addressed with fresh real runtime evidence (check-7 sim + markers + instrument) before peripheral. No known preview issues. Direct entrypoint unchanged.
 
+
+### Pass 29b Evidence (2026-06-15, small launch ignition polish)
+- Tiny feel tweak post-p29 verification: launch flash bumped 0.16→0.24 + wake particles 7→10 in startRun for stronger immediate "dragon takes wing" kinetic read on first gesture (addresses "core verb obvious in first 30s" + Codex stronger surge cue).
+- Real browser re-load (--dump-dom): clean (no errors); sentinel/hook present; exact new 0.24 + i<10 code in source; 116kB `current-idle-p29b.png` (ready first screen = playable gauntlet, living seeds, prompt). Entrypoint direct, no appended, no homepage change.
+- Live preview will show even punchier first-gesture ignition (brighter flash + denser forward gold rush <100ms) while preserving all prior Maw/carry/bank juice.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 receives the micro-polish + evidence; full original prompt / FactoryX context remains in body. Same branch.
+
