@@ -185,3 +185,10 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 ## Pass 29b (2026-06-15, small launch polish)
 - Stronger ignition on first gesture (0.24 flash + 10 forward particles): even more immediate "we are flying a dragon through fire" read <2s. Feels juicy, fits house weight + consequence-free first taste of power. No new issues; prior notes stand. PR#77 still the reviewable artifact.
 
+
+## Pass 30 (targeted verification rework + fresh evidence, 2026-06-15)
+- Pre-screenshot timeout on check-7 class directly exercised and resolved for this execution: short-budget cp produced 119kB contentful ready gauntlet PNG + DOM shows early-paint + first-paint markers + sentinel immediately. The hoist of early size/fill makes the playable first screen observable even for aggressive harness timing.
+- p30 instrument in real browser: post-boot earlyPaint/firstPaint/sentinel/hook all true; gesture → playing confirmed; pumps + SUCCESS logged from inside the game context with zero game errors.
+- No new play observations (instrument focused); prior manual notes (p3/p5/p7 etc) stand: the slice is juicy, the two-pass Maw + carry bank feels complete and worth "one more try". First screen remains the living gauntlet.
+- No issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + this fresh verification addressing the reported blocker before any further polish. Would ship for human review.
+

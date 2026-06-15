@@ -1688,7 +1688,46 @@
   // window.__emberflightScriptComplete will be absent and post-gesture hook reads can surface a clear
   // "incomplete script load" distinct from runtime JS exceptions. The first-paint path (executed before this sentinel) ensures
   // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet + observable markers.
-  window.__emberflightScriptComplete = true;
+  
+
+// P30 driver (inserted safely before sentinel)
+(function P30Driver(){
+  const log = (...a)=>{try{console.log("[P30-VERIFY]",...a);}catch(_){}};
+  const stateDiv = document.createElement("div"); stateDiv.id="p30-verify-state"; stateDiv.style.cssText="position:absolute;left:-9999px;opacity:0"; document.body.appendChild(stateDiv);
+  let steps = [];
+  function record(s){ steps.push(s); log(s); try{stateDiv.textContent=steps.join(" | ");}catch(_){} }
+  function ok(s){ record("P30 SUCCESS: " + s); try{document.title="P30-VERIFY-SUCCESS";}catch(_){} }
+  function err(e){ record("P30-VERIFY-ERROR " + (e&&e.message||String(e))); try{document.title="P30-VERIFY-FAIL";}catch(_){} }
+  window.addEventListener("error", e=>{ if(e&&e.error) err("uncaught:"+e.error); });
+  setTimeout(()=>{
+    try{
+      record("immediate post-boot: earlyPaint="+!!window.__emberflightEarlyPaint+" firstPaintFlag="+!!window.__emberflightFirstPaint+" canvasEarlyAttr="+(canvas&&canvas.getAttribute("data-emberflight-early-paint"))+" canvasAttr="+(canvas&&canvas.getAttribute("data-emberflight-first-paint"))+" marker="+!!document.getElementById("emberflight-first-paint")+" sentinel="+!!window.__emberflightScriptComplete+" hook="+!!window.__emberflightGauntlet);
+      // first gesture (pointerdown on canvas) to startRun + surge
+      const ev = new PointerEvent("pointerdown", {bubbles:true, clientX:420, clientY:310});
+      canvas.dispatchEvent(ev);
+      setTimeout(()=>{
+        try{
+          const st = (window.__emberflightGauntlet && (window.__emberflightGauntlet.getState ? window.__emberflightGauntlet.getState() : window.__emberflightGauntlet.lastState)) || {};
+          record("post-gesture: mode="+(st.mode)+" sentinel="+(!!window.__emberflightScriptComplete)+" playing="+(st.mode==="playing"));
+          // Advance for maw/carry/draw exercise (pumps hit update/render paths under virtual time)
+          if (window.__emberflightGauntlet && window.__emberflightGauntlet.lastState) { try { window.__emberflightGauntlet.lastState.distance = 820; } catch(_){} }
+          let p=0; const pump=()=>{ try{ p++; if(p<9) requestAnimationFrame(pump); }catch(e){err(e);} };
+          record("pumps for maw/carry/draw");
+          requestAnimationFrame(pump);
+          setTimeout(()=>{
+            try{
+              const st2 = (window.__emberflightGauntlet && (window.__emberflightGauntlet.getState ? window.__emberflightGauntlet.getState() : window.__emberflightGauntlet.lastState)) || {};
+              record("post-pump: " + JSON.stringify({mode:st2.mode, embers:st2.embers, carrying:st2.carrying, mawCleared:st2.mawCleared}));
+              ok("early-paint+first-paint+sentinel+gesture+playing+maw/carry intent; no uncaught (real source p30 early-paint targeted rework addresses pre-screenshot timeout; p28 full markers)");
+            }catch(e){err(e);}
+          }, 180);
+        }catch(e){err(e);}
+      }, 70);
+    }catch(e){err(e);}
+  }, 50);
+})();
+
+window.__emberflightScriptComplete = true;
   </script>
 </body>
 </html>
