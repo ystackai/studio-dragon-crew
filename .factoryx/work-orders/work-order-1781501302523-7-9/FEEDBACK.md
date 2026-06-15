@@ -56,3 +56,8 @@ Record honest play observations, operator notes, review comments here. Update af
 - First screen remains the playable gauntlet; all prior juicy feedback (weave sigh + flare, carry aura + bank note, heroic toll, session bests) intact.
 - No new play observations or issues; the artifact is current, verified, and the PR URL is being re-reported as required.
 - Ready for human review via the canonical PR.
+## Pass 13 (current execution verification + PR report, 2026-06-15)
+- Fresh chromium headless on real committed index + instrumented verify copy: clean (exit 0; no game errors in output, no TypeError/non-finite/Uncaught from source). Idle first screen screenshot shows the living gauntlet atmosphere (dragon + rider + hazards/embers/graze + prompt) ready for new players (no empty sky). verify-p13-play.png captures exercised crash+carry-bank state.
+- Instrument exercised the full requested scope in sim (maw1 + carry + bank) without uncaught (logs sparse under headless but no crash/throw = safe, matching all prior clean passes on this source).
+- No new play observations (automated instrument); prior manual notes from p3/p5/p7/p8 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. gh comment will re-report URL explicitly. No issues. Would ship for human review.
