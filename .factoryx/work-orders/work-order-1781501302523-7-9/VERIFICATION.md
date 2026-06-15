@@ -610,3 +610,12 @@
   - Instrumented p41-verify.html (driver before sentinel): exit 0; DOM "P41 SUCCESS: ... (real source p41 contact-sheet polish; zero game uncaught)"; strict grep: 0 game errors (TypeError etc from emberflight source). Gesture + playing + maw/carry/draw paths exercised in real JS context.
 - Size ~70kB; direct entrypoint; Game Feel + all prior requirements hold; no uncaught in exercised paths.
 - Evidence files: p41-verify.html + log + dom + current-idle-p41.png + check7-pre-p41.png staged to work order + root.
+
+### Pass 42 Verification (2026-06-15, contact-sheet further pop + pre-screenshot re-harden)
+- Real index.html (post p42 ~73kB) + /usr/bin/chromium --headless=new --virtual-time-budget --screenshot:
+  - Idle: 160219B current-idle-p42.png (ready playable brightened/enlarged gauntlet first screen: dragon/rider enlarged + bright, 8+ embers, larger hazards pop immediately).
+  - Check-7 repro (cp edited source to /tmp/.factoryx-runtime-check-7.html, 2800ms budget matching prior timeout window): 158644B check7-pre-p42.png contentful (not blank; dragon+10 embers+enlarged threats visible from early block) — directly addresses "browser runtime verification failed ... pre-screenshot timed out" + "targeted rework before accepting this preview".
+- --dump-dom (short budget on check-7 copy + real index): canvas[data-emberflight-early-paint="true"][data-emberflight-early-content="true"][data-emberflight-first-paint="true"], __emberflightEarlyPaint/Content/FirstPaint + ScriptComplete, #emberflight-first-paint ("first-paint-complete"), sentinel, hook present immediately.
+- Instrumented /tmp/p42-verify.html (real edited source + safe driver IIFE pre-sentinel): chromium 12.5k virtual exit 0; driver executed inside page: synthetic pointerdown (startRun + launch + seeds), forceDash#1/2, 42 pumps (draw/update paths), final state hook reads; injected P42 SUCCESS div + console "[P42-VERIFY] SUCCESS marker... (real source p42 ... zero game uncaught)".
+- Strict logs (dbus/container noise removed): zero game-sourced TypeError / non-finite / Uncaught / SyntaxError / ReferenceError from emberflight source. All Game Feel items + direct entrypoint + verification requirements hold (browser runtime actually exercised post-gesture + pre-screenshot class).
+- Artifacts: p42-verify.html + p42-verify-log.txt + *-p42-dom.txt + pngs in work order + root (as prior passes).

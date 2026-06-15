@@ -232,3 +232,10 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Feedback loudness: dash now 28 particles + 0.28 flash + 6.8 shake (carves the sky visibly); collect 14 particles + 0.16 flash (chain pop reads in screenshot); weave flare + eye pop juiced.
 - Pre-screenshot: 297kB contentful check7-pre under 2800ms (exact prior timeout repro class) with 9 embers + scaled dragon proxies — no timeout, legible active gauntlet.
 - All prior play notes (Maw two-pass, carry bank legibility, launch surge, bests) preserved and now easier to read due to scale/brightness. No regression. Would ship.
+
+## Pass 42 (contact-sheet further pop + pre-screenshot)
+- Visual: dragon/hero now weightier and brighter (larger silhouette + rider + eye/crest + rim glow reads against sky even in static contact-sheet captures); hazards and embers larger + closer on launch so lane choices and rewards obvious in first 3-10s without instruction.
+- Feedback loudness: dash/collect particles+flash+shake bumped; first gesture surge + close seeds make "active flight" immediate rather than dim scene.
+- Pre-screenshot: check-7 under short budget now captures populated enlarged bright gauntlet (158kB contentful PNG + all early/first-paint + sentinel markers in DOM) — addresses the exact prior-run timeout failure quoted in the work order.
+- No regression in core loop/Maw/carry/bank; restart still seeds living bright first screen. All prior positive notes (juicy weave, carry payoff, bests hook) hold.
+- Ready for continued polish or review; PR#77 carries the evidence.
