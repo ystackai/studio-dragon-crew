@@ -69,7 +69,7 @@
 - Size: 46.7kB. All checklist items from Pass 0 carried; escalation now concrete. No new audio (post-gesture gate preserved). No external.
 - Next: commit on canonical, push, update PR#77 body (include full prompt + current evidence + status), re-inspect for reviews/comments, continue small juice if time before deadline. Same branch/PR throughout.
 
-**Current Status:** TDZ blocker resolved + Sky Maw added for full goal scope. Playable first screen + heroic kinetic loop + escalation beat verified in real browser runtime. Ready for push + PR update + live preview confirmation. Polish continues to deadline.
+**Current Status:** TDZ blocker resolved + Sky Maw added + collision feel refined for full goal scope. Playable first screen + heroic kinetic loop + escalation beat verified in real browser runtime (multiple headless passes, CI green). Pushed to canonical; PR#77 updated with evidence + full prompt context (no new reviews/comments/blocks found on re-inspect). Polish continues to deadline on same branch/PR.
 
 ---
 
