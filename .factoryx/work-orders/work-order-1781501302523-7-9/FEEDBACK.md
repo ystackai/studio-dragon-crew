@@ -72,3 +72,9 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Core loop + escalation + carry + bank + restart still feel as juicy and heroic as p5/p7 notes. The sentinel is invisible; "FLY AGAIN" after a Maw clear + carry bank still gives strong "one more try" pull.
 - No new issues. The rework makes the verification more robust for the FactoryX harness path. PR#77 remains the reviewable artifact.
 
+## Pass 15 (2026-06-15, visual polish addressing monitor)
+- Overnight monitor feedback actioned: atmosphere preserved (mythic dark heat) but action layer brightened (haze/ember/glow alphas + grad stops raised), silhouettes zoomed (dragon body/wings/head/rider + embers/hazards/graze/Maw all +~15-20% scale, thicker strokes, taller PLAY band 0.15/0.85, larger particles via spawn sz*1.15), rim/heat lines for pop.
+- Early interactions obvious: 3+ close embers + 1-2 hazards seeded at boot (living ready gauntlet), launch burst (11 gold/heat particles + flash/shake) on first gesture makes "take wing into fire" visceral <2s.
+- Play observations (instrument + idle): larger dragon reads as weighty ancient presence immediately; embers/graze now obvious collect targets; Maw gaps + vents more legible; "carry the fire" gold still pops on weaves/crash. First 10s now delivers clear heroic kinetic verb without squint.
+- No new issues; core loop + escalation + juice still the star. Would ship this pass for review.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 carries the evidence + full context.

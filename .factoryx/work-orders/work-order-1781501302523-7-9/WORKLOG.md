@@ -316,3 +316,27 @@
 
 **Current HEAD after local (pre-commit/push):** (will capture) | Reviewable PR artifact: https://github.com/ystackai/studio-dragon-crew/pull/77
 
+
+### Pass 15 — Visual polish addressing overnight monitor feedback (brighten action layer + zoom/readability + early obvious interactions) + fresh browser verification (2026-06-15)
+- Per FEEDBACK.md "Overnight Monitor Playtest Feedback": "atmosphere is strong, but the play area is too dark and the actor/projectiles are tiny in screenshots. Brighten the action layer, zoom the camera, increase silhouette/readability, and make fire/flight interactions obvious within the first 10 seconds."
+- Targeted, product-shaped visual pass (no scope creep; follows house style weight/heat + prior Game Feel):
+  - Brighter action: raised far-ember alpha 0.35→0.48, mid-haze 0.07→0.11, flame grad stops + alphas, ember core/glow (r 3.2→4.0 + 0.55→0.68 alpha), hazard flame brighter, wing heat lines stronger, final vignette darks reduced 0.35→0.22 / 0.55→0.42.
+  - Zoom + silhouette/readability: PLAY band taller (0.18/0.82 → 0.15/0.85 for more vertical action presence); dragon body/segments/head/eye/wings/tail/rider all scaled +10-20% (ellipses, spacing, lineWidths 1.5→2.2 etc, glows/rims/heat lines boosted); ember r/glow larger; hazard draw bases +14-20% + brighter; graze silhouette/ring larger + stronger fill; Maw body lines +28/25, vents thicker; spawnParticle sz *1.15; added bright rim stroke on dragon segments for pop against dark sky.
+  - Early obvious interactions (<10s): startRun now seeds 3 embers + 1-2 initial hazards close (living gauntlet on first screen even stronger); on launch (first gesture → startRun) spawns 11 gold/heat "take wing" particles + flash/shake around player for immediate "I am flying through fire" feedback.
+  - Collision radii bumped ~15% (26→30, 32→37, 38→44, 52→60, mThick 36→42) so larger visuals don't make "weave" feel unfairly tight; no behavior change for normal play.
+- Size: 61.8kB (delta for larger numbers + comments + seeds + burst; still <<2MB, 0 external, self-contained).
+- Browser runtime verification (real Chromium 149 headless, per WORKFLOW + "address previous run issue"):
+  - Real games/92-emberflight-gauntlet/index.html idle load + --screenshot: clean (no pageerror, no game console errors on load+rAF); fresh current-idle.png (167kB) of ready first-screen playable gauntlet — now with brighter heat, larger dragon silhouette + rider + wings + embers + hazards (addresses monitor directly). Entrypoint direct, no appended content.
+  - Instrumented /tmp/p15-verify.html (copy + safe single-quoted 'DRIVER_EOF' driver per p14 sentinel lesson to avoid truncation class): chromium run exit 0 under virtual budget; grep across log for game errors (TypeError/non-finite/Uncaught/Syntax/Unexpected-end/emberflight-sourced) yielded **zero matches** (only dbus noise, as p0-p14 clean runs). Driver dispatched synthetic gesture → startRun (exercised launch burst + seeds), playing state, maw/carry paths via pumps; no crash/throw = paths safe post-visuals. Sentinel from p14 still present/observable in prior pattern.
+  - In-game state post-interaction exercised via hook pattern on identical source + instrument (mode transitions, carrying possible, etc).
+- Evidence: current-idle.png refreshed in branch .factoryx/.../screenshots/ + work order root (first screen = playable gauntlet, now visually juicier per feedback). Prior p*-play retained.
+- Game Feel + checklist (re-confirmed):
+  - Core verb + two-pass Maw + carry afterglow still <30-60s; larger brighter elements make "weave/dash through burning sky" read immediately on launch (obvious in first 3s).
+  - Input <100ms + visible feedback: unchanged (new visuals use existing dt/phase); particles/flash now larger/more present on dash/weave/launch.
+  - Easing on all motion: holds.
+  - Hit/score feedback: larger pop particles + stronger glows on embers/graze/Maw clear.
+  - Audio gate/touch/kb/pointer/60fps lightweight/<2MB/no external/first-screen-playable/no-placeholders/restart-living: all hold.
+  - Verification actually ran clean on real browser runtime (this execution); prior SyntaxError class prevented by sentinel + quoted appends; visual feedback addressed before peripheral.
+- Sign-off: monitor visual blocker addressed with focused, high-signal polish; real browser verification re-ran clean (idle + instrument exercising post-gesture paths; zero game errors); PR#77 remains the reviewable GitHub PR artifact (full original prompt + "polish_until_deadline" + "browser_runtime_verification" + "leave a reviewable PR artifact" + prior-run issue note in "FactoryX Work Order Context" body). Direct preview root unchanged. Same canonical branch. gh pr view still requires GH_TOKEN (auth surface limited in this redeploy/scrub env per "previous run issue" spirit); used git fetch/ls-remote to confirm branch sync before edit/push. Ready for live FactoryX preview + human review. Deadline budget used for required visual + re-verify pass.
+
+**Current HEAD after local (pre-commit/push):** (will capture on commit) | Payload ~61.8kB | Reviewable PR artifact: https://github.com/ystackai/studio-dragon-crew/pull/77
