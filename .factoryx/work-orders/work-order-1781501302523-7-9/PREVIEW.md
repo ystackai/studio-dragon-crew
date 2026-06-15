@@ -30,3 +30,13 @@
 
 ## PR Body Requirements
 PR body must reference this preview path and contain a "FactoryX Work Order Context" section quoting the full user prompt so reviewers can judge diff against goal.
+
+### Pass 3 Evidence (2026-06-15)
+- Updated screenshots in `.factoryx/work-orders/work-order-1781501302523-7-9/screenshots/`:
+  - `current-idle.png` — 233kB headless capture of the first screen (ready gauntlet: deep heat sky bands, drifting embers, spire+vent hazards, weighty dragon silhouette with rider, HUD, prompt, boost bar). Direct playable surface.
+  - `polish-play.png` (and retained play captures) — post auto-gesture sim showing motion, entities, potential Maw.
+- Runtime: re-confirmed on real `games/92-emberflight-gauntlet/index.html` (49.5kB) via Chromium headless load + virtual rAF: clean (no pageerror, no console game errors, no non-finite radial, full playing path previously exercised).
+- The preview entrypoint `games/92-emberflight-gauntlet/index.html` remains the direct game (no appended links, no homepage mutation).
+- Known: play-state PNGs from headless virtual-time are smaller files (dark uniform + motion); idle capture is rich. Live deployed preview will show full 60fps motion + gesture start + Maw beat + bests on crash.
+- PR will be updated with these artifacts + "FactoryX Work Order Context" quoting the full original payload prompt.
+

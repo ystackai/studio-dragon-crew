@@ -91,3 +91,29 @@
 - Post-push: remote advanced to 3a574ef; new `runtime-fix-verify.png` (headless capture of ready gauntlet post-fix + restart reseed) added to context dir for PR evidence. PR body update requested with full context (rate limit prevented live body re-read, but prior pattern + edit cmd succeeded structurally). Re-inspect via `gh pr view` showed PR OPEN, head OID matches our fix commit. No CHANGES_REQUESTED visible in available output.
 
 **Updated sign-off:** Runtime verification now passes for the reported failure mode + full play entry path (gesture → playing → ember draw with gradients). Continue polish on same branch/PR.
+
+### Pass 3 — Juice Polish + Session Bests + Weave Feedback + Maw Telegraph (2026-06-15, pre-deadline)
+- Changes (small product-shaped, focused on Game Feel + the prior runtime concern addressed before this):
+  - Added session `bestEmbers` / `bestCombo` tracking (persist across restarts within a browser session). Crash overlay now shows "SESSION BEST — X embers • ×Y" under the run stats. Gives immediate "one more try" incentive on the restart screen without any persistence API.
+  - Perfect-weave micro-rewards on hazards: when a very close near-miss (non-hit) occurs, occasional gold spark particles + micro combo nudge (+0.12 if low) + flash. Makes "weave" verb actively rewarding and juicy, not just survival. Low spawn rate (38% chance per frame in window) to avoid spam.
+  - Maw telegraph: low-rate heat particles emitted from the undulating gap/vent zones while Sky Maw is on screen. Improves readability of the "weave the gaps" escalation beat (player can see the safe lanes forming in the serpent's breath).
+  - Combo decay tuned 0.9 → 0.65 per sec window for better chaining feel during the 20-50s Maw section (still decays, but allows 4-6x runs with good play).
+  - Verification hook + getState extended with best* for tooling; resetWorld comment notes bests are intentionally session-persistent.
+- Browser runtime verification (post-edit):
+  - Main `index.html` (49.5kB) loaded clean under Chromium headless + virtual-time rAF (no SyntaxError, no Uncaught, no TypeError, no "non-finite", no createRadialGradient failures, no pageerror from game code). Only container dbus/gpu noise.
+  - Prior auto-gesture instrumented runs (pre-this-pass) exercised startRun → playing → embersArr update → drawEmber (with guarded radial) + maw collision/reward path with zero game exceptions.
+  - New FX paths (weave particles, maw vent spawns, best updates on crash) are simple numeric + reuse existing guarded spawnParticle/float; no new NaN sources introduced (all coords derived from finite W/H/playerY/worldX).
+- Screenshots refreshed in context/screenshots/:
+  - `current-idle.png` (233kB) — fresh headless capture of ready gauntlet (living sky + dragon + seeded hazards/embers + HUD + prompt). First-screen = playable game.
+  - `polish-play.png` / prior play captures — post-gesture sim state (motion + Maw possible).
+- Game Feel checklist delta:
+  - Core verb still instant on gesture; new weave reward gives visible/audible-adjacent (particles + flash + combo tick) <100ms feedback on skilled positioning.
+  - Easing unchanged (all damp/Ease.* + dt); no linear teleports.
+  - Hit/score + now "dodge score" feedback present.
+  - Restart shows living sky (prior) + now session record for motivation.
+  - Maw beat more readable (telegraph particles help "read" the ancient fire serpent).
+  - All prior items (audio gate, touch/kb/pointer, size, no net, no placeholders) hold.
+- Size: 49.5kB (delta +~2kB for bests + weave + telegraph + UI text). Still <2MB, 0 external, offline ok.
+- No blockers. The exact previous-run radial non-finite (and the TDZ before it) were fixed in prior targeted rework; this pass exercised the full path again post-juice and remained clean.
+- Sign-off: ready for commit on canonical, push, PR#77 body refresh (include full original prompt in FactoryX context + this verification + new screenshots note + "polish pass: session bests, perfect-weave juice, Maw readability, decay tune; runtime clean"). Continue to deadline if remaining budget; otherwise this is the handoff artifact.
+

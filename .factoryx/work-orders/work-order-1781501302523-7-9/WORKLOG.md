@@ -89,3 +89,17 @@
 ---
 
 *(Historical context from prior WO on same factory carried in main .factoryx/WORKLOG.md; this WO is fresh creative_game for Emberflight action title.)*
+
+### Pass 3 — Pre-Deadline Polish (2026-06-15)
+- Added replay pull via session bests on crash screen (bestEmbers/bestCombo updated on crash, shown under score, persist until full page reload). Small but powerful for "fly again" loop feel.
+- Juiced the core weave verb with "perfect weave" micro rewards (close non-hit dodges spawn gold sparks + micro combo + flash). Low probability to stay sparse and high-value.
+- Improved Sky Maw readability (and heroic weight) with occasional gap-vent telegraph particles while active — player sees the "breath" gaps form.
+- Combo decay 0.9→0.65 to let good chains breathe during the Maw beat without becoming trivial.
+- All changes kept the single-file self-contained nature; +~2kB.
+- Re-ran browser runtime verification on real index + prior instrumented paths: zero game errors (the reported non-finite radial and TDZ were already eliminated; new code paths safe). Chromium headless confirmed clean parse + rAF exec.
+- Fresh evidence: current-idle.png (large, detailed ready state), polish-play.png. PR#77 will be refreshed with these + full prompt context.
+- Checklist: more "hit/score feedback" (now includes skilled dodge), restart more motivating, Maw escalation clearer to read on first encounter. All other items (60fps feel on lightweight canvas, input direct, easing, audio post-gesture, <2MB, no net) unchanged and holding.
+- Git: will commit these focused diffs, push only to canonical ref, update the existing PR#77 (no new branches).
+- Status: ambitious playable first-screen game delivered + polish passes complete within budget. The taste-gate slice (weave+timed-dash in burning sky) plus escalation (Sky Maw) + juice now match the goal description. Ready for live preview re-verify on deploy.
+
+**Current HEAD after local:** (will capture on commit) | Payload 49.5kB | Deadline budget: remaining until 2026-06-15T14:28:32Z.

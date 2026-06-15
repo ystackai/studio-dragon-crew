@@ -73,6 +73,7 @@
   <div id="crash">
     <h1>THE SKY TOOK YOU</h1>
     <div class="score">Embers: <span id="final-embers">0</span> • Chain: <span id="final-combo">×1</span> • <span id="final-dist">0</span>m</div>
+    <div id="crash-best" style="font-size:11px; color:#8a6f5c; margin:2px 0 6px; letter-spacing:0.5px;">SESSION BEST — <span id="best-embers">0</span> embers • ×<span id="best-combo">1</span></div>
     <button id="restart-btn">FLY AGAIN</button>
     <div style="font-size:11px; color:#6a5346; margin-top:4px;">Press R or tap anywhere</div>
   </div>
@@ -114,7 +115,7 @@
   const DASH_COST = 0.28;
   const BOOST_RECHARGE = 0.018;
   const MAX_COMBO = 12;
-  const COMBO_DECAY_PER_SEC = 0.9;
+  const COMBO_DECAY_PER_SEC = 0.65;
   const HAZARD_SPAWN_MIN = 420;
   const HAZARD_SPAWN_MAX = 680;
   const EMBER_SPAWN = 210;
@@ -146,6 +147,10 @@
   let shake = 0;
   let flash = 0;
   let firstInteraction = false;
+
+  // Session bests (replay pull on restart; scoped to this run, no storage)
+  let bestEmbers = 0;
+  let bestCombo = 1;
 
   // Escalation boss: Sky Maw (clear beat after distance gate)
   let maw = null; // {x, phase, passed}
@@ -504,6 +509,7 @@
     playerY = 0.5;
     playerVY = 0;
     steerTarget = 0.5;
+    // note: bestEmbers/bestCombo persist across restarts for this session (replay incentive)
   }
 
   function startRun() {
@@ -533,6 +539,11 @@
     document.getElementById('final-embers').textContent = embers;
     document.getElementById('final-combo').textContent = '×' + combo;
     document.getElementById('final-dist').textContent = Math.floor(distance);
+    // Session bests (replay juice)
+    if (embers > bestEmbers) bestEmbers = embers;
+    if (combo > bestCombo) bestCombo = combo;
+    document.getElementById('best-embers').textContent = bestEmbers;
+    document.getElementById('best-combo').textContent = bestCombo;
     document.getElementById('crash').classList.add('visible');
   }
 
@@ -651,6 +662,19 @@
       if (Math.abs(hx - W*0.26) < 52 && Math.abs(py - hy) < hh*0.9) {
         flash = Math.max(flash, 0.08);
       }
+      // Perfect weave micro-reward (juicy dodge feel without spamming; small combo nudge + spark)
+      if (!hit && Math.abs(hx - W*0.26) < 38 && Math.abs(py - hy) < hh * 0.72) {
+        if (Math.random() < 0.38) {
+          flash = Math.max(flash, 0.05);
+          const wy = (py + hy) * 0.5;
+          for (let k=0; k<2; k++) {
+            spawnParticle(hx + (Math.random()-0.5)*9, wy + (Math.random()-0.5)*7,
+              -0.8 - Math.random()*0.6, (Math.random()-0.5)*0.8 - 0.3,
+              0.26 + Math.random()*0.18, 0.9 + Math.random()*0.6, PAL.gold);
+          }
+          if (combo < 4.5) combo = Math.min(MAX_COMBO, combo + 0.12);
+        }
+      }
     }
 
     // Embers
@@ -724,6 +748,14 @@
     }
     if (maw) {
       maw.phase += dt * 1.8;
+      // Occasional vent/gap telegraph particles (readability for "weave the gaps" without clutter)
+      if (Math.random() < 0.22) {
+        const vx = (maw.x - worldX) / (W * 0.9) * (W * 0.5) + W * 0.26 + (Math.random()-0.5) * 28;
+        const vy = H*PLAY_TOP + (0.5 + Math.sin(maw.phase * 1.3) * 0.26) * H*(PLAY_BOT-PLAY_TOP);
+        spawnParticle(vx + (Math.random()-0.5)*11, vy + (Math.random()-0.5)*19,
+          -1.4 - Math.random()*0.7, (Math.random()-0.5)*1.1 - 0.2,
+          0.32 + Math.random()*0.22, 1.1 + Math.random()*0.7, PAL.heat);
+      }
       const mMove = speed * 58 * dt;
       maw.x -= mMove * 0.78; // slightly slower for presence/weight
       const sx = (maw.x - worldX);
@@ -1306,7 +1338,7 @@
 
     // Verification hook
     if (window.__emberflightGauntlet) {
-      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw };
+      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, bestEmbers, bestCombo };
     }
 
     requestAnimationFrame(render);
@@ -1332,7 +1364,7 @@
 
     // Expose for verification (in-game state after interaction)
     window.__emberflightGauntlet = {
-      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw }),
+      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, bestEmbers, bestCombo }),
       forceDash: () => { if (mode==='playing') dashRequested = true; },
       forceRestart: () => restart()
     };
