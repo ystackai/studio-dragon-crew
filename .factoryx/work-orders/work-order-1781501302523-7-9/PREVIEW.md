@@ -94,6 +94,11 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive comment + evidence + explicit re-report of the reviewable artifact URL; the full original user prompt / FactoryX Work Order Context section remains in the PR body. Same canonical branch and direct preview root `games/92-emberflight-gauntlet/index.html`.
 - All Game Feel + verification requirements maintained. No known preview issues. The "report a GitHub PR URL" requirement addressed with fresh verification + gh comment + memory updates in this execution.
 
+### Pass 39/40 Evidence (2026-06-15, contact-sheet polish verification in this runtime)
+- Fresh chromium captures (this execution, post the enlarge/brighten polish addressing 15:32 blocking "too dark and small" feedback): current-idle.png (275kB) — ready first screen now bright active gauntlet with enlarged dragon/hero silhouette + rider + 8 embers + larger visible spire/vent hazards immediately (first 10s feels like heroic flight, not dim). check7-pre.png (279kB) from short-budget on .factoryx-runtime-check-7.html copy: contentful legible (enlarged bright proxies in early block prevent the prior pre-screenshot timeout).
+- p40 instrumented verify run: SUCCESS "no uncaught ... (real source post-contact-polish; early enlarged dragon/8 embers visible)"; gesture exercised playing + hook; p40-play.png + p40-verify-log.txt + real-index-p40-dom.txt + p40-verify.html staged in work order + root.
+- Entrypoint direct `games/92-emberflight-gauntlet/index.html` (playable brightened/enlarged gauntlet first screen); no appended content. PR#77 updated with evidence + full prompt context preserved. The blocking contact-sheet visual + runtime verification requirements addressed.
+
 
 ### Pass 10 Evidence (2026-06-15, current execution verification)
 - Real `games/92-emberflight-gauntlet/index.html` + Chromium headless produced refreshed `current-idle.png` (116kB) — ready first screen (playable gauntlet, dragon silhouette + rider, seeded living hazards/embers/graze, HUD, prompt). Entrypoint direct, no appended links/content, no homepage mutation.
