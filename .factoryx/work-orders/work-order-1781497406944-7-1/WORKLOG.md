@@ -65,8 +65,8 @@
 
 **Next:** Commit + push to canonical branch, create PR with full payload + this context + evidence, re-verify on live preview (cache-bust), polish (tuning, more dragon presence, spawn fairness, audio layers) on same PR until deadline.
 
-**Last updated:** 2026-06-15 Pass 1 complete (implementation + local verification + docs)
-**PR:** https://github.com/ystackai/studio-dragon-crew/pull/75 (created; inspected post-push — no reviews/checks yet, mergeable per gh)
+**Last updated:** 2026-06-15 Pass 1 complete + polish (implementation + local verification + docs + weight tuning)
+**PR:** https://github.com/ystackai/studio-dragon-crew/pull/75 (head f5a29cb; inspected multiple times — OPEN/REVIEW_REQUIRED, no comments/reviews; mergeable CONFLICTING noted due to base history, will forward if requested. All pushes used canonical only.)
 
 ---
 
