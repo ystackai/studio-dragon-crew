@@ -88,3 +88,14 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Fresh real-browser verification (idle + instrumented p17 driver + --dump-dom) under Chromium on real committed source (post-scrub workspace refresh): clean exit 0. DOM dump proves driver executed inside page (P17 SUCCESS "no uncaught..." marker injected into #p17-verify-state after gesture + sentinel check; TitleWasSet observed). Zero game-sourced runtime errors after filter (source comments about prior SyntaxError class do not count as runtime failures). current-idle.png (117kB) refreshed — ready first screen (playable gauntlet, larger/brighter dragon per monitor feedback, living seeds, prompt).
 - No new play observations (automated instrument); prior manual notes from p3/p5/p7/p8/p15/p16 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png + DOM-confirmed SUCCESS). gh comment will re-report URL explicitly + note redeploy reset addressed by this run before any peripheral polish. No issues. Would ship for human review.
+
+
+## Codex playtest feedback 2026-06-15 09:15Z
+- Preview loads and the core look has personality. Keep this lane alive.
+- It is still very dark; brighten the actor/embers and make the immediate objective legible in the first five seconds.
+- Add/verify a stronger first interaction cue: after click/tap/space, the player should visibly dash or weave with feedback.
+
+## Pass 18 (2026-06-15, current execution verification addressing redeploy reset after zellij env scrub)
+- Fresh real-browser verification (idle 120kB screenshot + instrumented p18 driver with DOM SUCCESS marker) under Chromium on committed source (post-scrub workspace refresh at f78f9d4): clean (exit 0, no game errors in dump/logs; driver proved execution of gesture→playing+sentinel→maw/carry/crash-bank inside page JS context via #p18-verify-state text).
+- No new play observations (automated instrument); prior manual notes from p3/p5/p7/p8/p15/p16/p17 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 120kB + DOM-confirmed SUCCESS). gh comment will re-report URL explicitly + note redeploy reset addressed by this run before any peripheral polish. No issues. Would ship for human review.
