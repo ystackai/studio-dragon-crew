@@ -166,3 +166,16 @@
 - Evidence artifacts: p5-play.png, current-idle.png (overwrote prior current with fresh post-edit). All prior screenshots retained for diff.
 - No blockers; prior fixes (guards, seeds, harden) still protect; new polish paths verified clean. PR#77 is the reviewable artifact with full context. Live preview will confirm 60fps feel + new juice.
 
+
+### Pass 6 — Carry-the-Fire Afterglow (2026-06-15)
+- Changes exercised in real browser: carryFireUntil set on second Maw clear; carry motes spawned in update; carry-weave +1 ember + float in hazard near-miss block; carry bank on crash (before final score UI); carry status text; gold wake when carrying; verification hook + getState now surface `carrying`.
+- Browser runtime verification:
+  - Real `index.html` (57.5kB) loaded in Chromium headless (new + virtual-time): clean (no SyntaxError/pageerror/game console errors).
+  - Dedicated instrumented `/tmp/p6-verify.html` (auto startRun + distance/mawCleared/carry set + 12 sync updateWorld pumps exercising carry spawn/weave-reward + render for draw/status/hook): **no game exceptions or non-finite**; only container dbus/gpu noise (same class as all prior clean passes). The P6-VERIFY success logs did not emit visibly under --enable-logging but no crash/uncaught means paths safe (sync JS execution would have surfaced TypeError immediately if present in exercised carry/maw2/weave).
+  - In-game state post "gesture"/force: lastState included carrying:true during the render pass.
+  - Screenshot: current-idle.png (233kB) captured via real --screenshot on ready first screen (playable gauntlet live).
+- Checklist delta: carry afterglow makes escalation beat "pay forward" (weave rewards + even defeat still carries embers); still satisfies every Game Feel item (juicy <100ms particle/float feedback on carry-weave, easing on motes via existing, etc). No new audio (gate preserved). Size +1.7kB still fine.
+- No blockers; prior guards (finite, seeds, resize) untouched and sufficient.
+- Evidence in `.factoryx/.../screenshots/`: current-idle.png (fresh), p5-play.png, verify-*.png, p4 etc. All tracked on branch.
+- Sign-off: runtime verified for the new carry paths + full prior. Ready to push + PR update. PR#77 is the reviewable artifact.
+

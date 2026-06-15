@@ -86,7 +86,7 @@
   // ============================================================
   // EMBERFLIGHT GAUNTLET — playable first screen (weave/dash through burning sky + Sky Maw escalation)
   // One verb (weave + timed dash), one space (burning sky gauntlet)
-  // Dragon Crew house style: weight, heat, consequence, mythic presence. Juicy feedback, session bests, two-pass Maw.
+  // Dragon Crew house style: weight, heat, consequence, mythic presence. Juicy feedback, session bests, two-pass Maw + carry-the-fire afterglow (lingering payoff from escalation).
   // ============================================================
 
   const canvas = document.getElementById('c');
@@ -157,6 +157,7 @@
   let mawClearedAt = -999;
   let weaveFlare = 0;
   let heroicFlare = 0; // dragon acknowledges skilled Maw clears (heroic weight + house "dragon notices")
+  let carryFireUntil = -999; // post-second-Maw linger window; "carry the fire" visual + scoring payoff (escalation afterglow)
 
   // Entities (lightweight, no class overhead in hot path)
   let hazards = []; // {x, y, kind:'spire'|'vent', h, phase}
@@ -569,6 +570,7 @@
     shake = 0;
     flash = 0;
     maw = null;
+    carryFireUntil = -999;
     playerY = 0.5;
     playerVY = 0;
     steerTarget = 0.5;
@@ -587,6 +589,10 @@
   function crash() {
     if (mode !== 'playing') return;
     mode = 'crashed';
+    // Carry-the-fire: even if the sky takes you, some warmth reaches the crew (mythic softening of failure, from escalation payoff)
+    if (carryFireUntil > time) {
+      embers += 2 + (Math.random() < 0.5 ? 1 : 0);
+    }
     playCrash();
     rampMaster(0.18, 0.4);
     shake = 22;
@@ -741,6 +747,15 @@
           }
           if (combo < 4.5) combo = Math.min(MAX_COMBO, combo + 0.12);
           playWeave();
+          if (carryFireUntil > time) {
+            // carry-the-fire pays forward on skilled weave (afterglow from Maw clear)
+            embers++;
+            spawnFloatText('+1', hx + 4, wy - 14, 520);
+            for (let k=0; k<3; k++) {
+              spawnParticle(hx, wy, (Math.random()-0.5)*1.1, -0.7 + Math.random()*0.4,
+                0.32, 0.8, PAL.gold);
+            }
+          }
         }
       }
     }
@@ -852,6 +867,7 @@
           shake = Math.max(shake, 4);
           heroicFlare = 1.15; // dragon crest acknowledges the feat (cost of power paid, warmth earned)
           playMawClear();
+          carryFireUntil = time + 8.0; // the fire is carried forward; visual + scoring linger from the clear escalation beat
         }
       }
       if (sx < -180) { maw = null; } // despawn after pass
@@ -873,6 +889,17 @@
             flash = Math.max(flash, 0.09);
           }
         }
+      }
+    }
+
+    // Carry-the-fire afterglow (post second Maw clear): small gold motes + scoring juice on weaves (the warmth pays forward)
+    if (carryFireUntil > time && mode === 'playing') {
+      const py = playerScreenY();
+      const px = W * 0.26;
+      if (Math.random() < 0.85) {
+        spawnParticle(px + (Math.random()-0.5)*22, py + (Math.random()-0.5)*16 - 2,
+          -1.1 + Math.random()*0.5, (Math.random()-0.5)*0.9,
+          0.48 + Math.random()*0.18, 0.95, PAL.gold);
       }
     }
 
@@ -1322,6 +1349,7 @@
     const st = document.getElementById('status');
     if (maw) st.textContent = maw.second ? 'SKY MAW • SECOND PASS • WEAVE' : 'SKY MAW • WEAVE THE GAPS';
     else if (mawClearedAt > 0 && distance - mawClearedAt < 220) st.textContent = 'THE MAW YIELDS • CARRY THE FIRE';
+    else if (carryFireUntil > time) st.textContent = 'CARRY THE FIRE • WEAVE ON';
     else if (distance > 820) st.textContent = 'THROUGH THE MAW • LAST CHAIN';
     else if (distance > 620) st.textContent = 'THE MAW OPENS • DASH THE GAP';
     else if (distance > 320) st.textContent = 'FEEL THE HEAT • CHAIN THE DASH';
@@ -1413,10 +1441,11 @@
     const py = playerScreenY();
     drawDragon(px, py, time, boosting);
 
-    // Player ember wake (kinetic + heroic on high flare)
+    // Player ember wake (kinetic + heroic on high flare + carry the fire afterglow)
     if (mode === 'playing') {
-      const wakeCol = (heroicFlare > 0.3 || boosting) ? PAL.gold : PAL.ember;
-      const nWake = (heroicFlare > 0.3 ? 5 : (boosting ? 4 : 3));
+      const carrying = carryFireUntil > time;
+      const wakeCol = (heroicFlare > 0.3 || boosting || carrying) ? PAL.gold : PAL.ember;
+      const nWake = (heroicFlare > 0.3 || carrying ? 5 : (boosting ? 4 : 3));
       for (let i=0; i<nWake; i++) {
         spawnParticle(px - 32 - i*7, py + (i-1)*3 + Math.sin(time*7+i)*1.5,
           -1.2 - Math.random()*0.8, (Math.random()-0.5)*0.7,
@@ -1460,7 +1489,7 @@
 
     // Verification hook
     if (window.__emberflightGauntlet) {
-      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1 };
+      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1, carrying: carryFireUntil > time };
     }
 
     requestAnimationFrame(render);
@@ -1486,7 +1515,7 @@
 
     // Expose for verification (in-game state after interaction)
     window.__emberflightGauntlet = {
-      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1 }),
+      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1, carrying: carryFireUntil > time }),
       forceDash: () => { if (mode==='playing') dashRequested = true; },
       forceRestart: () => restart()
     };

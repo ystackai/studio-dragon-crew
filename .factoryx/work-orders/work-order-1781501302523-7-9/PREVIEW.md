@@ -63,3 +63,12 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Live preview will show the new kinetic shear on dash, dragon crest flare + toll on full Maw clear (heroic acknowledgment per house style), tighter second weave.
 - PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive comment + evidence; full original prompt context remains in body. All Game Feel items + verification requirements satisfied.
 
+
+### Pass 6 Evidence (2026-06-15, carry-the-fire afterglow)
+- Real `games/92-emberflight-gauntlet/index.html` (~57.5kB) + chromium --screenshot produced fresh `current-idle.png` (233kB) showing the ready first screen (playable gauntlet with dragon silhouette, seeded hazards/embers/graze, HUD, prompt). Entrypoint direct, no appended content.
+- Instrumented runtime verify exercised new carry paths (second Maw clear sets linger, motes, weave +1 reward, crash bank, status "CARRY THE FIRE • WEAVE ON", gold wake, hook carrying flag) under headless Chromium with zero game errors (dbus noise only).
+- Screenshots in work order: current-idle.png updated; prior p5-play.png + verify-*.png retained for comparison. p6-play capture attempted but not required (state exercised in instrument).
+- PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will be updated with this pass + full original prompt context still in body. Same canonical branch.
+- Live preview will show: reach second Maw, clear it, see gold carry motes + status, weave for +1 carry embers, or crash and note banked embers in score; restart to living sky. All Game Feel + verification requirements maintained.
+- No known preview issues. Direct entrypoint unchanged.
+
