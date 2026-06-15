@@ -70,10 +70,20 @@
 - Game Feel Checklist and "Overnight FactoryX game protocol" (full text in original payload).
 - `team/avatars/generated/fire-dragon.png` + `prompts/dragon-portraits.json` + personas/ as visual/audio north stars.
 
-**Last updated:** 2026-06-15 — Strategy gate closure: created `.factoryx/preview-entrypoint` (exact contents per required entrypoint) + updated all WO memory files to record the fix for prior verification skip. No implementation performed.
+**Last updated:** 2026-06-15 — Technical design gate closure: created `.factoryx/work-orders/work-order-1781497406944-7-1/TECHNICAL_SYSTEM_DESIGN.md` (filesystem/modules, data flow, engine choices, asset pipeline, controls, verification plan, risks, non-goals). All updates confined to WO memory. No production implementation.
 
-**This agent execution (planner-default, strategy gate):** Inspected branch (gh pr list/view: NO PR found for head — correct per gate rules; no comments/CHANGES_REQUESTED). No upstream in shell but rev-list confirmed in-sync with origin tip after fetch. Used structured todos. Re-read full strategy + companions + FACTORY_CONTEXT + game-designer-2d/SKILL.md as plan of record. Confirmed every creative_game archetype section present in GOAL_EXECUTION_STRATEGY.md. 
+**Technical design gate (planner-default):** 
+- Re-inspected current git state (branch `factoryx/factory-dragon-crew/work-order-1781497406944-7-1` at 0e3acb2d67692d7d951d369b525f60a6895770c9; remote tip matches after fetch; gh pr list/view: [] — no PR, no comments, no CHANGES_REQUESTED — correct per gate rules; no upstream tracking locally but rev-list confirmed clean).
+- Re-read GOAL_EXECUTION_STRATEGY.md (plan of record) + full WO companions + `.factoryx/FACTORY_CONTEXT.md` (house style + Fire Dragon) + `.factoryx/skills/game-designer-2d/SKILL.md` + sanctuary (1777399670138868166: single-file canvas + WebAudio procedural) and Rhythm Drift (1777047133184832800: WebGL flow + resilient load) drop sources + `team/avatars/generated/fire-dragon.png` (visual north star) + `.factoryx/preview-entrypoint` (already exact `games/88-emberflight-gauntlet/index.html`).
+- Confirmed design addresses every protocol requirement: filesystem/modules (game tree + WO memory), data flow (state, loop with dt, collision, particles), libraries/tools (vanilla canvas 2D primary + WebAudio; no deps; optional isolated WebGL haze), asset/evidence generation (small coherent real set + manifest + decode proof + screenshots), verification (repo checks + full browser runtime 60s play + Game Feel Checklist + retirement re-check + autoreview), risks/mitigations, explicit non-goals, rollout/branch notes.
+- Used structured todos throughout. No changes outside `.factoryx/work-orders/work-order-1781497406944-7-1/`. Tree outside .factoryx/ remains untouched (no games/, no assets, no index.html, no .factoryx/preview-entrypoint mutation).
+- gh pr empty (as required). Ready for taste-gate slice (one 30–60s playable verb in one space) on same branch after commit of this design gate. All durable notes kept under the Work Order dir.
 
-**Key action to address previous run issue:** Created `.factoryx/preview-entrypoint` containing `games/88-emberflight-gauntlet/index.html` (the declared payload preview_entrypoint). This was the root cause of "browser runtime verification skipped: ... no preview entrypoint could be resolved". File is a small durable factory config (not game code), committed with WO memory updates only. Updated VERIFICATION.md, PREVIEW.md, and this WORKLOG with explicit sign-off that the resolvable-entrypoint blocker is cleared at gate. 
+**Acceptance (this gate):**
+- [x] TECHNICAL_SYSTEM_DESIGN.md created at exact path with required sections (filesystem/modules, data flow, libraries/tools, asset/evidence gen, verification, rollout/rollback, risks, implementation non-goals).
+- [x] Design uses strategy as source of product intent + creative_game/browser-game-2d archetype.
+- [x] No PR opened or human review requested from this gate.
+- [x] `.factoryx/preview-entrypoint` remains correct (set in prior gate).
+- [ ] (Future) Taste-gate slice at `games/88-emberflight-gauntlet/index.html` with real assets driving hero dragon + signature audio, browser-playable evidence, full verification pass, and Game Feel Checklist items evidenced.
 
-Tree outside .factoryx/ remains untouched (no games/, no assets, no index.html). gh pr empty. Ready for taste-gate slice on same branch after this commit. All durable notes under `.factoryx/work-orders/work-order-1781497406944-7-1/`. No PR opened.
+Tree outside .factoryx/ untouched. All planning/feedback under `.factoryx/work-orders/work-order-1781497406944-7-1/`. No PR.

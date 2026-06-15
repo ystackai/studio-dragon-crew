@@ -86,6 +86,17 @@ See full checklist in Work Order and GOAL_EXECUTION_STRATEGY.md. Key items that 
 - Verification numbers, screenshots, and live URLs will be added only after taste-gate slice implementation and local browser runtime exercise.
 - Any "verification" at this gate is process and planning verification only.
 
-**Last updated:** 2026-06-15 — Strategy gate closure: `.factoryx/preview-entrypoint` created to resolve prior verification skip (file now present for browser runtime verifier). Actual runtime verification pending taste-gate impl.
+**Last updated:** 2026-06-15 — Technical design gate closure: TECHNICAL_SYSTEM_DESIGN.md created with full verification implications, planned runtime steps, Game Feel Checklist targets, asset decode proof requirements, and placeholder retirement re-check. No runtime verification performed (none possible yet); design-time process verification complete. Actual browser runtime + screenshots + evidence pending taste-gate impl.
 
-**Execution note (this agent run, addressing prior run issue):** Confirmed payload in Work Order includes explicit `"preview_entrypoint"` value. Created `.factoryx/preview-entrypoint` (contents: `games/88-emberflight-gauntlet/index.html`) at strategy gate to ensure the preview entrypoint is resolvable. This directly addresses the "browser runtime verification skipped: work order declares a previewable artifact but no preview entrypoint could be resolved" failure from prior run — the file is now present so verifier can map the declared entrypoint. gh pr view + list confirmed: no PR yet (correct for strategy gate); no blocking comments. All other strategy-gate verification items complete. No production game code or assets added.
+**Technical design gate verification (process + planning):**
+- [x] Re-read full strategy (verification implications section), payload (browser_runtime_verification: true), game feel checklist, and prior drop patterns (sanctuary single-file + procedural audio; rhythm resilient load).
+- [x] Confirmed `.factoryx/preview-entrypoint` already present with exact `games/88-emberflight-gauntlet/index.html` (resolves prior skip; no mutation needed at this gate).
+- [x] gh pr list/view: no PR on branch (correct; no blocking comments or reviews to address).
+- [x] Branch HEAD (0e3acb2) in sync with remote tip for this Work Order after fetch; no force-push of stale history.
+- [x] Design doc explicitly specifies: repo checks (node --check), local serve + real browser open, 60s core loop exercise (gesture → bank → burst → ring/target → crash/retry), evidence capture (screenshots desktop+mobile, console clean, network local-only, FPS ~60, decode proof for dragon + real audio buffers), autoreview + crew passes, live preview retest, and explicit "failure = blocker" rule.
+- [x] Game Feel Checklist and placeholder retirement (dragon hero + ≥1 real audio cue) called out as active verification targets that must be evidenced before review.
+- [x] No production game code, assets, or changes outside WO memory at this gate.
+
+**Known limitations (post-design gate):** No game code or assets exist yet. Full numbers, console output, screenshots, decode logs, and live URLs will be added only after taste-gate slice + local browser runtime exercise. Any "verification" at this gate remains process/planning verification.
+
+**Execution note (this agent run):** Inspected git + gh (no PR). Re-read strategy + all WO files + skills + drops + fire-dragon asset as inputs to the design. Created TECHNICAL_SYSTEM_DESIGN.md with concrete verification plan aligned to protocol, game feel, and "polish until deadline" intent. All durable notes under `.factoryx/work-orders/work-order-1781497406944-7-1/`. No prod changes. Ready for taste-gate implementation verification on same branch.
