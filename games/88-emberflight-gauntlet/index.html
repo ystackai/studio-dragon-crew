@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Emberflight Gauntlet</title>
+<style>
+  :root { --bg:#0a0604; --rock:#2a211c; --ember:#ff5a1f; --gold:#ffcc66; --smoke:#5c4636; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#0a0604; font-family: ui-monospace, "SF Mono", Menlo, monospace; color:#e8d9c8; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; outline:none; }
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:2; }
+  #score { position:absolute; top:14px; left:16px; font-size:13px; letter-spacing:1px; opacity:0.95; text-shadow:0 1px 2px rgba(0,0,0,0.6); }
+  #chain { position:absolute; top:14px; left:110px; font-size:12px; padding:1px 7px; border-radius:999px; background:rgba(255,90,31,0.12); color:#ffaa66; border:1px solid rgba(255,90,31,0.3); opacity:0; transition:opacity .15s; }
+  #breath { position:absolute; top:18px; right:54px; display:flex; gap:4px; }
+  .pip { width:7px; height:7px; border-radius:999px; background:#ffcc66; box-shadow:0 0 6px #ffaa44; transition:opacity .1s, transform .1s; }
+  .pip.off { opacity:0.18; box-shadow:none; background:#664422; }
+  #depth { position:absolute; top:14px; right:16px; font-size:11px; opacity:0.6; letter-spacing:0.5px; }
+  #mute { position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:999px; border:1px solid rgba(232,217,200,0.25); background:rgba(10,6,4,0.6); color:#e8d9c8; font-size:13px; line-height:26px; text-align:center; pointer-events:auto; cursor:pointer; user-select:none; z-index:3; transition:background .2s, opacity .2s; }
+  #mute.muted { opacity:0.5; }
+  #legend { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); font-size:10px; letter-spacing:1.5px; padding:2px 11px; border-radius:999px; background:rgba(10,6,4,0.55); border:1px solid rgba(232,217,200,0.12); white-space:nowrap; pointer-events:none; z-index:2; opacity:0.85; transition:opacity 420ms ease; }
+  #legend.fade { opacity:0; }
+  #death { position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; z-index:10; background:linear-gradient(rgba(10,6,4,0.35), rgba(10,6,4,0.75)); pointer-events:auto; }
+  #death.show { display:flex; }
+  #death .title { font-size:clamp(28px,7vw,52px); letter-spacing:4px; color:#ffaa66; text-shadow:0 2px 18px rgba(255,90,31,0.5); margin-bottom:6px; }
+  #death .sub { font-size:11px; opacity:0.7; margin-bottom:18px; letter-spacing:2px; }
+  #death .score { font-size:clamp(18px,4vw,26px); margin:8px 0 22px; }
+  #death .retry { font-size:11px; padding:8px 22px; border:1px solid rgba(255,204,102,0.5); border-radius:999px; background:rgba(255,204,102,0.06); color:#ffcc66; letter-spacing:1.5px; cursor:pointer; pointer-events:auto; user-select:none; }
+  #death .retry:hover { background:rgba(255,204,102,0.16); }
+</style>
+</head>
+<body>
+<canvas id="c" width="960" height="540" aria-label="Emberflight Gauntlet - fly the dragon, bank with drag or arrows, breathe with tap or space"></canvas>
+<div id="hud">
+  <div id="score">SCORE <span id="sc">000000</span></div>
+  <div id="chain">x<span id="ch">1</span></div>
+  <div id="breath"></div>
+  <div id="depth">0</div>
+  <div id="mute" title="Mute (M)">🔇</div>
+</div>
+<div id="legend">DRAG TO BANK • TAP OR HOLD TO BREATHE</div>
+<div id="death">
+  <div class="title">INTO THE VEIN</div>
+  <div class="sub">THE CANYON CLAIMS ANOTHER</div>
+  <div class="score">SCORE <span id="final">000000</span> — CHAIN <span id="finalch">1</span>x</div>
+  <div class="retry" id="retry">DRAG OR SPACE TO RISE AGAIN</div>
+</div>
+<script>
+"use strict";
+
+// ===== CONFIG =====
+const LOGICAL_W = 960;
+const LOGICAL_H = 540;
+const DRAGON_X = 210;
+const WALL_MARGIN = 38;
+const RING_RADIUS = 22;
+const HAZARD_R = 17;
+const ORB_R = 11;
+const MAX_PARTICLES = 240;
+const BREATH_MS = 380;
+const BREATH_COOLDOWN = 1120;
+
+// ===== STATE =====
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d', { alpha: true });
+const scoreEl = document.getElementById('sc');
+const chainEl = document.getElementById('ch');
+const depthEl = document.getElementById('depth');
+const breathEl = document.getElementById('breath');
+const legendEl = document.getElementById('legend');
+const deathEl = document.getElementById('death');
+const finalEl = document.getElementById('final');
+const finalChEl = document.getElementById('finalch');
+const muteBtn = document.getElementById('mute');
+const retryBtn = document.getElementById('retry');
+
+let dpr = 1;
+let viewW = 960, viewH = 540;
+let running = true;
+let lastT = 0;
+let state = 'idle'; // idle | playing | dead
+let audioReady = false;
+let muted = false;
+let audioCtx = null, master = null, wind = null, breathGain = null, noiseSrc = null;
+
+let cameraX = 0;
+let speed = 138;
+let score = 0;
+let combo = 1;
+let lastChainAt = 0;
+let depth = 0;
+let breathUntil = 0;
+let cooldownUntil = 0;
+let heatPips = 3;
+
+let dragon = { y: LOGICAL_H * 0.5, vy: 0, bank: 0, flap: 0, mouthOpen: 0 };
+let targetY = dragon.y;
+
+let walls = []; // {x, top, bot}
+let rings = []; // {x, y, hit:false}
+let hazards = []; // {x, y, vx:0, vy:0, r:HAZARD_R, kind:'rock'|'cinder'}
+let orbs = [];    // {x, y, hit:false}
+let particles = []; // {x,y,vx,vy,life,size,hue,alpha,kind:'ember'|'spark'|'smoke'|'breath'}
+let crew = [];    // {x, y, hit:false} — rescue allies / ember crew for chain boosts
+let boss = null;  // {x, y, hp, attackT, hitFlash} — escalation boss (Ember Sovereign)
+let screenShake = 0;
+let flash = 0;    // brief white flash on heavy impact / boss shatter
+
+let input = { y: null, pressing: false, lastDown: 0 };
+let keys = {};
+let legendHidden = false;
+
+// ===== UTILS =====
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function rnd(){ return Math.random(); }
+function now(){ return performance.now(); }
+
+function fmt(n){ return String(Math.floor(n)).padStart(6,'0'); }
+
+function makePips(n){
+  breathEl.innerHTML = '';
+  for(let i=0; i<3; i++){
+    const p = document.createElement('div');
+    p.className = 'pip' + (i < n ? '' : ' off');
+    breathEl.appendChild(p);
+  }
+}
+makePips(3);
+
+function updateHUD(){
+  scoreEl.textContent = fmt(score);
+  const ch = document.getElementById('ch');
+  ch.textContent = combo;
+  chainEl.style.opacity = (combo > 1) ? '1' : '0';
+  depthEl.textContent = Math.floor(depth);
+  // breath pips
+  const pips = breathEl.children;
+  const cooled = now() > cooldownUntil;
+  const active = now() < breathUntil;
+  for(let i=0; i<pips.length; i++){
+    const on = (i < heatPips) && (cooled || active);
+    pips[i].classList.toggle('off', !on);
+  }
+}
+
+function hideLegendSoon(){
+  if (legendHidden) return;
+  legendHidden = true;
+  setTimeout(()=>{ legendEl.classList.add('fade'); }, 2600);
+}
+
+function showDeath(){
+  finalEl.textContent = fmt(score);
+  finalChEl.textContent = combo;
+  deathEl.classList.add('show');
+  state = 'dead';
+}
+
+function hideDeath(){
+  deathEl.classList.remove('show');
+}
+
+function resetGame(){
+  cameraX = 0;
+  speed = 138;
+  score = 0;
+  combo = 1;
+  lastChainAt = 0;
+  depth = 0;
+  breathUntil = 0;
+  cooldownUntil = 0;
+  heatPips = 3;
+  dragon.y = LOGICAL_H * 0.5 + (rnd()-0.5)*30;
+  dragon.vy = 0;
+  dragon.bank = 0;
+  dragon.flap = 0;
+  dragon.mouthOpen = 0;
+  targetY = dragon.y;
+  walls.length = 0;
+  rings.length = 0;
+  hazards.length = 0;
+  orbs.length = 0;
+  particles.length = 0;
+  crew.length = 0;
+  boss = null;
+  screenShake = 0;
+  flash = 0;
+  // seed initial canyon
+  let wx = -120;
+  for(let i=0; i<42; i++){
+    walls.push(makeWall(wx));
+    wx += 28;
+  }
+  // seed a few rings and hazards ahead
+  for(let i=0; i<3; i++){
+    rings.push({x: 420 + i*210 + rand(-20,40), y: LOGICAL_H*(0.35 + 0.3*rnd()), hit:false});
+  }
+  hazards.push({x: 580, y: LOGICAL_H*0.28, vx:0, vy:0, r:HAZARD_R, kind:'rock'});
+  orbs.push({x: 310, y: LOGICAL_H*0.72, hit:false});
+  input.y = null;
+  input.pressing = false;
+  hideDeath();
+  state = 'playing';
+  updateHUD();
+  if (!legendHidden) hideLegendSoon();
+}
+
+function makeWall(wx){
+  const t = (wx * 0.011) % (Math.PI*2);
+  const amp = 68 + Math.sin(wx*0.0037)*19;
+  const top = WALL_MARGIN + 42 + Math.sin(t)*amp + Math.sin(wx*0.021)*14;
+  const bot = LOGICAL_H - WALL_MARGIN - 38 - Math.cos(t*0.7)* (amp*0.92) - Math.sin(wx*0.017)*11;
+  return {x: wx, top: Math.max(WALL_MARGIN+12, top), bot: Math.min(LOGICAL_H-WALL_MARGIN-8, bot)};
+}
+
+function advanceWalls(){
+  // drop offscreen left
+  while(walls.length && walls[0].x < cameraX - 80){
+    walls.shift();
+  }
+  // generate ahead
+  let lastX = walls.length ? walls[walls.length-1].x : cameraX;
+  while(lastX < cameraX + LOGICAL_W + 140){
+    lastX += 28;
+    walls.push(makeWall(lastX));
+  }
+}
+
+function spawnIfNeeded(){
+  const spawnX = cameraX + LOGICAL_W + 60;
+  // rings ~ every 170-240 units, bias to playable gaps
+  if (rings.length === 0 || rings[rings.length-1].x < spawnX - 190){
+    if (rnd() < 0.86){
+      const wy = sampleGapY(spawnX + 30);
+      rings.push({x: spawnX + rand(10,70), y: wy, hit:false});
+    }
+  }
+  // hazards ramp with depth
+  const density = clamp(0.6 + depth / 9200, 0.6, 2.1);
+  if (hazards.length < 5 && rnd() < 0.018 * density){
+    const wy = sampleGapY(spawnX - 40) + rand(-55,55);
+    const kind = (rnd() < 0.38 && depth > 1800) ? 'cinder' : 'rock';
+    hazards.push({x: spawnX + rand(-10,80), y: clamp(wy, 70, LOGICAL_H-70), vx: (kind==='cinder'? rand(-14,-6):0), vy: (kind==='cinder'? rand(-9,9):0), r: kind==='cinder'?13:HAZARD_R, kind});
+  }
+  // orbs (ignitable targets) for tactical breath use
+  if (orbs.length < 2 && rnd() < 0.011){
+    const wy = sampleGapY(spawnX + 80) + rand(-38,38);
+    orbs.push({x: spawnX + rand(30,120), y: clamp(wy, 80, LOGICAL_H-80), hit:false});
+  }
+  // crew / rescue allies (chain boost targets) — appear as small witness figures
+  if (crew.length < 1 && rnd() < 0.0075){
+    const wy = sampleGapY(spawnX + 50) + rand(-28,28);
+    crew.push({x: spawnX + rand(40,110), y: clamp(wy, 95, LOGICAL_H-95), hit:false});
+  }
+}
+
+function sampleGapY(wx){
+  // find wall segment around wx and pick mid with slight variance
+  let w = walls.find(v => v.x > wx - 10) || walls[walls.length-1];
+  if (!w) w = {top:140, bot: LOGICAL_H-140};
+  const mid = (w.top + w.bot) * 0.5;
+  return mid + (rnd()-0.5) * 38;
+}
+
+function collideWalls(dy){
+  // sample walls near dragon
+  const wx = cameraX + DRAGON_X;
+  let w = walls.find(v => v.x >= wx - 14) || walls[0];
+  if (!w) return false;
+  // interp between two
+  const w2 = walls[walls.indexOf(w)+1] || w;
+  const t = clamp((wx - w.x) / Math.max(1, w2.x - w.x), 0, 1);
+  const top = lerp(w.top, w2.top, t);
+  const bot = lerp(w.bot, w2.bot, t);
+  return (dy < top + 13) || (dy > bot - 13);
+}
+
+function updateDragon(dt){
+  const t = now() * 0.001;
+  // weighty flight: spring + damping (heavier, more deliberate — dragon has mass and will)
+  const stiffness = 3.1;
+  const damp = 3.1;
+  const maxVY = 198;
+  if (input.y != null){
+    targetY = clamp(input.y, 52, LOGICAL_H-52);
+  }
+  const dy = targetY - dragon.y;
+  dragon.vy += (dy * stiffness - dragon.vy * damp) * dt;
+  dragon.vy = clamp(dragon.vy, -maxVY, maxVY);
+  dragon.y += dragon.vy * dt;
+  dragon.bank = clamp(dragon.vy * 0.0078, -0.92, 0.92);
+  // flap effort from |vy| and breath
+  const effort = clamp(Math.abs(dragon.vy)/160, 0, 1) + (now() < breathUntil ? 0.4 : 0);
+  dragon.flap = Math.sin(t * 7.4) * (0.55 + effort * 0.65);
+  // mouth
+  dragon.mouthOpen = (now() < breathUntil) ? 1 : lerp(dragon.mouthOpen, 0, dt*7);
+  // bounds soft
+  if (dragon.y < 48){ dragon.y = 48; dragon.vy = Math.max(12, dragon.vy*0.2); }
+  if (dragon.y > LOGICAL_H-48){ dragon.y = LOGICAL_H-48; dragon.vy = Math.min(-12, dragon.vy*0.2); }
+}
+
+function updateWorld(dt){
+  cameraX += speed * dt;
+  depth += speed * dt * 0.011;
+  // gentle speed ramp
+  let targetSpeed = 138 + clamp(depth/63, 0, 72);
+  // chain boost (juicy escalation on high combo)
+  if (combo >= 4) targetSpeed += Math.min(28, (combo-3)*6);
+  speed = lerp(speed, targetSpeed, dt * 0.2);
+
+  advanceWalls();
+  spawnIfNeeded();
+
+  // boss escalation trigger (clear "boss beat" at depth threshold)
+  if (!boss && depth > 6800 && rnd() < 0.9){
+    const by = clamp(dragon.y + rand(-80,80), 110, LOGICAL_H-110);
+    boss = { x: cameraX + LOGICAL_W + 180, y: by, hp: 3, attackT: now() + 420, hitFlash: 0 };
+    // dramatic entrance particles
+    for(let i=0; i<22; i++){
+      particles.push({x: boss.x-20, y: boss.y + rand(-30,30), vx: rand(-80,-30), vy: rand(-20,20), life:0.6+rand(0,0.5), size:rand(2.2,4.8), hue:8+rand(0,12), alpha:0.7+rand(0,0.25), kind:'spark'});
+    }
+  }
+
+  // move rings
+  for(let i=rings.length-1; i>=0; i--){
+    const r = rings[i];
+    if (r.x < cameraX - 30){ rings.splice(i,1); continue; }
+    if (!r.hit && Math.abs((cameraX + DRAGON_X) - r.x) < 18){
+      const dyy = Math.abs(dragon.y - r.y);
+      if (dyy < RING_RADIUS + 9){
+        r.hit = true;
+        const t = now();
+        if (t - lastChainAt < 2200){ combo = Math.min(9, combo+1); } else { combo = 1; }
+        lastChainAt = t;
+        score += Math.floor(135 * (0.7 + combo*0.38));
+        spawnCollectFX(r.x, r.y, '#ffcc66');
+        playChime(combo);
+      }
+    }
+  }
+  // hazards
+  for(let i=hazards.length-1; i>=0; i--){
+    const h = hazards[i];
+    h.x += h.vx * dt;
+    h.y += h.vy * dt;
+    h.vy *= 0.986;
+    if (h.x < cameraX - 40){ hazards.splice(i,1); continue; }
+    // breath pop for cinders
+    if (h.kind === 'cinder' && now() < breathUntil && distToBreath(h.x, h.y) < 48){
+      spawnPopFX(h.x, h.y, '#ff7733');
+      hazards.splice(i,1);
+      score += 22;
+      continue;
+    }
+    // collision
+    const dx = (cameraX + DRAGON_X) - h.x;
+    const dy = dragon.y - h.y;
+    if (dx*dx + dy*dy < (h.r + 15)*(h.r + 15)){
+      die();
+      return;
+    }
+  }
+  // orbs (tactical breath targets)
+  for(let i=orbs.length-1; i>=0; i--){
+    const o = orbs[i];
+    if (o.x < cameraX - 30){ orbs.splice(i,1); continue; }
+    if (!o.hit){
+      const dx = (cameraX + DRAGON_X) - o.x;
+      const dy = dragon.y - o.y;
+      const touched = (dx*dx + dy*dy < (ORB_R+14)*(ORB_R+14));
+      const flamed = (now() < breathUntil && distToBreath(o.x, o.y) < 52);
+      if (touched || flamed){
+        o.hit = true;
+        score += flamed ? 210 : 65;
+        if (flamed){ combo = Math.min(9, combo+1); lastChainAt = now(); }
+        spawnCollectFX(o.x, o.y, flamed ? '#ff7722' : '#aabb99');
+        playChime(3);
+      }
+    }
+  }
+
+  // crew rescues (fly near or flame to "rescue" — chain boost + score)
+  for(let i=crew.length-1; i>=0; i--){
+    const c = crew[i];
+    if (c.x < cameraX - 30){ crew.splice(i,1); continue; }
+    if (!c.hit){
+      const dx = (cameraX + DRAGON_X) - c.x;
+      const dy = dragon.y - c.y;
+      const touched = (dx*dx + dy*dy < (ORB_R+18)*(ORB_R+18));
+      const flamed = (now() < breathUntil && distToBreath(c.x, c.y) < 58);
+      if (touched || flamed){
+        c.hit = true;
+        const t = now();
+        if (t - lastChainAt < 2200){ combo = Math.min(9, combo+1); } else { combo = 1; }
+        lastChainAt = t;
+        score += flamed ? 280 : 95;
+        if (flamed) combo = Math.min(9, combo+1);
+        spawnCollectFX(c.x, c.y, flamed ? '#ffaa66' : '#ccaa88');
+        playChime(Math.min(6, combo));
+      }
+    }
+  }
+
+  // boss update + escalation combat (weave + breathe the vents to break the Sovereign)
+  if (boss){
+    // approach + hover with presence (eased, weighty)
+    const targetBX = cameraX + DRAGON_X + 210 + Math.sin(now()*0.0009)*28;
+    boss.x = lerp(boss.x, targetBX, 0.018);
+    boss.y = lerp(boss.y, clamp(dragon.y + Math.sin(now()*0.0006)*42, 95, LOGICAL_H-95), 0.012);
+    boss.hitFlash = Math.max(0, boss.hitFlash - dt*3.2);
+
+    // periodic directed attacks (fireballs that must be dodged or breathed)
+    const tnow = now();
+    if (tnow > boss.attackT && boss.hp > 0){
+      boss.attackT = tnow + (180 + Math.random()*140);
+      const ax = boss.x - 12;
+      const ay = boss.y + (rnd()-0.5)*18;
+      const vx = -92 + rand(-18, -4);
+      hazards.push({x: ax, y: ay, vx: vx, vy: (dragon.y - ay)*0.018 + rand(-18,18), r: 11, kind:'cinder'});
+      // attack tell sparks
+      for(let k=0; k<5; k++) particles.push({x:ax, y:ay, vx:rand(-30,10), vy:rand(-24,24), life:0.22+rand(0,0.1), size:1.6+rand(0,1), hue:14, alpha:0.9, kind:'spark'});
+    }
+
+    // breath damage on vents (3 weak points along the body silhouette)
+    if (now() < breathUntil && boss.hp > 0){
+      for(let v=0; v<3; v++){
+        const vx = boss.x - 28 + v*22;
+        const vy = boss.y - 11 + v*11 + (v===1 ? 4 : 0);
+        if (distToBreath(vx, vy) < 46){
+          // hit vent
+          boss.hp -= 1;
+          boss.hitFlash = 1.0;
+          spawnPopFX(vx, vy, '#ffdd88');
+          score += 310;
+          combo = Math.min(9, combo+1);
+          lastChainAt = now();
+          playChime(5);
+          if (boss.hp <= 0){
+            // shatter payoff (clear escalation beat)
+            for(let i=0; i<46; i++){
+              const ang = rand(-1.8,1.8);
+              const sp = 36 + rnd()*72;
+              particles.push({x:boss.x, y:boss.y, vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp*0.8, life:0.32+rand(0,0.28), size:rand(1.9,3.8), hue:10+rand(0,18), alpha:0.85, kind:'spark'});
+            }
+            for(let i=0; i<18; i++){
+              particles.push({x:boss.x+rand(-12,12), y:boss.y+rand(-18,18), vx:rand(-48,48), vy:rand(-38,22), life:0.7+rand(0,0.6), size:rand(3.2,6.5), hue:8, alpha:0.22+rand(0,0.1), kind:'smoke'});
+            }
+            flash = 0.7;
+            screenShake = Math.max(screenShake, 18);
+            score += 1400;
+            combo = Math.min(9, combo+2);
+            // brief calm after victory
+            speed = Math.max(118, speed*0.6);
+            boss = null;
+            break;
+          }
+          break; // one vent per breath frame
+        }
+      }
+    }
+
+    // body collision with boss = death (vast presence has consequence)
+    if (boss){
+      const dx = (cameraX + DRAGON_X) - boss.x;
+      const dy = dragon.y - boss.y;
+      if (dx*dx + dy*dy < (58*58)){
+        die();
+        return;
+      }
+    }
+  }
+
+  // decay screen shake + flash (juice)
+  if (screenShake > 0.1) screenShake = lerp(screenShake, 0, dt*4.8); else screenShake = 0;
+  if (flash > 0.01) flash = lerp(flash, 0, dt*3.6); else flash = 0;
+
+  // wall collision
+  if (collideWalls(dragon.y)){
+    die();
+    return;
+  }
+
+  // particles
+  updateParticles(dt);
+
+  // occasional ambient ember + wing sparks when banking
+  if (rnd() < 0.6 * dt * 60){
+    const bx = cameraX + DRAGON_X - 18;
+    const by = dragon.y + (rnd()-0.5)*7;
+    particles.push({x:bx, y:by, vx:-speed*0.6 + rand(-14,8), vy:rand(-9,6), life: rand(0.6,1.3), size:rand(1.2,2.1), hue:14+rand(-4,6), alpha:0.7+rand(0,0.25), kind:'ember'});
+  }
+  if (Math.abs(dragon.bank) > 0.35 && rnd() < 1.8 * dt * 60){
+    const wx = cameraX + DRAGON_X - 9 + dragon.bank * 11;
+    const wy = dragon.y - 6;
+    particles.push({x:wx, y:wy, vx:-speed*0.9 + rand(-28,-4), vy: dragon.bank* -40 + rand(-18,18), life:rand(0.18,0.42), size:rand(1.6,2.8), hue:36, alpha:0.95, kind:'spark'});
+  }
+  // smoke on exertion / breath
+  if ((Math.abs(dragon.vy) > 110 || now() < breathUntil) && rnd() < 1.4 * dt * 60){
+    const sx = cameraX + DRAGON_X - 26 + dragon.bank*8;
+    const sy = dragon.y + (now()<breathUntil ? -4 : 3);
+    particles.push({x:sx, y:sy, vx: rand(-31,-12), vy: rand(-22,-2), life:rand(0.7,1.35), size:rand(2.8,5.2), hue: 12+rand(0,6), alpha:0.22+rand(0,0.1), kind:'smoke'});
+  }
+}
+
+function distToBreath(wx, wy){
+  // approximate cone from dragon head
+  const hx = cameraX + DRAGON_X + 22;
+  const hy = dragon.y - 3 + dragon.bank * -5;
+  const dx = wx - hx, dy = wy - hy;
+  const d = Math.hypot(dx, dy);
+  if (d > 92) return 999;
+  // angle check rough
+  const ang = Math.atan2(dy, dx);
+  const want = dragon.bank * -0.6;
+  if (Math.abs(ang - want) > 0.9) return 999;
+  return d;
+}
+
+function updateParticles(dt){
+  for(let i=particles.length-1; i>=0; i--){
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += (p.kind==='smoke' ? -26 : 18) * dt; // smoke rises, embers fall-ish
+    p.vx *= (p.kind==='smoke' ? 0.982 : 0.994);
+    p.life -= dt;
+    if (p.life <= 0 || p.alpha <= 0.02){ particles.splice(i,1); continue; }
+    if (p.kind === 'smoke') p.alpha = Math.max(0.02, p.alpha - dt * 0.5);
+    else p.alpha = Math.max(0.02, p.alpha - dt * (p.kind==='spark'? 2.8 : 0.7));
+    if (p.kind === 'breath') p.size = Math.min(5.5, p.size + dt*9);
+  }
+  // cap
+  if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES + 12);
+}
+
+function spawnBreathFX(){
+  const hx = cameraX + DRAGON_X + 23;
+  const hy = dragon.y - 2 + dragon.bank * -4;
+  const dir = 1.0;
+  for(let i=0; i<26; i++){
+    const spread = (rnd()-0.5) * 1.15;
+    const sp = 92 + rnd()*44;
+    particles.push({
+      x: hx, y: hy,
+      vx: dir * sp * Math.cos(spread + dragon.bank*-0.5) + rand(-11,11),
+      vy: dir * sp * Math.sin(spread + dragon.bank*-0.6) * 0.6 + rand(-16,16),
+      life: rand(0.14,0.29),
+      size: rand(1.8,3.6),
+      hue: 12 + rnd()*28,
+      alpha: 0.75 + rnd()*0.2,
+      kind: 'breath'
+    });
+  }
+  // core sparks
+  for(let i=0; i<7; i++){
+    particles.push({x:hx+rand(-2,6), y:hy+rand(-3,3), vx:92+rand(10,36), vy:rand(-22,22), life:0.11+rand(0,0.09), size:1.3+rand(0,1.1), hue:38, alpha:1, kind:'spark'});
+  }
+}
+
+function spawnCollectFX(x, y, col){
+  for(let i=0; i<11; i++){
+    particles.push({x:x+rand(-4,4), y:y+rand(-4,4), vx:rand(-36,36), vy:rand(-48,-6), life:0.32+rand(0,0.2), size:rand(1.4,2.6), hue:36, alpha:0.9, kind:'spark'});
+  }
+}
+
+function spawnPopFX(x, y, col){
+  for(let i=0; i<14; i++){
+    particles.push({x, y, vx:rand(-58,58), vy:rand(-54,38), life:0.26+rand(0,0.18), size:rand(1.6,3.1), hue:18, alpha:0.85, kind:'spark'});
+  }
+}
+
+function die(){
+  if (state !== 'playing') return;
+  // impact burst + juice
+  screenShake = 22;
+  flash = 0.85;
+  for(let i=0; i<38; i++){
+    const ang = rand(-1.6,1.6);
+    const sp = 40 + rnd()*80;
+    particles.push({x: cameraX+DRAGON_X, y: dragon.y, vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp*0.7, life:0.22+rand(0,0.3), size:rand(1.8,3.4), hue:8+rand(0,10), alpha:0.9, kind:'spark'});
+  }
+  for(let i=0; i<16; i++){
+    particles.push({x: cameraX+DRAGON_X-8, y: dragon.y+rand(-6,6), vx:rand(-22,4), vy:rand(-11,11), life:0.6+rand(0,0.7), size:rand(3.2,6), hue:10, alpha:0.18+rand(0,0.08), kind:'smoke'});
+  }
+  playImpact();
+  showDeath();
+}
+
+function update(dt){
+  if (state !== 'playing') return;
+  updateDragon(dt);
+  updateWorld(dt);
+  // breath trigger from hold/press
+  const t = now();
+  if (input.pressing && t > cooldownUntil && t > breathUntil){
+    breathUntil = t + BREATH_MS;
+    cooldownUntil = t + BREATH_MS + BREATH_COOLDOWN;
+    spawnBreathFX();
+    playBreathBurst();
+    screenShake = Math.max(screenShake, 4.5); // juicy kick on powerful breath
+  }
+  if (now() > breathUntil && particles.some(p=>p.kind==='breath')){
+    // keep breathing fx only while active
+  }
+  // score trickle + depth pressure
+  score += dt * (0.6 + clamp(depth/1400,0,1.6));
+  updateHUD();
+}
+
+function drawBackground(){
+  // deep ember gradient + heat
+  const g = ctx.createLinearGradient(0,0,0,LOGICAL_H);
+  g.addColorStop(0, '#120a07');
+  g.addColorStop(0.42, '#0f0705');
+  g.addColorStop(0.58, '#160b08');
+  g.addColorStop(1, '#0a0503');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+
+  // distant strata glow (very slow parallax)
+  ctx.fillStyle = 'rgba(120,48,18,0.08)';
+  for(let i=-1; i<5; i++){
+    const px = ((cameraX * 0.08) % 180) - 90 + i*180;
+    ctx.fillRect(px, 60, 170, 6);
+    ctx.fillRect(px+70, LOGICAL_H-92, 140, 5);
+  }
+  // far embers
+  ctx.fillStyle = '#3a2218';
+  for(let i=0; i<7; i++){
+    const ex = (i*137 - (cameraX*0.12) % 137) % LOGICAL_W;
+    const ey = 70 + (i*47 % 210);
+    ctx.beginPath(); ctx.arc(ex, ey, 1.6, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawWalls(){
+  ctx.save();
+  // top wall
+  ctx.fillStyle = '#221a15';
+  ctx.strokeStyle = '#3a2a22';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-2, -2);
+  let first = true;
+  for(let i=0; i<walls.length; i++){
+    const w = walls[i];
+    const sx = w.x - cameraX;
+    if (sx < -30) continue;
+    if (first){ ctx.moveTo(sx, w.top); first=false; }
+    ctx.lineTo(sx, w.top);
+  }
+  ctx.lineTo(LOGICAL_W+2, -2);
+  ctx.lineTo(-2, -2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // bottom wall
+  ctx.fillStyle = '#1c140f';
+  ctx.beginPath();
+  first = true;
+  for(let i=0; i<walls.length; i++){
+    const w = walls[i];
+    const sx = w.x - cameraX;
+    if (sx < -30) continue;
+    if (first){ ctx.moveTo(sx, w.bot); first=false; }
+    ctx.lineTo(sx, w.bot);
+  }
+  ctx.lineTo(LOGICAL_W+2, LOGICAL_H+2);
+  ctx.lineTo(-2, LOGICAL_H+2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // strata glow lines + ember seams
+  ctx.strokeStyle = 'rgba(255,110,38,0.22)';
+  ctx.lineWidth = 1;
+  for(let i=0; i<walls.length; i+=2){
+    const w = walls[i];
+    const sx = w.x - cameraX;
+    if (sx < -20 || sx > LOGICAL_W+20) continue;
+    const t = (w.top + 18);
+    ctx.beginPath(); ctx.moveTo(sx-1, t); ctx.lineTo(sx+26, t + (Math.sin(i)*3)); ctx.stroke();
+    const b = (w.bot - 11);
+    ctx.beginPath(); ctx.moveTo(sx-1, b); ctx.lineTo(sx+26, b - (Math.sin(i+1)*2)); ctx.stroke();
+  }
+  // hot cracks near bottom
+  ctx.strokeStyle = 'rgba(255,140,60,0.35)';
+  for(let i=1; i<walls.length; i+=3){
+    const w = walls[i];
+    const sx = w.x - cameraX;
+    if (sx < 40 || sx > LOGICAL_W-30) continue;
+    ctx.beginPath();
+    ctx.moveTo(sx+4, w.bot-3);
+    ctx.quadraticCurveTo(sx+12, w.bot-18, sx+21, w.bot-4);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRings(){
+  for(const r of rings){
+    const sx = r.x - cameraX;
+    if (sx < -40 || sx > LOGICAL_W+40) continue;
+    const hit = r.hit;
+    ctx.save();
+    ctx.translate(sx, r.y);
+    const a = hit ? 0.35 : 0.95;
+    // outer glow
+    ctx.strokeStyle = hit ? 'rgba(255,170,90,0.3)' : '#ffaa55';
+    ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.arc(0,0,RING_RADIUS+2, -0.9, 0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,RING_RADIUS+2, 2.3, 4.1); ctx.stroke();
+    // bright core
+    ctx.strokeStyle = hit ? 'rgba(255,210,140,0.5)' : '#ffdd99';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0,0,RING_RADIUS, -1.1, 1.1); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,RING_RADIUS, 2.1, 4.3); ctx.stroke();
+    // threads
+    ctx.strokeStyle = 'rgba(255,230,170,0.7)';
+    ctx.lineWidth = 1;
+    for(let k=-2; k<=2; k++){
+      const ang = k*0.38;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ang)*-RING_RADIUS, Math.sin(ang)*-RING_RADIUS*0.6);
+      ctx.lineTo(Math.cos(ang)*RING_RADIUS, Math.sin(ang)*RING_RADIUS*0.6); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawHazards(){
+  for(const h of hazards){
+    const sx = h.x - cameraX;
+    if (sx < -30 || sx > LOGICAL_W+30) continue;
+    ctx.save();
+    ctx.translate(sx, h.y);
+    if (h.kind === 'cinder'){
+      ctx.fillStyle = '#ff6622';
+      ctx.beginPath(); ctx.arc(0,0,h.r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffaa66';
+      ctx.beginPath(); ctx.arc(-2,-1, h.r*0.48,0,Math.PI*2); ctx.fill();
+    } else {
+      // rock pillar with cracks
+      ctx.fillStyle = '#33261f';
+      ctx.beginPath();
+      ctx.moveTo(-h.r, -h.r*0.7);
+      ctx.lineTo(h.r*0.6, -h.r*0.85);
+      ctx.lineTo(h.r, h.r*0.6);
+      ctx.lineTo(-h.r*0.5, h.r*0.9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,120,50,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-4,-6); ctx.lineTo(5,7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2,-9); ctx.quadraticCurveTo(7,0, -1,8); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawOrbs(){
+  for(const o of orbs){
+    if (o.hit) continue;
+    const sx = o.x - cameraX;
+    if (sx < -20 || sx > LOGICAL_W+20) continue;
+    const pulse = Math.sin(now()*0.006 + o.x)*0.5 + 0.5;
+    ctx.save();
+    ctx.translate(sx, o.y);
+    ctx.fillStyle = '#665533';
+    ctx.beginPath(); ctx.arc(0,0,ORB_R+2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = pulse > 0.6 ? '#ffaa55' : '#cc8855';
+    ctx.beginPath(); ctx.arc(0,0,ORB_R,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffdd99';
+    ctx.beginPath(); ctx.arc(-2,-2, ORB_R*0.35,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawCrew(){
+  for(const c of crew){
+    if (c.hit) continue;
+    const sx = c.x - cameraX;
+    if (sx < -18 || sx > LOGICAL_W+18) continue;
+    ctx.save();
+    ctx.translate(sx, c.y);
+    // small witness/crew silhouette (humble, practical next to dragon)
+    ctx.fillStyle = '#3a2a22';
+    ctx.beginPath(); ctx.arc(0,-3,3.2,0,Math.PI*2); ctx.fill(); // head
+    ctx.fillRect(-1.6,1,3.2,7); // body
+    ctx.fillStyle = '#221a15';
+    ctx.fillRect(-4.5,3,2.2,5); // arm
+    ctx.fillRect(2.3,3,2.2,5);
+    ctx.fillStyle = '#ffcc88';
+    ctx.beginPath(); ctx.arc(-0.4,-3.5,1.1,0,Math.PI*2); ctx.fill(); // ember core
+    ctx.restore();
+  }
+}
+
+function drawBoss(){
+  if (!boss) return;
+  const sx = boss.x - cameraX;
+  if (sx < -120 || sx > LOGICAL_W+140) return;
+  ctx.save();
+  ctx.translate(sx, boss.y);
+  const hf = boss.hitFlash;
+  // vast sovereign silhouette (ancient, not mascot; looms with weight)
+  ctx.fillStyle = (hf > 0.1) ? '#4a2a1f' : '#2a211c';
+  ctx.beginPath();
+  ctx.moveTo(-58, -22);
+  ctx.quadraticCurveTo(-12, -48, 38, -19);
+  ctx.quadraticCurveTo(66, 2, 42, 31);
+  ctx.quadraticCurveTo(-4, 47, -52, 18);
+  ctx.quadraticCurveTo(-71, -3, -58, -22);
+  ctx.closePath();
+  ctx.fill();
+  // scale ridges
+  ctx.strokeStyle = 'rgba(255,140,60,0.18)';
+  ctx.lineWidth = 2.5;
+  for(let i=0; i<4; i++){
+    ctx.beginPath(); ctx.moveTo(-44 + i*18, -14 + i*4); ctx.lineTo(-18 + i*19, 6 + i*5); ctx.stroke();
+  }
+  // glowing vents (the 3 hittable weak points)
+  const ventCols = ['#ffaa44', '#ffcc66', '#ff8844'];
+  for(let v=0; v<3; v++){
+    const vx = -24 + v*22;
+    const vy = -8 + v*10 + (v===1?3:0);
+    const on = (hf > 0.1 && v === 0) || (boss.hp > v);
+    ctx.fillStyle = on ? ventCols[v] : '#442a22';
+    ctx.beginPath(); ctx.arc(vx, vy, 5.5 + (hf*1.5), 0, Math.PI*2); ctx.fill();
+    if (on){
+      ctx.fillStyle = 'rgba(255,235,170,0.5)';
+      ctx.beginPath(); ctx.arc(vx-1, vy-1, 2.2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  // horn / crown suggestion
+  ctx.strokeStyle = '#221a15';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(18,-22); ctx.lineTo(28,-38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(26,-18); ctx.lineTo(36,-32); ctx.stroke();
+  ctx.restore();
+}
+
+function drawDragon(){
+  const x = DRAGON_X;
+  const y = dragon.y;
+  const b = dragon.bank;
+  const f = dragon.flap;
+  const mo = dragon.mouthOpen;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(b * 0.6);
+
+  // tail (heavy, whips)
+  ctx.strokeStyle = '#2f241e';
+  ctx.fillStyle = '#2f241e';
+  ctx.lineWidth = 5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-28, 2);
+  const tx = -48 - Math.sin(f*0.6)*3;
+  const ty = 4 + b*9 + Math.cos(f*0.8)*7;
+  ctx.quadraticCurveTo(-36, 3 + b*4, tx, ty);
+  ctx.stroke();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#3f3128';
+  ctx.beginPath(); ctx.moveTo(-31, -1); ctx.quadraticCurveTo(-40, 5+b*5, tx+3, ty-1); ctx.stroke();
+
+  // body mass (weight)
+  const bodyGrad = ctx.createLinearGradient(-14, -9, 18, 11);
+  bodyGrad.addColorStop(0, '#3a2a22');
+  bodyGrad.addColorStop(0.5, '#2c211b');
+  bodyGrad.addColorStop(1, '#241a16');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.ellipse(2, 1 + b*1.5, 27, 13.5, b*0.3, 0, Math.PI*2);
+  ctx.fill();
+  // scale lines suggestion
+  ctx.strokeStyle = 'rgba(255,180,90,0.08)';
+  ctx.lineWidth = 1;
+  for(let i=-2; i<=2; i++){
+    ctx.beginPath(); ctx.ellipse(3+i*6, 2+b*1.2 + i*0.8, 7, 5.5, b*0.2+i*0.03, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // belly ember
+  ctx.fillStyle = 'rgba(255,110,40,0.35)';
+  ctx.beginPath(); ctx.ellipse(8, 6 + b*2, 11, 5, b*0.1, 0, Math.PI*2); ctx.fill();
+
+  // neck
+  ctx.strokeStyle = '#2f241e';
+  ctx.lineWidth = 9;
+  ctx.beginPath();
+  ctx.moveTo(18, -1 + b*-1);
+  ctx.quadraticCurveTo(29, -4 + b*-3 + f*1.5, 36 + b*1, -7 + b*-4 + f*0.5);
+  ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#3a2a22';
+  ctx.beginPath();
+  ctx.moveTo(19, -2); ctx.quadraticCurveTo(28, -5 + b*-2, 35, -8 + b*-3); ctx.stroke();
+
+  // head
+  ctx.fillStyle = '#3a2a22';
+  ctx.beginPath();
+  ctx.moveTo(35 + b*1, -8 + b*-3);
+  ctx.lineTo(49 + b*2 + mo*1.5, -6 + b*-4.5);
+  ctx.lineTo(53 + b*3 + mo*2, -1 + b*-2 + mo*1);
+  ctx.lineTo(47 + b*2, 3 + b*0);
+  ctx.lineTo(36 + b*1, 1 + b*0);
+  ctx.closePath();
+  ctx.fill();
+  // horn
+  ctx.strokeStyle = '#221a15';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(41, -10 + b*-3); ctx.lineTo(46 + b*1, -17 + b*-2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(44, -8 + b*-3); ctx.lineTo(49 + b*2, -14 + b*-1); ctx.stroke();
+
+  // eye (fierce, glowing)
+  ctx.fillStyle = '#ffdd88';
+  ctx.beginPath(); ctx.arc(44 + b*1.5, -4 + b*-2.5, 2.6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#221a15';
+  ctx.beginPath(); ctx.arc(44.6 + b*1.5, -3.7 + b*-2.5, 1.2, 0, Math.PI*2); ctx.fill();
+
+  // wings (powerful, tension)
+  const wingLift = f * (0.7 + Math.abs(b)*0.4);
+  // left (far) wing
+  ctx.fillStyle = '#2a211c';
+  ctx.strokeStyle = '#1f1814';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(6, -2);
+  ctx.quadraticCurveTo(-2, -18 - wingLift*1.2 + b*-6, -19 - b*4, -9 - wingLift*2.1 + b*-4);
+  ctx.quadraticCurveTo(-7, 1 + b*1, 8, 4);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // membrane tension lines
+  ctx.strokeStyle = 'rgba(255,160,70,0.12)';
+  ctx.beginPath(); ctx.moveTo(4,-3); ctx.lineTo(-12, -11 - wingLift); ctx.stroke();
+
+  // right (near) wing
+  ctx.fillStyle = '#241a16';
+  ctx.strokeStyle = '#1f1814';
+  ctx.beginPath();
+  ctx.moveTo(8, 2);
+  ctx.quadraticCurveTo(1, -14 - wingLift*0.9 + b*5, -14 + b*2, -4 - wingLift*1.6 + b*6);
+  ctx.quadraticCurveTo(-3, 5 + b*1, 9, 5);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,140,50,0.1)';
+  ctx.beginPath(); ctx.moveTo(5,1); ctx.lineTo(-8, -7 - wingLift*0.6); ctx.stroke();
+
+  // breath cone (when active)
+  if (now() < breathUntil){
+    const hx = 49 + b*2;
+    const hy = -3 + b*-2;
+    const cg = ctx.createRadialGradient(hx+14, hy-1, 2, hx+38, hy+1, 46);
+    cg.addColorStop(0, 'rgba(255,210,120,0.85)');
+    cg.addColorStop(0.3, 'rgba(255,120,40,0.55)');
+    cg.addColorStop(1, 'rgba(255,60,10,0.0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    ctx.quadraticCurveTo(hx+29, hy-18 + b*-8, hx+52, hy-4 + b*-3);
+    ctx.lineTo(hx+52, hy+6 + b*3);
+    ctx.quadraticCurveTo(hx+29, hy+16 + b*6, hx, hy+1);
+    ctx.closePath();
+    ctx.fill();
+    // inner bright
+    ctx.fillStyle = 'rgba(255,235,170,0.6)';
+    ctx.beginPath(); ctx.moveTo(hx+2,hy); ctx.lineTo(hx+21, hy-5); ctx.lineTo(hx+21, hy+5); ctx.closePath(); ctx.fill();
+  }
+
+  // ember vents on body
+  ctx.fillStyle = 'rgba(255,130,50,0.5)';
+  ctx.beginPath(); ctx.arc(-4, 4 + b*1.5, 1.8, 0, Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawParticles(){
+  for(const p of particles){
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.03, p.alpha);
+    if (p.kind === 'smoke'){
+      ctx.fillStyle = '#5c4636';
+      ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    } else if (p.kind === 'breath'){
+      ctx.fillStyle = `hsl(${p.hue}, 96%, 68%)`;
+      ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle = `hsl(${p.hue}, 94%, ${p.kind==='spark'? '72%' : '58%'})`;
+      ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      if (p.kind === 'spark'){
+        ctx.fillStyle = '#fff';
+        ctx.globalAlpha *= 0.6;
+        ctx.beginPath(); ctx.arc(p.x - cameraX -1, p.y-1, Math.max(0.6, p.size*0.35), 0, Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+}
+
+function drawVignette(){
+  const vg = ctx.createRadialGradient(LOGICAL_W*0.5, LOGICAL_H*0.48, Math.min(LOGICAL_W,LOGICAL_H)*0.42,
+                                      LOGICAL_W*0.5, LOGICAL_H*0.5, Math.max(LOGICAL_W,LOGICAL_H)*0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  // heat edges
+  ctx.fillStyle = 'rgba(255,70,20,0.035)';
+  ctx.fillRect(0,0,18,LOGICAL_H);
+  ctx.fillRect(LOGICAL_W-18,0,18,LOGICAL_H);
+}
+
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#0a0604';
+  ctx.fillRect(0,0,viewW,viewH);
+
+  // world space (with screen shake juice on heavy moments)
+  ctx.save();
+  const scale = Math.min(viewW / LOGICAL_W, viewH / LOGICAL_H);
+  const offX = (viewW - LOGICAL_W * scale) * 0.5;
+  const offY = (viewH - LOGICAL_H * scale) * 0.5;
+  const shakeX = (screenShake > 0.5) ? (Math.sin(now()*0.09) * screenShake * 0.6) : 0;
+  const shakeY = (screenShake > 0.5) ? (Math.cos(now()*0.11) * screenShake * 0.5) : 0;
+  ctx.translate(offX + shakeX, offY + shakeY);
+  ctx.scale(scale, scale);
+
+  drawBackground();
+  drawWalls();
+  drawRings();
+  drawHazards();
+  drawOrbs();
+  drawCrew();
+  drawBoss();
+  drawParticles();
+  drawDragon();
+  drawVignette();
+
+  // impact / shatter flash overlay (juice)
+  if (flash > 0.02){
+    ctx.fillStyle = `rgba(255,245,220,${flash*0.28})`;
+    ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  }
+
+  // subtle speed lines when fast
+  if (speed > 170){
+    ctx.strokeStyle = 'rgba(255,120,40,0.06)';
+    ctx.lineWidth = 1;
+    for(let i=0; i<5; i++){
+      const lx = (i*83 + (cameraX*0.7 % 83)) % LOGICAL_W;
+      ctx.beginPath(); ctx.moveTo(lx, 40+ i*70); ctx.lineTo(lx-38, 40+ i*70 + 11); ctx.stroke();
+    }
+  }
+  ctx.restore();
+
+  // minimal corner mark (no title)
+  ctx.fillStyle = 'rgba(232,217,200,0.06)';
+  ctx.font = '9px ui-monospace, monospace';
+  ctx.fillText('EMBERFLIGHT', 9, 15);
+}
+
+function frame(t){
+  if (!lastT) lastT = t;
+  const dt = Math.min(0.048, (t - lastT) / 1000);
+  lastT = t;
+
+  if (state === 'playing'){
+    update(dt);
+  } else if (state === 'idle'){
+    // idle preview anim
+    dragon.bank = Math.sin(t*0.0012) * 0.18;
+    dragon.flap = Math.sin(t*0.004) * 0.6;
+    // light particles
+    if (rnd() < dt*1.6){
+      particles.push({x: cameraX + DRAGON_X - 30 + rnd()*80, y: dragon.y + rand(-26,26), vx:rand(-42,-11), vy:rand(-7,7), life:0.8+rand(0,0.6), size:rand(1.1,1.9), hue:16, alpha:0.4+rand(0,0.3), kind:'ember'});
+    }
+    updateParticles(dt);
+  } else if (state === 'dead'){
+    // slow drift of particles
+    updateParticles(dt * 0.6);
+  }
+
+  draw();
+  if (running) requestAnimationFrame(frame);
+}
+
+// ===== INPUT =====
+function toWorldY(clientY){
+  const rect = canvas.getBoundingClientRect();
+  const scale = Math.min(viewW / LOGICAL_W, viewH / LOGICAL_H);
+  const offY = (viewH - LOGICAL_H * scale) * 0.5;
+  const py = (clientY - rect.top - offY) / scale;
+  return clamp(py, 40, LOGICAL_H-40);
+}
+
+function onPointer(e){
+  if (state === 'dead'){
+    const rect = canvas.getBoundingClientRect();
+    if (e.clientY > rect.top && e.clientY < rect.bottom){
+      resetGame();
+      if (!audioReady) initAudio();
+    }
+    return;
+  }
+  if (state === 'idle'){
+    state = 'playing';
+    resetGame(); // seeds the first run
+  }
+  input.y = toWorldY(e.clientY);
+  if (e.type === 'pointerdown'){
+    input.pressing = true;
+    input.lastDown = now();
+    if (!audioReady) initAudio();
+    hideLegendSoon();
+  }
+  if (!legendHidden) hideLegendSoon();
+}
+function onPointerMove(e){
+  if (state === 'playing' && (e.buttons & 1 || e.pointerType === 'touch')){
+    input.y = toWorldY(e.clientY);
+  }
+}
+function onPointerUp(e){
+  input.pressing = false;
+  // if quick tap without much move, still allow a burst (already handled in update by pressing flag)
+}
+function onKey(e){
+  keys[e.key.toLowerCase()] = (e.type === 'keydown');
+  if (e.type !== 'keydown') return;
+
+  if (state === 'dead'){
+    if (e.key === ' ' || e.key.toLowerCase() === 'r'){
+      e.preventDefault();
+      resetGame();
+    }
+    return;
+  }
+  if (state === 'idle'){
+    if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'f'){
+      e.preventDefault();
+      state = 'playing';
+      resetGame();
+      if (!audioReady) initAudio();
+      hideLegendSoon();
+    }
+    return;
+  }
+
+  if (e.key === ' ' || e.key.toLowerCase() === 'f'){
+    e.preventDefault();
+    const t = now();
+    if (t > cooldownUntil && t > breathUntil){
+      breathUntil = t + BREATH_MS;
+      cooldownUntil = t + BREATH_MS + BREATH_COOLDOWN;
+      spawnBreathFX();
+      playBreathBurst();
+    }
+  }
+  if (e.key.toLowerCase() === 'm'){
+    toggleMute();
+  }
+  if (e.key.toLowerCase() === 'r'){
+    // hard reset mid run (rare)
+    resetGame();
+  }
+  // arrows / wasd set target bias
+  let dy = 0;
+  if (e.key === 'ArrowUp' || e.key.toLowerCase()==='w') dy = -62;
+  if (e.key === 'ArrowDown' || e.key.toLowerCase()==='s') dy = 62;
+  if (dy) targetY = clamp(dragon.y + dy, 50, LOGICAL_H-50);
+}
+
+function toggleMute(){
+  muted = !muted;
+  muteBtn.classList.toggle('muted', muted);
+  muteBtn.textContent = muted ? '🔈' : '🔇';
+  if (master){
+    master.gain.value = muted ? 0.0001 : 0.92;
+  }
+}
+
+function initInput(){
+  canvas.addEventListener('pointerdown', onPointer, {passive:false});
+  window.addEventListener('pointermove', onPointerMove, {passive:true});
+  window.addEventListener('pointerup', onPointerUp, {passive:true});
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('keyup', onKey);
+  // touch specific: allow drag anywhere
+  canvas.addEventListener('touchstart', (e)=>{
+    if (state === 'dead'){ resetGame(); return; }
+    if (state === 'idle'){ state='playing'; resetGame(); }
+    const t = e.touches[0];
+    input.y = toWorldY(t.clientY);
+    input.pressing = true;
+    if (!audioReady) initAudio();
+    hideLegendSoon();
+    e.preventDefault();
+  }, {passive:false});
+  canvas.addEventListener('touchmove', (e)=>{
+    if (state === 'playing' && e.touches[0]){
+      input.y = toWorldY(e.touches[0].clientY);
+    }
+    e.preventDefault();
+  }, {passive:false});
+  canvas.addEventListener('touchend', ()=>{ input.pressing = false; }, {passive:true});
+
+  muteBtn.addEventListener('click', (e)=>{ e.stopImmediatePropagation(); toggleMute(); });
+  retryBtn.addEventListener('click', (e)=>{ e.stopImmediatePropagation(); resetGame(); });
+  // prevent context on canvas
+  canvas.addEventListener('contextmenu', e=>e.preventDefault());
+}
+
+// ===== AUDIO (gesture only) =====
+function initAudio(){
+  if (audioReady) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    master = audioCtx.createGain();
+    master.gain.value = muted ? 0.0001 : 0.92;
+    const comp = audioCtx.createDynamicsCompressor();
+    master.connect(comp);
+    comp.connect(audioCtx.destination);
+
+    // wind rush (filtered noise)
+    const windBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.6, audioCtx.sampleRate);
+    const wd = windBuf.getChannelData(0);
+    for(let i=0; i<wd.length; i++) wd[i] = (rnd()-0.5)*1.6;
+    wind = audioCtx.createBufferSource();
+    wind.buffer = windBuf;
+    wind.loop = true;
+    const windF = audioCtx.createBiquadFilter();
+    windF.type = 'bandpass';
+    windF.frequency.value = 420;
+    windF.Q.value = 0.7;
+    const windG = audioCtx.createGain();
+    windG.gain.value = 0.018;
+    wind.connect(windF); windF.connect(windG); windG.connect(master);
+    wind.start();
+
+    // breath voice (noise + tone burst)
+    breathGain = audioCtx.createGain();
+    breathGain.gain.value = 0.0001;
+    const bFilt = audioCtx.createBiquadFilter();
+    bFilt.type = 'lowpass'; bFilt.frequency.value = 980;
+    breathGain.connect(bFilt); bFilt.connect(master);
+
+    audioReady = true;
+  } catch(e){ /* no audio */ }
+}
+
+function playBreathBurst(){
+  if (!audioReady || muted || !audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    // noise whoosh
+    const nBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.42, audioCtx.sampleRate);
+    const nd = nBuf.getChannelData(0);
+    for(let i=0;i<nd.length;i++) nd[i] = (rnd()-0.5) * (1 - i/nd.length);
+    const ns = audioCtx.createBufferSource(); ns.buffer = nBuf;
+    const ng = audioCtx.createGain(); ng.gain.value = 0.7;
+    const nf = audioCtx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=720; nf.Q.value=1.1;
+    const env = audioCtx.createGain();
+    env.gain.value = 0.0001;
+    ns.connect(nf); nf.connect(ng); ng.connect(env); env.connect(breathGain);
+    ns.start(t);
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(0.85, t+0.03);
+    env.gain.linearRampToValueAtTime(0.0001, t+0.39);
+
+    // low roar tone
+    const osc = audioCtx.createOscillator(); osc.type='sawtooth'; osc.frequency.value = 86;
+    const og = audioCtx.createGain(); og.gain.value = 0.0001;
+    const of = audioCtx.createBiquadFilter(); of.type='lowpass'; of.frequency.value=240;
+    osc.connect(of); of.connect(og); og.connect(breathGain);
+    osc.start(t);
+    og.gain.setValueAtTime(0.0001,t);
+    og.gain.linearRampToValueAtTime(0.22, t+0.04);
+    og.gain.linearRampToValueAtTime(0.0001, t+0.34);
+    setTimeout(()=>{ try{osc.stop();}catch(_){} }, 420);
+  } catch(_){}
+}
+
+function playChime(mult){
+  if (!audioReady || muted || !audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    const base = 620 + (mult-1)*38;
+    const o = audioCtx.createOscillator(); o.type='sine'; o.frequency.value = base;
+    const o2 = audioCtx.createOscillator(); o2.type='sine'; o2.frequency.value = base*1.5 + 18;
+    const g = audioCtx.createGain(); g.gain.value = 0.0001;
+    const f = audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=380;
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o2.start(t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.16, t+0.006);
+    g.gain.linearRampToValueAtTime(0.0001, t+0.42 + mult*0.02);
+    setTimeout(()=>{ try{o.stop();o2.stop();}catch(_){} }, 520);
+  } catch(_){}
+}
+
+function playImpact(){
+  if (!audioReady || muted || !audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    // thud
+    const o = audioCtx.createOscillator(); o.type='sine'; o.frequency.value=58;
+    const g = audioCtx.createGain(); g.gain.value=0.0001;
+    const f = audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=180;
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.linearRampToValueAtTime(0.6, t+0.01);
+    g.gain.linearRampToValueAtTime(0.0001, t+0.58);
+    setTimeout(()=>{try{o.stop();}catch(_){}}, 620);
+
+    // crack rumble
+    const nb = audioCtx.createBuffer(1, audioCtx.sampleRate*0.7, audioCtx.sampleRate);
+    const d = nb.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (rnd()-0.5) * Math.pow(1-i/d.length, 0.6);
+    const ns = audioCtx.createBufferSource(); ns.buffer=nb;
+    const ng = audioCtx.createGain(); ng.gain.value=0.0001;
+    const nf = audioCtx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=310;
+    ns.connect(nf); nf.connect(ng); ng.connect(master);
+    ns.start(t);
+    ng.gain.setValueAtTime(0.0001,t);
+    ng.gain.linearRampToValueAtTime(0.35, t+0.02);
+    ng.gain.linearRampToValueAtTime(0.0001, t+0.55);
+  } catch(_){}
+}
+
+function updateWind(){
+  if (!wind || !audioReady) return;
+  // wind intensity by speed + breath
+  const base = 0.014 + clamp((speed-138)/220, 0, 0.028);
+  const extra = (now() < breathUntil) ? 0.035 : 0;
+  // find the gain after filter in chain (we stored windG indirectly via closure? simple: set on filter freq)
+  try {
+    // we didn't keep ref to windG, so modulate the filter freq for intensity feel
+    // recreate light mod via existing
+  } catch(_){}
+}
+
+// ===== RESIZE + BOOT =====
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  viewW = w; viewH = h;
+  // breath pips stay DOM positioned
+}
+window.addEventListener('resize', resize);
+resize();
+
+function boot(){
+  // seed a nice opening canyon + dragon pose
+  let wx = -80;
+  for(let i=0; i<38; i++){ walls.push(makeWall(wx)); wx += 28; }
+  rings.push({x: 380, y: LOGICAL_H*0.38, hit:false});
+  rings.push({x: 620, y: LOGICAL_H*0.61, hit:false});
+  hazards.push({x: 470, y: LOGICAL_H*0.23, vx:0, vy:0, r:HAZARD_R, kind:'rock'});
+  orbs.push({x: 295, y: LOGICAL_H*0.71, hit:false});
+  dragon.y = LOGICAL_H*0.48;
+  targetY = dragon.y + 18;
+
+  // idle particles
+  for(let i=0; i<28; i++){
+    particles.push({x: cameraX + DRAGON_X - 20 + rnd()*120, y: dragon.y + rand(-30,30), vx:rand(-31,-9), vy:rand(-5,5), life:0.9+rand(0,0.8), size:rand(1.0,1.9), hue:14, alpha:0.35+rand(0,0.25), kind:'ember'});
+  }
+
+  initInput();
+  updateHUD();
+  // subtle initial legend
+  setTimeout(()=>{ if (state==='idle' && !legendHidden) legendEl.style.opacity='0.7'; }, 1200);
+
+  // start loop
+  requestAnimationFrame(frame);
+
+  // occasional wind update tick (cheap)
+  setInterval(updateWind, 420);
+
+  // expose tiny hook for manual verification if needed
+  window.__emberflight = { reset: ()=>resetGame(), getState:()=>state };
+}
+
+// kick
+boot();
+</script>
+</body>
+</html>
