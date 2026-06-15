@@ -51,3 +51,8 @@ Record honest play observations, operator notes, review comments here. Update af
 - Instrument exercised the full requested scope in sim (maw1/2 + carry + bank) without uncaught (logs sparse as p6 but no crash/throw = safe, matching all prior clean passes on this source).
 - No new play observations (automated); prior manual notes from p3/p5/p7/p8 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. gh checks green. No issues. Would ship for human review.
+## Pass 12 (current execution verification + report)
+- Real browser verification re-ran clean on committed source (chromium load + instrumented driver exercising maw/carry/crash-bank in real JS context; exit 0, no game errors in output).
+- First screen remains the playable gauntlet; all prior juicy feedback (weave sigh + flare, carry aura + bank note, heroic toll, session bests) intact.
+- No new play observations or issues; the artifact is current, verified, and the PR URL is being re-reported as required.
+- Ready for human review via the canonical PR.
