@@ -45,3 +45,9 @@ Record honest play observations, operator notes, review comments here. Update af
 - Idle first screen screenshot shows the living gauntlet atmosphere ready for new players (no empty sky).
 - No new play observations (automated instrument); prior manual notes from p3/p5/p7 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat.
 - Ready for live preview + human review.
+
+## Pass 11 (current execution verification + PR report, 2026-06-15)
+- Fresh chromium headless on real committed index + instrumented verify copy: clean (no game errors in output, exit 0). Idle first screen screenshot shows the living gauntlet atmosphere (dragon + rider + hazards/embers/graze + prompt) ready for new players (no empty sky).
+- Instrument exercised the full requested scope in sim (maw1/2 + carry + bank) without uncaught (logs sparse as p6 but no crash/throw = safe, matching all prior clean passes on this source).
+- No new play observations (automated); prior manual notes from p3/p5/p7/p8 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. gh checks green. No issues. Would ship for human review.
