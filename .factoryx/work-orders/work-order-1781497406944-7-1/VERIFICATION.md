@@ -87,3 +87,5 @@ See full checklist in Work Order and GOAL_EXECUTION_STRATEGY.md. Key items that 
 - Any "verification" at this gate is process and planning verification only.
 
 **Last updated:** 2026-06-15 — Strategy gate (verification plan + contract recorded; actual runtime verification pending implementation).
+
+**Execution note (this agent run, addressing prior run issue):** Confirmed payload in Work Order includes explicit `"preview_entrypoint"` value. The `.factoryx/preview-entrypoint` file (plain text containing `games/88-emberflight-gauntlet/index.html`) is planned for creation in implementation (see GOAL_EXECUTION_STRATEGY.md "Preview setup" and PREVIEW.md). This resolves the "browser runtime verification skipped: ... no preview entrypoint could be resolved" condition for future verifier runs without needing WORKER_RUNTIME_VERIFY_REQUIRE_ENTRYPOINT override. gh pr view + list confirmed: no PR yet (correct for strategy gate); no blocking comments. All other strategy-gate verification items (reading context, no impl yet, docs present) complete.

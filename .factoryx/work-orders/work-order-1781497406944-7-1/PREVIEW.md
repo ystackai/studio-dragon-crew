@@ -43,3 +43,5 @@ When the slice exists, update this file + PR with:
 - Any known visual or control limitations at the time of capture.
 
 **Last updated:** 2026-06-15 — Strategy gate (preview contract + planned shape recorded; no live preview yet).
+
+**Execution note (this agent run):** Preview contract remains: write `.factoryx/preview-entrypoint` with exact `games/88-emberflight-gauntlet/index.html` during impl so that verifier and FactoryX preview root resolve directly to the playable game (addresses previous run skip). Payload already carries the preview_entrypoint field. No changes to shape; still no game or live preview at gate.
