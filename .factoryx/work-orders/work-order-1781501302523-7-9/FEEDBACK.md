@@ -174,3 +174,10 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - The further targeted rework (early explicit canvas size + guaranteed bg fill + full sync render + post-paint attr/marker/flag) is invisible to players — the ready gauntlet first screen and all juicy heroic flight/Maw/carry/bank/launch-surge feedback remain exactly as p25b/p15/p27 polished. The value is bulletproofing the exact harness pre-screenshot timeout reported for check-7.html (and similar) so the preview is acceptable.
 - No new play observations (automated instrument + idle); prior manual notes from p3/p5/p7/p8/p15/p25b/p27 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle 117.5kB + check-7 sim 117kB contentful + instrument DOM SUCCESS + first-paint signals). gh comment will re-report URL explicitly + note the pre-screenshot timeout addressed by this further targeted rework before peripheral. No issues. Would ship for human review.
+
+## Pass 29 (2026-06-15, verification re-confirm)
+- Fresh short-budget chromium on check-7 copy + real index: 119kB contentful ready gauntlet screenshots (addresses the exact pre-screenshot timeout reported for check-7.html class). Markers (attr/span/flag/sentinel) observable in DOM under the short budget that previously timed out.
+- Instrument p29 run clean (SUCCESS marker in real JS DOM; zero game errors).
+- Prior play notes (p3/p5/p7/p8/p15/p25b etc) stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat; first screen living playable gauntlet with obvious launch on gesture. The verification hardening makes the preview robust for FactoryX harnesses.
+- No new issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (check-7 sim + idle p29). Would ship for human review.
+
