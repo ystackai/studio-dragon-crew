@@ -737,21 +737,22 @@
       }
       if (sx < -180) { maw = null; } // despawn after pass
       else if (mode === 'playing') {
-        // Collision with maw body (weave the gaps)
+        // Collision with maw body (weave the gaps) — use same projection as drawMaw
         const py = playerScreenY();
-        const mProg = Math.max(0, Math.min(1, (W*0.26 - (W*0.18)) / (W*0.7) )); // approx relative
-        const my = H*PLAY_TOP + (0.5 + Math.sin(maw.phase * 1.3) * 0.26) * H*(PLAY_BOT-PLAY_TOP);
-        const mThick = 38 + Math.sin(maw.phase*2.1) * 9; // breathing
-        const mHitX = W*0.26 + ((maw.x - worldX) / (W*0.9)) * (W*0.52);
-        const distToMaw = Math.abs(mHitX - W*0.26);
-        if (distToMaw < 48 && Math.abs(py - my) < mThick) {
-          // hit the serpent body (no safe gap here)
-          crash();
-          return;
-        }
-        // near-miss juice on the body edges
-        if (distToMaw < 72 && Math.abs(py - my) < mThick + 18) {
-          flash = Math.max(flash, 0.07);
+        const mHitX = (maw.x - worldX) / (W * 0.9) * (W * 0.5) + W * 0.26;
+        const distToMaw = Math.abs(mHitX - W * 0.26);
+        if (distToMaw < 52) {
+          const my = H*PLAY_TOP + (0.5 + Math.sin(maw.phase * 1.3) * 0.26) * H*(PLAY_BOT-PLAY_TOP);
+          const mThick = 36 + Math.sin(maw.phase*2.1) * 10; // breathing
+          if (Math.abs(py - my) < mThick) {
+            // hit the serpent body (no safe gap here)
+            crash();
+            return;
+          }
+          // near-miss juice on the body edges (feel the heat)
+          if (Math.abs(py - my) < mThick + 22) {
+            flash = Math.max(flash, 0.09);
+          }
         }
       }
     }
