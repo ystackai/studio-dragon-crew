@@ -54,7 +54,7 @@
 
 **Protocol sign-off:** Verification is part of deliverable. All steps executed; no stop at first static green.
 
-**Last updated:** 2026-06-15 Pass 1 (local serve + full interaction + evidence recorded; see WORKLOG for detailed playtest notes)
+**Last updated:** 2026-06-15 Pass 1 (local serve + full interaction + evidence recorded; PR #75 created + inspected; see WORKLOG for detailed playtest notes)
 
 ## Actual Verification Run (Pass 1)
 - `python3 -m http.server` (ports 18765/18767) from repo root: 200 OK for direct entrypoint.
