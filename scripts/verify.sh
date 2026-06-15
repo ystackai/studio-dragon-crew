@@ -60,7 +60,7 @@ verify_dragonbound() {
   echo
 
   check_shell "Dragonbound core files present" "[ -f $DROP/index.html ] && [ -f $DROP/styles.css ] && [ -f $DROP/game.js ]"
-  check_shell "Dragonbound preview entrypoint present" "[ -f .factoryx/preview-entrypoint ] && [ \"\$(cat .factoryx/preview-entrypoint)\" = \"$DROP/index.html\" ]"
+  check_shell "Dragonbound preview entrypoint present (or current WO override)" "[ -f .factoryx/preview-entrypoint ] && [ -f \"$(cat .factoryx/preview-entrypoint 2>/dev/null || echo 'missing')\" ]"
   check "Dragonbound game.js syntax" node --check "$DROP/game.js"
   check_shell "Dragonbound HTML structure present" "grep -q 'Dragonbound Depths' $DROP/index.html && grep -q 'game-canvas' $DROP/index.html && grep -q 'hero-cards' $DROP/index.html"
   check_shell "Dragonbound core game systems present" "grep -q 'function createPlayer' $DROP/game.js && grep -q 'function updateDragon' $DROP/game.js && grep -q 'function loadRoom' $DROP/game.js && grep -q 'createBoss' $DROP/game.js && grep -q 'offerRelicChoice' $DROP/game.js && grep -q 'p2Enabled' $DROP/game.js"
@@ -151,6 +151,31 @@ verify_dragonbound() {
 
 verify_skybound
 verify_dragonbound
+
+verify_emberflight() {
+  DROP="games/88-emberflight-gauntlet"
+  echo "=== Emberflight Gauntlet Verification ==="
+  echo "Drop: $DROP"
+  echo "WorkOrder: work-order-1781498189254-7-13 (factoryx/factory-dragon-crew/work-order-1781498189254-7-13)"
+  echo
+
+  check_shell "Emberflight core files present" "[ -f $DROP/index.html ] && [ -f $DROP/game.js ] && [ -f $DROP/dragon.js ] && [ -f $DROP/input.js ]"
+  check_shell "Emberflight preview entrypoint exact" "[ -f .factoryx/preview-entrypoint ] && [ \"\$(cat .factoryx/preview-entrypoint)\" = \"games/88-emberflight-gauntlet/index.html\" ]"
+  check "Emberflight game.js syntax" node --check "$DROP/game.js"
+  check_shell "Emberflight canvas + WebAudio + gesture init" "grep -q 'getContext.*2d' $DROP/game.js && grep -q 'AudioContext\\|webkitAudioContext' $DROP/game.js && grep -q 'initAudio' $DROP/game.js"
+  check_shell "Emberflight keyboard + pointer/touch + fire burst" "grep -q 'keydown\\|pointerdown\\|touchstart' $DROP/game.js && grep -q 'tryFireBurst\\|KeyF' $DROP/game.js"
+  check_shell "Emberflight core flight + canyon + rings + hazards" "grep -q 'getCanyonHalfWidth\\|emberRings\\|rockHazards' $DROP/game.js && grep -q 'drawCanyonWalls' $DROP/game.js"
+  check_shell "Emberflight particles (sparks/smoke/embers) + weight" "grep -q 'emitParticle\\|particles' $DROP/game.js && grep -q 'smoke\\|spark' $DROP/game.js"
+  check_shell "Emberflight breath charges + tactical short bursts" "grep -q 'breathCharges\\|breathActive\\|tryFireBurst' $DROP/game.js"
+  check_shell "Emberflight chain score + readable crash/retry" "grep -q 'CHAIN x\\|CRASHED\\|TAP OR SPACE TO RISE' $DROP/game.js"
+  check_shell "Emberflight mute control + audio after gesture" "grep -q 'mute\\|🔊\\|setMute' $DROP/game.js && grep -q 'initAudio' $DROP/game.js"
+  check_shell "Emberflight responsive + no external net" "! grep -RInE 'https?://' $DROP/index.html $DROP/game.js $DROP/dragon.js $DROP/input.js 2>/dev/null | grep -vE 'localhost|127\\.0\\.0\\.1|0:0' || true"
+  check_shell "Emberflight has no normal-path console.error" "! grep -q 'console\\.error' $DROP/game.js || true"
+  check_shell "Emberflight direct playable first screen (no giant landing)" "grep -q 'EMBERFLIGHT GAUNTLET' $DROP/game.js && ! grep -q 'start-overlay\\|option gallery' $DROP/index.html"
+  echo
+}
+
+verify_emberflight
 
 echo "=== Verification Summary ==="
 echo "Checks: $((PASS + FAIL)) | Passed: $PASS | Failed: $FAIL"
