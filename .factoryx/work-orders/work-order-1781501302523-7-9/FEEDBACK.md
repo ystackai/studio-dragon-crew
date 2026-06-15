@@ -35,3 +35,8 @@ Record honest play observations, operator notes, review comments here. Update af
 - Carry + second Maw + crash bank still feel as juicy as p7 described; the first 30-60s delivers the heroic weave/dash through burning sky + clear escalation beat + "carry the fire" afterglow payoff.
 - No new issues. Would ship the slice as-is for review. The PR artifact (77) carries the full context.
 
+## Pass 9 (final verification + PR report, this execution)
+- Fresh p9 instrument under real Chromium: confirmed clean SUCCESS on full path (start → carry set → crash-while-carry bank exercised; "no uncaught" logged; zero game errors). The carry bank + bests on crash remain satisfying "one more try" even after heroic escalation payoff. First screen still the living playable gauntlet.
+- No issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. Would ship for human review.
+
+

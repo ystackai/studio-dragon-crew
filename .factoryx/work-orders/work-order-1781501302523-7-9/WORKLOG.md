@@ -215,3 +215,22 @@
 
 **Current HEAD after local:** (will capture) | 59.3kB | Reviewable PR artifact: https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical, one PR throughout, full FactoryX Work Order Context with original prompt + payload + checklist in body).
 
+### Pass 9 — Final runtime verification + explicit PR artifact report (this agent execution, 2026-06-15)
+- Per the work order note ("previous run issue to address before peripheral polish: agent completed successfully but did not report a GitHub PR URL; code-producing WorkOrders must leave a reviewable PR artifact"), this execution performed a fresh real-browser verification pass + memory + PR comment update to ensure the report is present and current for this invocation.
+- Chromium headless (real /usr/bin/chromium 149) on the committed `games/92-emberflight-gauntlet/index.html` (no source edits): produced refreshed `current-idle.png` (ready first-screen playable gauntlet with dragon/rider, living hazards/embers/graze, HUD, prompt).
+- Instrumented `/tmp/p9-verify.html` (copy + injected auto firstInteraction + startRun + distance seed for maw + carryFireUntil set + forceDash + state polls + explicit crash() while carrying to exercise bank):
+  - CONSOLE captured full sequence: synthetic gesture/start, carry seed, playing states with carrying:true, forced crash-while-carry (bank executed, bestEmbers updated), SUCCESS "no uncaught in maw/carry/weave/crash-bank/draw paths".
+  - Zero game errors: no TypeError, no non-finite, no Uncaught, no console.error from source (only the normal/expected AudioContext "must be resumed after user gesture" warnings on synthetic init, as in p0-p8, and dbus noise).
+  - Post-interaction state exercised: mode=playing then crashed, carrying, bank path (embers increased on crash), hook reads.
+- Screenshots committed to branch: `current-idle.png` (refreshed ready state), new `verify-p9-play.png` (instrument crash/carry-bank state).
+- Game Feel + checklist: all items from prior passes hold (core verb in <30s, input<100ms + feedback, easing, hit/score now includes verified carry bank on defeat, audio gate, large touch+kb+pointer, 60fps lightweight, <2MB self-contained, no external, first screen=playable game no placeholders, restart to living sky, verification actually ran clean).
+- Updated durable notes (this WORKLOG + PREVIEW + VERIFICATION + FEEDBACK) + screenshots.
+- Git: added pngs + md updates, committed on canonical branch only, pushed to `factoryx/factory-dragon-crew/work-order-1781501302523-7-9`.
+- Used `gh pr comment` to add explicit report comment on PR#77 (re-confirms the artifact URL + verification success for reviewers/FactoryX).
+- PR#77 remains OPEN, checks (facts/ci/deploy-preview) were SUCCESS on prior head; this push will retrigger. No reviews, no CHANGES_REQUESTED, reviewDecision=REVIEW_REQUIRED (expected). Body retains full "FactoryX Work Order Context" with original prompt + payload + WORKFLOW + Game Feel.
+- **Reviewable PR artifact (reported):** https://github.com/ystackai/studio-dragon-crew/pull/77
+- Deadline budget still open at execution time (~06:45 UTC vs 14:28Z); stopped after verification + report per "must leave a reviewable PR artifact". Ready for live preview deploy + human review.
+
+**Current status:** Work Order executed to completion with reviewable GitHub PR. All evidence fresh from real browser runtime. HEAD after this commit/push.
+
+

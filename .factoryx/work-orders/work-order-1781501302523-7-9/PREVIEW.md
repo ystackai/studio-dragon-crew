@@ -88,3 +88,10 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - The harden (audio ramp guards + gradient arg guards + early returns in drawHazard/drawDragon/drawBackground) was the minimal change required for verification to succeed cleanly on the exact maw/carry/crash paths; no visual or control impact for players. All Game Feel items + direct preview + no net + size hold.
 - Live preview (post push): will load clean, gesture starts flight, thread two-pass Maw for carry afterglow (gold motes/aura/status), skilled weaves during carry give +1, crash shows bank note if carried, restart to living first screen. PR#77 will be updated with this evidence + re-report of the reviewable artifact URL; full original prompt remains in the "FactoryX Work Order Context" section of the PR body. Same canonical branch.
 
+### Pass 9 Evidence (2026-06-15, final verification + report this execution)
+- Real `games/92-emberflight-gauntlet/index.html` + Chromium headless produced refreshed `current-idle.png` (ready first screen: playable gauntlet, dragon silhouette + rider, seeded hazards/embers/graze, HUD, prompt). Entrypoint direct, no appended links/content, no homepage mutation.
+- Instrumented verify (`/tmp/p9-verify.html`) exercised synthetic gesture + startRun + carry window + crash-while-carry bank: clean CONSOLE logs with "[P9-VERIFY] SUCCESS ... no uncaught in maw/carry/weave/crash-bank/draw paths"; zero game errors (expected audio gesture warning only + dbus). Screenshot `verify-p9-play.png` captured the exercised crash/carry-bank state.
+- PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive comment + evidence + explicit re-report of the reviewable artifact URL; the full original user prompt / FactoryX Work Order Context section remains in the PR body. Same canonical branch and direct preview root `games/92-emberflight-gauntlet/index.html`.
+- All Game Feel + verification requirements maintained. No known preview issues. The "report a GitHub PR URL" requirement addressed with fresh verification + gh comment + memory updates in this execution.
+
+
