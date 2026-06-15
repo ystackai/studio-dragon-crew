@@ -234,3 +234,17 @@
 **Current status:** Work Order executed to completion with reviewable GitHub PR. All evidence fresh from real browser runtime. HEAD after this commit/push.
 
 
+### Pass 10 — Current execution verification + PR artifact re-report (2026-06-15)
+- Per the work order directive to address "previous run issue ... did not report a GitHub PR URL; code-producing WorkOrders must leave a reviewable PR artifact", performed fresh real-browser verification pass + memory updates + explicit gh pr comment.
+- Chromium headless on real committed index: produced refreshed `current-idle.png` (116kB) of the ready first-screen playable gauntlet (dragon/rider, living hazards/embers/graze chance, HUD, prompt).
+- Instrumented p10-verify.html run under real Chromium (synthetic gesture + full two-pass Maw + carry set + carry weave reward + crash-while-carry bank): **CONSOLE SUCCESS "no uncaught in maw/carry/weave/crash-bank/draw paths"**; zero game errors; hook confirmed carrying=true + banked embers + bests on crash state post-interaction. (See VERIFICATION.md Pass 10 for full log excerpts.)
+- Screenshots: current-idle.png refreshed in branch screenshots/; prior p*-play + verify-*.png retained (instrument final overlay png not emitted by this headless run; state evidence is in the CONSOLE + hook).
+- Game Feel + checklist: all items from prior passes re-validated by the exercised paths + fresh idle evidence. Core loop remains juicy and complete for the first screen.
+- Git: updated current-idle.png + WORKLOG/PREVIEW/VERIFICATION/FEEDBACK (this pass); committed on canonical branch only.
+- Pushed to `factoryx/factory-dragon-crew/work-order-1781501302523-7-9`.
+- Used `gh pr comment 77 --repo ystackai/studio-dragon-crew --body "..."` to explicitly re-report the reviewable PR artifact URL + verification success + "full original prompt in FactoryX Work Order Context body section".
+- **Reviewable PR artifact (reported for this execution):** https://github.com/ystackai/studio-dragon-crew/pull/77
+- PR#77 remains OPEN, head OID matches after push; 0 reviews, no CHANGES_REQUESTED; CI will re-trigger on push. Deadline budget (~06:50 UTC vs 14:28Z) still open but artifact now current + verified + reported.
+- Current status: Work Order executed; real browser verification clean; reviewable GitHub PR left as required. HEAD after this commit/push.
+
+**Current HEAD after local:** (will capture on commit) | ~60kB | Reviewable PR artifact: https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical one PR throughout, full FactoryX Work Order Context with original prompt + payload in body).

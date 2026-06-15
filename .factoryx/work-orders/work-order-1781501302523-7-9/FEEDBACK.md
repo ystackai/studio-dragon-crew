@@ -40,3 +40,8 @@ Record honest play observations, operator notes, review comments here. Update af
 - No issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. Would ship for human review.
 
 
+## Pass 10 (current execution verification)
+- Instrumented real-browser run confirmed the carry bank + bests + two-pass escalation paths fire cleanly without runtime faults (hook state: carrying=true, embers banked on crash, best updated).
+- Idle first screen screenshot shows the living gauntlet atmosphere ready for new players (no empty sky).
+- No new play observations (automated instrument); prior manual notes from p3/p5/p7 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat.
+- Ready for live preview + human review.
