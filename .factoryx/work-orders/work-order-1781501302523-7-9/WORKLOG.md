@@ -134,3 +134,26 @@
 
 **Final reported status:** Work Order complete with reviewable GitHub PR. HEAD e8f884f on canonical branch. All durable notes + evidence committed. Deadline budget not exhausted; stopped on PR artifact delivery + no blockers. Ready for live preview deploy verification + human review.
 
+### Pass 5 — Deadline Polish (kinetic shear, heroic dragon acknowledgment, second Maw weight) (2026-06-15, ~2h pre-deadline)
+- Small, high-signal product-shaped changes (no scope creep; follows GOAL/STRATEGY/HOUSE + prior passes):
+  - Kinetic wind shear: expanded speed lines into variable "wind shear" streaks (more, angled, intensity tied to boost + excess speed). Sells the "dash through burning sky" verb; visible even on non-boost high-speed approach to Maw. Fits house: motion has temperature/weight (lines feel like air tearing).
+  - Heroic dragon response on full Maw clear: new `heroicFlare` (decays fast) drives crest/horn gold flare + scale glint + brighter eye in `drawDragon`, plus intensified ember wake. Triggered only on `isSecond` clear (the complete escalation beat). `playMawClear()` (Sea Dragon sparse toll + distant heat-sigh resonance) gives audio payoff. Status flips to "THE MAW YIELDS • CARRY THE FIRE" (mythic, not gamey; human as witness carrying the warmth earned at cost).
+  - Second Maw escalation juice: phase rate +0.45 (feels urgent), collision mThick +6 on second (narrower safe weave = more consequence). Matches "clear boss/escalation beat" + "price of power".
+  - getState/lastState + HUD expose the heroic state for tooling.
+- Browser runtime verification (real Chromium headless):
+  - Real index.html load + initial rAF: clean (no SyntaxError, no Uncaught, no game console errors, finite in all radials/shear/crest paths). Screenshot: current-idle.png (233kB, ready gauntlet with living sky + dragon + prompt; first screen = playable).
+  - Instrumented /tmp copy (forces startRun, seeds second Maw + heroicFlare, pumps updateWorld + renders): exercised new shear draw, crest/horn flare, ember wake boost, playMawClear audio path, maw phase/thick, heroicFlare decay, status text. p5-play.png (246kB) captured under virtual time. Zero game errors (only dbus noise, as all prior passes).
+- Size: ~53.8kB (delta ~0.5kB for shear + crest + audio + flare + 1 status + 1 rate). Still <<2MB, 0 external, self-contained.
+- Game Feel + Checklist delta (Pass 5):
+  - Core verb + two-pass escalation still <30s; new shear makes "dash" feel like negotiating the sky itself.
+  - Input <100ms + easing unchanged (new visuals use existing dt + sin time).
+  - Hit/score/weave feedback + now full-clear "dragon acknowledges" multi-sensory (crest visual + toll audio + gold wake + mythic HUD text) on the heroic beat.
+  - Audio still post-gesture only (new playMawClear gated behind clear).
+  - Maw second now reads heavier (faster undulation + less mercy on weave).
+  - All prior (60fps lightweight canvas, touch/kb/pointer, restart living sky, session bests, size, no net, no placeholders) hold.
+- No blockers. The prior runtime classes (TDZ, non-finite radial) remain guarded; new paths (shear/crest audio+draw) clean in real browser + instrumented play.
+- Evidence: new p5-play.png + refreshed current-idle.png in screenshots/. Will commit + push canonical, add PR comment re-reporting the artifact.
+- Sign-off: ambitious polished slice delivered and verified to deadline. Ready for live preview + review. PR#77 remains the canonical reviewable artifact.
+
+**Current HEAD after local:** (pre-commit) | ~53.8kB | Deadline budget: within (final polish executed before 14:28Z).
+

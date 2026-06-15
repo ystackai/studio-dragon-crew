@@ -156,6 +156,7 @@
   let maw = null; // {x, phase, passed, second?}
   let mawClearedAt = -999;
   let weaveFlare = 0;
+  let heroicFlare = 0; // dragon acknowledges skilled Maw clears (heroic weight + house "dragon notices")
 
   // Entities (lightweight, no class overhead in hot path)
   let hazards = []; // {x, y, kind:'spire'|'vent', h, phase}
@@ -351,6 +352,44 @@
     o.connect(g); g.connect(masterGain);
     o.start(now);
     o.stop(now + 1.1);
+  }
+
+  function playMawClear() {
+    // Sparse Sea Dragon resonance for full heroic clear (weight, distance, smallness; price of the warmth)
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    // Low tolling bell (the cost)
+    const o = audioCtx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = 92;
+    const g = audioCtx.createGain();
+    g.gain.value = 0.0001;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(0.22, now + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 420;
+    o.connect(lp); lp.connect(g); g.connect(masterGain);
+    o.start(now);
+    o.stop(now + 2.2);
+    // Distant heat sigh tail (Maw yields; you carry the fire forward)
+    const n = audioCtx.createBufferSource();
+    const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.4, audioCtx.sampleRate);
+    const d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    n.buffer = nb;
+    const nf = audioCtx.createBiquadFilter();
+    nf.type = 'bandpass';
+    nf.frequency.value = 210;
+    nf.Q.value = 0.9;
+    const ng = audioCtx.createGain();
+    ng.gain.value = 0.09;
+    ng.gain.setValueAtTime(0.09, now + 0.4);
+    ng.gain.linearRampToValueAtTime(0.0001, now + 1.6);
+    n.connect(nf); nf.connect(ng); ng.connect(masterGain);
+    n.start(now + 0.35);
+    n.stop(now + 1.9);
   }
 
   function playWeave() {
@@ -781,7 +820,8 @@
       }
     }
     if (maw) {
-      maw.phase += dt * 1.8;
+      const phaseRate = 1.8 + (maw.second ? 0.45 : 0); // second pass feels faster, heavier to thread (escalation)
+      maw.phase += dt * phaseRate;
       // Occasional vent/gap telegraph particles (readability for "weave the gaps" without clutter)
       if (Math.random() < 0.22) {
         const vx = (maw.x - worldX) / (W * 0.9) * (W * 0.5) + W * 0.26 + (Math.random()-0.5) * 28;
@@ -808,7 +848,11 @@
             0.7 + Math.random()*0.4, 1.6, PAL.gold);
         }
         flash = Math.max(flash, isSecond ? 0.38 : 0.28);
-        if (isSecond) shake = Math.max(shake, 4);
+        if (isSecond) {
+          shake = Math.max(shake, 4);
+          heroicFlare = 1.15; // dragon crest acknowledges the feat (cost of power paid, warmth earned)
+          playMawClear();
+        }
       }
       if (sx < -180) { maw = null; } // despawn after pass
       else if (mode === 'playing') {
@@ -818,7 +862,7 @@
         const distToMaw = Math.abs(mHitX - W * 0.26);
         if (distToMaw < 52) {
           const my = H*PLAY_TOP + (0.5 + Math.sin(maw.phase * 1.3) * 0.26) * H*(PLAY_BOT-PLAY_TOP);
-          const mThick = 36 + Math.sin(maw.phase*2.1) * 10; // breathing
+          const mThick = 36 + Math.sin(maw.phase*2.1) * 10 + (maw.second ? 6 : 0); // second pass: hungrier, narrower mercy (cost)
           if (Math.abs(py - my) < mThick) {
             // hit the serpent body (no safe gap here)
             crash();
@@ -850,6 +894,7 @@
     shake = Math.max(0, shake * 0.86 - dt * 3);
     flash = Math.max(0, flash - dt * 1.6);
     weaveFlare = Math.max(0, weaveFlare - dt * 2.1);
+    heroicFlare = Math.max(0, heroicFlare - dt * 1.7);
   }
 
   let floatTexts = [];
@@ -917,7 +962,8 @@
     const bob = Math.sin(t * 2.2) * 1.6 + Math.sin(t * 0.7) * 0.8;
     const lean = (playerVY * 18) * 0.6; // body follows velocity
     const wingPhase = boosting ? 1.6 : (0.8 + Math.sin(t * 3.8) * 0.6);
-    const eyeGlow = boosting ? 0.95 : (0.55 + Math.sin(t * 4.2) * 0.25);
+    const eyeGlow = (boosting ? 0.95 : 0.55) + Math.sin(t * 4.2) * 0.25 + heroicFlare * 0.6; // dragon eye "notices" on heroic clears
+    const crest = heroicFlare * 0.85; // brief horn/scale flare on Maw survive (acknowledgment, not power fantasy)
 
     // Tail flame (weight + presence)
     ctx.strokeStyle = PAL.ember;
@@ -1007,6 +1053,22 @@
     ctx.beginPath();
     ctx.arc(38, -6 + bob*0.1, 11, 0, Math.PI*2);
     ctx.fill();
+
+    // Heroic crest / horn flare (dragon acknowledges the Maw clear; brief, mythic, per house "not a power fantasy")
+    if (crest > 0.02) {
+      ctx.fillStyle = `rgba(255,215,120,${crest * 0.55})`;
+      ctx.beginPath();
+      ctx.moveTo(46, -9 + bob*0.1);
+      ctx.lineTo(56, -14 - crest * 3);
+      ctx.lineTo(52, -3 + bob*0.12);
+      ctx.closePath();
+      ctx.fill();
+      // scale glint on neck
+      ctx.fillStyle = `rgba(244,211,94,${crest * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(18, -2 + bob*0.08, 2.4, 0, Math.PI*2);
+      ctx.fill();
+    }
 
     // Wings — large, weighty, respond to dash
     const wingSpread = 0.65 + wingPhase * 0.55;
@@ -1259,7 +1321,7 @@
     // status line (subtle escalation hint after distance)
     const st = document.getElementById('status');
     if (maw) st.textContent = maw.second ? 'SKY MAW • SECOND PASS • WEAVE' : 'SKY MAW • WEAVE THE GAPS';
-    else if (mawClearedAt > 0 && distance - mawClearedAt < 220) st.textContent = 'MAW SURVIVED • DEEPER GAUNTLET';
+    else if (mawClearedAt > 0 && distance - mawClearedAt < 220) st.textContent = 'THE MAW YIELDS • CARRY THE FIRE';
     else if (distance > 820) st.textContent = 'THROUGH THE MAW • LAST CHAIN';
     else if (distance > 620) st.textContent = 'THE MAW OPENS • DASH THE GAP';
     else if (distance > 320) st.textContent = 'FEEL THE HEAT • CHAIN THE DASH';
@@ -1324,15 +1386,18 @@
       ctx.fill();
     }
 
-    // Boost speed lines (kinetic juice, only when surging)
-    if (boosting) {
-      ctx.strokeStyle = 'rgba(255,200,80,0.18)';
-      ctx.lineWidth = 1 * DPR;
-      for (let s=0; s<5; s++) {
-        const ly = 80 + ((time * 180 + s*47) % (H-160));
+    // Wind shear / speed lines (kinetic rush through the burning sky; stronger on boost, house weight + motion)
+    const shear = boosting ? 1 : Math.min(0.6, (speed - BASE_SPEED) * 0.8);
+    if (shear > 0.12) {
+      ctx.strokeStyle = boosting ? 'rgba(255,210,90,0.22)' : 'rgba(255,160,70,0.12)';
+      ctx.lineWidth = (boosting ? 1.1 : 0.7) * DPR;
+      const nlines = boosting ? 9 : 5;
+      for (let s = 0; s < nlines; s++) {
+        const ly = 70 + ((time * (boosting ? 260 : 140) + s * 31) % (H - 140));
+        const slant = (Math.sin(time * 4.2 + s) * 4) + (boosting ? (s - 4) * 1.6 : 0);
         ctx.beginPath();
-        ctx.moveTo(W*0.08, ly);
-        ctx.lineTo(W*0.24, ly + (Math.sin(time*3+s)*3));
+        ctx.moveTo(W * 0.06, ly);
+        ctx.lineTo(W * 0.28, ly + slant);
         ctx.stroke();
       }
     }
@@ -1348,10 +1413,11 @@
     const py = playerScreenY();
     drawDragon(px, py, time, boosting);
 
-    // Player ember wake (kinetic)
+    // Player ember wake (kinetic + heroic on high flare)
     if (mode === 'playing') {
-      const wakeCol = boosting ? PAL.gold : PAL.ember;
-      for (let i=0; i<3; i++) {
+      const wakeCol = (heroicFlare > 0.3 || boosting) ? PAL.gold : PAL.ember;
+      const nWake = (heroicFlare > 0.3 ? 5 : (boosting ? 4 : 3));
+      for (let i=0; i<nWake; i++) {
         spawnParticle(px - 32 - i*7, py + (i-1)*3 + Math.sin(time*7+i)*1.5,
           -1.2 - Math.random()*0.8, (Math.random()-0.5)*0.7,
           0.22 + Math.random()*0.12, 1.1 + Math.random()*0.6, wakeCol);
@@ -1394,7 +1460,7 @@
 
     // Verification hook
     if (window.__emberflightGauntlet) {
-      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo };
+      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1 };
     }
 
     requestAnimationFrame(render);
@@ -1420,7 +1486,7 @@
 
     // Expose for verification (in-game state after interaction)
     window.__emberflightGauntlet = {
-      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo }),
+      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo, heroic: heroicFlare > 0.1 }),
       forceDash: () => { if (mode==='playing') dashRequested = true; },
       forceRestart: () => restart()
     };

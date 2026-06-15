@@ -17,3 +17,10 @@ Record honest play observations, operator notes, review comments here. Update af
 - Decay tune: allowed one clean 5-6x combo through Maw section on practice; still punishes hesitation.
 - No new issues; core loop still the star. Would ship this slice.
 
+## Pass 5 (final deadline polish)
+- Wind shear on boost: immediately makes the dash feel like you're carving the sky; the angled streaks + intensified wake sell speed without clutter.
+- Dragon crest on Maw clear: the brief horn/eye gold + toll audio gives a real "the dragon noticed you survived that" moment — weighty, not triumphant. Fits house: you paid the cost, carry the warmth.
+- Second Maw tighter/faster: the escalation now has teeth; threading both passes feels like a complete heroic mini-story in 40s.
+- Status "THE MAW YIELDS • CARRY THE FIRE": lands with the right mythic register (small human carrying something ancient forward).
+- Still no issues; the slice feels complete and juicy. Ready for review.
+

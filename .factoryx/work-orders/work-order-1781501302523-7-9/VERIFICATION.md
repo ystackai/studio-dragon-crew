@@ -149,3 +149,20 @@
 - Game remains clean: 1466-line self-contained index.html, ~53kB, direct entrypoint, verification hook live, no external deps, Game Feel items satisfied.
 - **Reported PR artifact for this Work Order:** https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical branch, full context + screenshots in `.factoryx/work-orders/work-order-1781501302523-7-9/`). Ready for FactoryX preview + review. No blockers.
 
+### Pass 5 — Final Polish Verification (2026-06-15)
+- Browser runtime (Chromium headless, real `index.html` + dedicated instrumented copy):
+  - Load + initial rAF: clean (no pageerror, no console.error from source, no non-finite in shear/crest/gradients, no Uncaught). current-idle.png captured (ready first-screen state).
+  - Instrumented play path (startRun forced, second Maw seeded, heroicFlare, 6x updateWorld + renders under virtual time + compositor): exercised wind shear draw (boost/speed), drawDragon crest/eye/wake on heroic, playMawClear audio nodes, maw phase-rate + thicker collision, status "YIELDS", heroicFlare decay. p5-play.png (246kB) shows flight + Maw + flare. Zero game errors.
+- Checklist sign-off (all items now holding through final pass):
+  - [x] Core verb (weave+timed-dash) + full two-pass escalation in <30-60s first screen.
+  - [x] Input <100ms + visible (shear, crest, wake) + audible (toll+sigh on clear) feedback.
+  - [x] Easing on all motion (unchanged; new FX use dt/sin).
+  - [x] Hit/score + skilled-weave + now full-clear heroic feedback (crest + resonance + gold wake + mythic text).
+  - [x] Audio only after gesture (new playMawClear only on clear after start).
+  - [x] Touch/kb/pointer (full canvas targets); restart to living sky.
+  - [x] 60fps mid-laptop (lightweight, same draw budget + small loops).
+  - [x] <2MB (53.8kB self-contained, 0 net).
+  - [x] Real browser verification run (pageerror/console/request clean; in-game state post "gesture" via instrument: playing + maw + heroic).
+- Evidence artifacts: p5-play.png, current-idle.png (overwrote prior current with fresh post-edit). All prior screenshots retained for diff.
+- No blockers; prior fixes (guards, seeds, harden) still protect; new polish paths verified clean. PR#77 is the reviewable artifact with full context. Live preview will confirm 60fps feel + new juice.
+

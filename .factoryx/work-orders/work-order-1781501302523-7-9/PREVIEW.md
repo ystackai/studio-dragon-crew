@@ -56,3 +56,10 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Post-push: PR head OID advanced to match; CI re-triggered (facts/ci/deploy-preview expected to succeed as before). No blocking comments/reviews observed.
 - This closes the "report a GitHub PR URL" requirement for the code-producing Work Order. Live FactoryX preview will surface from the entrypoint tree on the PR branch.
 
+### Pass 5 Evidence (2026-06-15, pre-deadline polish)
+- Real `games/92-emberflight-gauntlet/index.html` (~53.8kB) loaded clean in Chromium headless (virtual time + compositor stages); no pageerror, no game errors, finite draws for new shear/crest paths. Screenshot: `current-idle.png` (233kB) — ready gauntlet first screen (living sky, dragon silhouette + rider, seeded hazards/embers/graze, HUD, prompt). Direct playable.
+- Instrumented temp copy (auto startRun + forced second Maw + heroicFlare + sim pumps) exercised under headless: new wind shear (boost+speed lines), crest/horn + eye glow on dragon, intensified wake, playMawClear resonance, maw rate/thick, "THE MAW YIELDS" status. Clean (dbus only). Evidence: `p5-play.png` (246kB) showing in-flight with Maw + heroic visual active.
+- Entrypoint unchanged: `games/92-emberflight-gauntlet/index.html` is the game (no appended links, no homepage edits).
+- Live preview will show the new kinetic shear on dash, dragon crest flare + toll on full Maw clear (heroic acknowledgment per house style), tighter second weave.
+- PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive comment + evidence; full original prompt context remains in body. All Game Feel items + verification requirements satisfied.
+
