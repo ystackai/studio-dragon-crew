@@ -88,5 +88,6 @@
 - Checklist delta: now the "first user gesture → in-game state" + "collect/dodge" path is protected against the exact runtime error reported in the work order. Live preview will re-confirm on deploy.
 - Evidence: chromium log from auto-gesture verify run (no game exceptions); math sim in node confirmed post-update sx/sy/r finite for seeded embers; resize now resilient.
 - No blockers remain from prior runtime failure. Ready for PR refresh + any final juice before deadline.
+- Post-push: remote advanced to 3a574ef; new `runtime-fix-verify.png` (headless capture of ready gauntlet post-fix + restart reseed) added to context dir for PR evidence. PR body update requested with full context (rate limit prevented live body re-read, but prior pattern + edit cmd succeeded structurally). Re-inspect via `gh pr view` showed PR OPEN, head OID matches our fix commit. No CHANGES_REQUESTED visible in available output.
 
 **Updated sign-off:** Runtime verification now passes for the reported failure mode + full play entry path (gesture → playing → ember draw with gradients). Continue polish on same branch/PR.

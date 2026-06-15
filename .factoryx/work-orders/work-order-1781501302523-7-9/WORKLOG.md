@@ -77,11 +77,14 @@
   - Fix: added vy to seeds; finite guards in drawEmber + resize harden + vignette radials.
   - Verified with: node math sim of seed+update+project (all finite); chromium headless on instrumented copy that forces synthetic pointerdown (triggers startRun) + rAF pumps (exercises update+drawEmber in playing); logs show VERIFY_STATE playing + "embers path exercised", ZERO game TypeErrors or non-finite (only normal audio gesture warnings).
 - Small product-shaped polish while here (no scope creep): made `restart()` reseed a few idle embers + hazards so that returning to ready state after crash looks/ feels like the initial first-screen atmosphere (consistent "first screen = playable game", no dead empty sky on retry). This improves the restart loop juice without adding systems.
-- Updated: VERIFICATION.md (full Pass 2 with evidence), this WORKLOG, index.html (47kB still).
+- Updated: VERIFICATION.md (full Pass 2 with evidence), this WORKLOG, index.html (47.5kB still).
 - Game feel: restart now returns player to a living gauntlet sky (prompt + drifting embers + spire/vent), matching the "take wing" entry. All prior checklist holds; the blocker is gone so live preview can be presented clean.
+- Evidence artifact: runtime-fix-verify.png (fresh headless capture of ready state after the fix + restart reseed).
 - Next: commit the fix + coherence on canonical branch, push (rebase if needed but in sync), refresh PR#77 body (include full original prompt in FactoryX context section + new verification summary + screenshots note + "browser runtime now passes the previously failing path"), re-inspect gh for feedback. Keep polishing feel/evidence until 2026-06-15T14:28:32Z or hard blocker.
 
-**Status after Pass 2:** Runtime error addressed at source + re-verified in real browser (post-gesture play path exercised cleanly). Ready for push + PR update. Polish continues.
+**Status after Pass 2:** Runtime error addressed at source + re-verified in real browser (post-gesture play path exercised cleanly). Pushed 3a574ef to canonical ref. gh pr edit issued for body refresh (full prompt context + evidence); gh api rate-limited on re-fetch but remote head confirmed matching, PR#77 OPEN. New screenshot runtime-fix-verify.png added. Polish continues to deadline on same branch/PR (no blocking comments observed in prior inspect; will re-check on next cycle if tokens allow).
+
+**Current HEAD:** 3a574ef (pushed) | Canonical PR: https://github.com/ystackai/studio-dragon-crew/pull/77 | Preview: games/92-emberflight-gauntlet/index.html | Deadline budget remaining: several hours.
 
 ---
 
