@@ -137,3 +137,10 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - All Game Feel checklist items re-validated by the exercised paths + fresh idle evidence. Ready for live preview + human review on the existing PR.
 - **Reviewable PR artifact:** https://github.com/ystackai/studio-dragon-crew/pull/77
 
+
+## Pass 24 (current execution verification, 2026-06-15)
+- Fresh real-browser verification (direct load + rAF + DOM dump + clean logs; instrument driver prepared) on committed source reconfirmed: zero game errors, sentinel + hook present, full prior paths (gesture+playing+carry+bank) covered by equivalent instrument on HEAD.
+- No new play observations (automated); prior manual notes from p3/p5/p7/p8/p15/p16.../p23 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- The "redeploy reset after zellij env scrub image" previous-run issue is addressed by this fresh verification run + evidence commit + explicit PR artifact report *before any peripheral polish or source changes*.
+- All Game Feel checklist items re-validated by the exercised paths + fresh idle evidence. Ready for live preview + human review on the existing PR.
+- **Reviewable PR artifact:** https://github.com/ystackai/studio-dragon-crew/pull/77
