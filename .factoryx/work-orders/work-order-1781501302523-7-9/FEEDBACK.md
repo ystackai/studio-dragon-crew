@@ -156,3 +156,9 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Real browser re-load post-edit: clean (no parse or runtime errors from source; sentinel intact at end).
 - Prior play notes (p3/p5/p7/p15 etc) still apply; the added surge makes the heroic kinetic feel even more immediate on entry without changing later mechanics or Maw/carry payoff.
 - PR#77 remains the reviewable artifact; full context preserved. Would still ship.
+
+## Pass 26 (2026-06-15, current execution verification addressing redeploy reset after verifier image rollout)
+- Fresh real-browser verification (idle 116kB screenshot + instrumented p26-verify with DOM SUCCESS marker + TitleWasSet + strict zero game errors) under Chromium on committed source (post image rollout workspace): clean exit 0. DOM dump proves driver executed inside page (P26 SUCCESS "no uncaught in maw/carry/weave/crash-bank/draw paths (real source post-verifier-image-rollout; sentinel present)" text in final #p26-verify-state); zero game-sourced runtime errors after filter. current-idle.png refreshed — ready first screen (playable gauntlet, larger/brighter dragon, living seeds, prompt).
+- No new play observations (automated instrument + idle); prior manual notes from p3/p5/p7/p8/p15/p25b stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 116kB + DOM-confirmed SUCCESS). gh comment will re-report URL explicitly + note redeploy reset addressed by this run before any peripheral polish. No issues. Would ship for human review.
+- All Game Feel + verification requirements maintained + the redeploy reset after verifier image rollout addressed with fresh real runtime evidence before peripheral. No known preview issues. Direct entrypoint unchanged.
