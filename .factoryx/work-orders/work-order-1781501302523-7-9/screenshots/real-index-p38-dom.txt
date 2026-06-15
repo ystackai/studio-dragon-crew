@@ -1,6 +1,5 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!DOCTYPE html>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Emberflight Gauntlet • The Dragon Crew</title>
@@ -58,15 +57,15 @@
   </style>
 </head>
 <body>
-  <canvas id="c" width="1280" height="720"></canvas>
+  <canvas id="c" width="960" height="620" data-emberflight-early-paint="true" data-emberflight-early-content="true" style="width: 960px; height: 620px;" data-emberflight-first-paint="true"></canvas>
 
   <div id="hud">
     <div class="hud-top">
       <div class="hud-stat">GAUNTLET <span id="dist">000</span>m</div>
       <div class="hud-stat">EMBERS <span id="embers">00</span></div>
     </div>
-    <div id="combo">COMBO <span id="combo-val">×1</span></div>
-    <div id="boost"><i id="boost-bar"></i></div>
+    <div id="combo">COMBO <span id="combo-val" style="color: inherit;">×1</span></div>
+    <div id="boost"><i id="boost-bar" style="width: 65%; background: linear-gradient(90deg, rgb(255, 90, 31), rgb(244, 211, 94));"></i></div>
     <div id="status">WEAVE • DASH • CHAIN</div>
   </div>
 
@@ -79,7 +78,7 @@
     <div style="font-size:11px; color:#6a5346; margin-top:4px;">Press R or tap anywhere</div>
   </div>
 
-  <div id="prompt" class="prompt">click or tap to take wing • arrows / drag to steer • space / tap to dash</div>
+  <div id="prompt" class="prompt" style="opacity: 0.652936;">click or tap to take wing • arrows / drag to steer • space / tap to dash</div>
 
   <script>
   "use strict";
@@ -1731,6 +1730,7 @@
   // "incomplete script load" distinct from runtime JS exceptions. The first-paint path (executed before this sentinel) ensures
   // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet + observable markers.
   window.__emberflightScriptComplete = true;
-  </script>
-</body>
-</html>
+  </script><span id="emberflight-first-paint" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">first-paint-complete</span>
+
+
+</body></html>
