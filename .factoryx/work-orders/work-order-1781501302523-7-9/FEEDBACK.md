@@ -111,3 +111,9 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 119kB + DOM-confirmed SUCCESS). gh comment will re-report URL explicitly + note redeploy reset addressed by this run before any peripheral polish. No issues. Would ship for human review.
 - All Game Feel + verification requirements maintained.
 
+## Pass 21 (2026-06-15, current execution verification addressing redeploy reset after zellij env scrub)
+- Fresh real-browser verification (idle 118.8kB screenshot + instrumented p21-verify + --dump-dom) under Chromium on committed source (post-scrub workspace refresh at ce40dd3): clean (exit 0, no game errors in dump/logs after strict filter; only dbus/deprecation noise). current-idle.png (118.8kB) refreshed — ready first screen (playable gauntlet, larger/brighter dragon per monitor feedback, living seeds, prompt).
+- DOM dump proves driver executed inside page (P21 SUCCESS "no uncaught..." marker injected into #p21-verify-state after gesture + sentinel check + title mutation).
+- No new play observations (automated instrument + idle); prior manual notes from p3/p5/p7/p8/p15/p16/p17/p18/p19/p20 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 118.8kB + DOM-confirmed SUCCESS). gh comment will re-report URL explicitly + note redeploy reset addressed by this run before any peripheral polish. No issues. Would ship for human review.
+- All Game Feel + verification requirements maintained.
