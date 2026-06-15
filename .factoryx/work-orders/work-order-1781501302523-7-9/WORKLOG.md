@@ -5,7 +5,7 @@
 **Project:** studio-dragon-crew  
 **Role:** coder-default (Grok / grok-build)  
 **Branch:** factoryx/factory-dragon-crew/work-order-1781501302523-7-9  
-**Canonical PR:** (to be opened after first push)  
+**Canonical PR:** https://github.com/ystackai/studio-dragon-crew/pull/77 (open)  
 **Preview:** games/92-emberflight-gauntlet/index.html  
 **Mode:** polish_until_deadline (budget to 2026-06-15T14:28:32Z)  
 **Current HEAD (start):** 56d2871b4dac286844c780e9432e06ee62c43581

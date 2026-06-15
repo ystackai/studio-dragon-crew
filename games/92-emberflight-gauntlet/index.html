@@ -1038,7 +1038,8 @@
 
     // status line (subtle escalation hint after distance)
     const st = document.getElementById('status');
-    if (distance > 680) st.textContent = 'THE MAW STIRS • WEAVE DEEPER';
+    if (distance > 820) st.textContent = 'THROUGH THE MAW • LAST CHAIN';
+    else if (distance > 620) st.textContent = 'THE MAW OPENS • DASH THE GAP';
     else if (distance > 320) st.textContent = 'FEEL THE HEAT • CHAIN THE DASH';
     else st.textContent = 'WEAVE • DASH • CHAIN';
   }
@@ -1097,6 +1098,19 @@
       ctx.lineTo(x+18, y+26);
       ctx.lineTo(x+32, y-2);
       ctx.fill();
+    }
+
+    // Boost speed lines (kinetic juice, only when surging)
+    if (boosting) {
+      ctx.strokeStyle = 'rgba(255,200,80,0.18)';
+      ctx.lineWidth = 1 * DPR;
+      for (let s=0; s<5; s++) {
+        const ly = 80 + ((time * 180 + s*47) % (H-160));
+        ctx.beginPath();
+        ctx.moveTo(W*0.08, ly);
+        ctx.lineTo(W*0.24, ly + (Math.sin(time*3+s)*3));
+        ctx.stroke();
+      }
     }
 
     // Entities (back to front)
