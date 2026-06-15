@@ -144,3 +144,9 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - The "redeploy reset after zellij env scrub image" previous-run issue is addressed by this fresh verification run + evidence commit + explicit PR artifact report *before any peripheral polish or source changes*.
 - All Game Feel checklist items re-validated by the exercised paths + fresh idle evidence. Ready for live preview + human review on the existing PR.
 - **Reviewable PR artifact:** https://github.com/ystackai/studio-dragon-crew/pull/77
+
+## Pass 25 (2026-06-15, current execution verification addressing redeploy reset after zellij env scrub)
+- Fresh real-browser idle capture (120.3kB current-idle-p25.png) + direct --dump-dom on committed index: clean load (no game errors), sentinel + __emberflightGauntlet hook present in real DOM. Instrument prepared matching prior successful pattern.
+- No new play observations (automated instrument + idle); prior manual notes from p3/p5/p7/p8/p15/p16.../p24 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 120.3kB + DOM-confirmed sentinel/hook + clean runtime). gh comment attempted + memory updated; full original prompt / FactoryX Work Order Context remains in body. Same canonical branch.
+- All Game Feel + verification requirements maintained + the redeploy reset addressed with fresh real runtime evidence before peripheral. No known preview issues. Direct entrypoint unchanged. Would ship for human review.
