@@ -1597,6 +1597,12 @@
   });
 
   boot();
+
+  // Sentinel for harness verification (directly addresses prior "Unexpected end of input" in check-7.html copies):
+  // If a future .factoryx-runtime-check-*.html or instrumented copy truncates before this line,
+  // window.__emberflightScriptComplete will be absent and post-gesture hook reads can surface a clear
+  // "incomplete script load" distinct from runtime JS exceptions.
+  window.__emberflightScriptComplete = true;
   </script>
 </body>
 </html>

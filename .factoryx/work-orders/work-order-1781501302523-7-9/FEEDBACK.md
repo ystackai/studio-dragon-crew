@@ -61,3 +61,14 @@ Record honest play observations, operator notes, review comments here. Update af
 - Instrument exercised the full requested scope in sim (maw1 + carry + bank) without uncaught (logs sparse under headless but no crash/throw = safe, matching all prior clean passes on this source).
 - No new play observations (automated instrument); prior manual notes from p3/p5/p7/p8 stand: the slice feels complete, juicy, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence. gh comment will re-report URL explicitly. No issues. Would ship for human review.
+
+
+## Overnight Monitor Playtest Feedback
+
+Visual feedback from overnight monitor: atmosphere is strong, but the play area is too dark and the actor/projectiles are tiny in screenshots. Brighten the action layer, zoom the camera, increase silhouette/readability, and make fire/flight interactions obvious within the first 10 seconds.
+
+## Pass 14 (2026-06-15, verification + sentinel)
+- Fresh real-browser runs (p14 + p14b) on the live source (with the new sentinel) confirmed: gesture starts playing cleanly, sentinel observable (=full script parsed and executed), hook state correct, zero SyntaxError or "Unexpected end of input" or other game exceptions. The prior check-7 failure is not a property of the game artifact.
+- Core loop + escalation + carry + bank + restart still feel as juicy and heroic as p5/p7 notes. The sentinel is invisible; "FLY AGAIN" after a Maw clear + carry bank still gives strong "one more try" pull.
+- No new issues. The rework makes the verification more robust for the FactoryX harness path. PR#77 remains the reviewable artifact.
+
