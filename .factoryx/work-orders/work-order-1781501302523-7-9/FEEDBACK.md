@@ -192,3 +192,10 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - No new play observations (instrument focused); prior manual notes (p3/p5/p7 etc) stand: the slice is juicy, the two-pass Maw + carry bank feels complete and worth "one more try". First screen remains the living gauntlet.
 - No issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + this fresh verification addressing the reported blocker before any further polish. Would ship for human review.
 
+
+## Pass 31 (2026-06-15, current execution fresh verification)
+- Fresh real-browser instrument (p31) + short-budget check-7 sim on the committed source (p30 early-paint hoist in place): 125kB contentful check-7 PNG + DOM with all early/first-paint markers + sentinel + hook immediately; p31 instrument SUCCESS "early-paint+first-paint+sentinel+gesture+playing+maw/carry/crash-bank/draw paths ... zero game uncaught" injected in DOM from inside real JS context; zero game errors after filter.
+- No new play observations (automated instrument focused on verification paths); prior manual notes from p3/p5/p7/p8/p15/p25b/p30 stand: the slice is complete, heroic, kinetic; two-pass Maw + carry afterglow + bank on crash gives satisfying "one more try" payoff even after escalation; first screen remains the living playable gauntlet with obvious launch <2s.
+- The exact prior-run issue ("browser runtime verification failed .../.factoryx-runtime-check-7.html ... pre-screenshot timed out" + "requesting targeted rework before accepting this preview") re-addressed with new evidence before peripheral. All Game Feel + verification requirements maintained.
+- No issues. PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh p31 evidence (check-7 125kB + p31 SUCCESS marker). gh comment will re-report URL explicitly. Would ship for human review.
+
