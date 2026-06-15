@@ -1,6 +1,29 @@
-<!doctype html>
-<html lang="en">
-<head>
+[8412:8440:0615/160909.653432:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+[8412:8440:0615/160909.661190:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8440:0615/160909.661393:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+[8412:8440:0615/160909.662330:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+[8412:8440:0615/160909.662357:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8440:0615/160909.680915:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8440:0615/160909.718881:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8412:0615/160909.829407:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8412:0615/160909.829488:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8440:0615/160909.829636:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8440:0615/160909.829652:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8412:0615/160909.844699:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8412:0615/160909.844997:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8412:0615/160909.856697:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8440:0615/160909.856837:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+[8412:8440:0615/160909.856863:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+[8412:8412:0615/160909.858226:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8440:0615/160909.858388:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8412:0615/160909.862054:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: unknown error type: 
+[8412:8412:0615/160909.864011:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8440:0615/160909.864075:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8412:0615/160909.878168:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[8412:8440:0615/160909.884389:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[8412:8412:0615/160909.889309:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+<!DOCTYPE html>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Emberflight Gauntlet • The Dragon Crew</title>
@@ -58,15 +81,15 @@
   </style>
 </head>
 <body>
-  <canvas id="c" width="1280" height="720"></canvas>
+  <canvas id="c" width="960" height="620" data-emberflight-early-paint="true" data-emberflight-early-content="true" style="width: 960px; height: 620px;" data-emberflight-first-paint="true"></canvas>
 
   <div id="hud">
     <div class="hud-top">
       <div class="hud-stat">GAUNTLET <span id="dist">000</span>m</div>
       <div class="hud-stat">EMBERS <span id="embers">00</span></div>
     </div>
-    <div id="combo">COMBO <span id="combo-val">×1</span></div>
-    <div id="boost"><i id="boost-bar"></i></div>
+    <div id="combo">COMBO <span id="combo-val" style="color: inherit;">×1</span></div>
+    <div id="boost"><i id="boost-bar" style="width: 65%; background: linear-gradient(90deg, rgb(255, 90, 31), rgb(244, 211, 94));"></i></div>
     <div id="status">WEAVE • DASH • CHAIN</div>
   </div>
 
@@ -79,7 +102,7 @@
     <div style="font-size:11px; color:#6a5346; margin-top:4px;">Press R or tap anywhere</div>
   </div>
 
-  <div id="prompt" class="prompt">click or tap to take wing • arrows / drag to steer • space / tap to dash</div>
+  <div id="prompt" class="prompt" style="opacity: 0.69376;">click or tap to take wing • arrows / drag to steer • space / tap to dash</div>
 
   <script>
   "use strict";
@@ -1737,6 +1760,7 @@
   // "incomplete script load" distinct from runtime JS exceptions. The first-paint path (executed before this sentinel) ensures
   // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet + observable markers.
   window.__emberflightScriptComplete = true;
-  </script>
-</body>
-</html>
+  </script><span id="emberflight-first-paint" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">first-paint-complete</span>
+
+
+</body></html>
