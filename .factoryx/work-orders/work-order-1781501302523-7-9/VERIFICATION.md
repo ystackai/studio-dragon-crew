@@ -140,3 +140,12 @@
   - All prior (audio gate, touch/kb/pointer full canvas, 60fps lightweight, no net, restart living, session bests, size) hold or improved.
 - Sign-off: The exact prior runtime blocker class is still prevented (guards + seeds + harden); new ambitious escalation + juicy weave feedback paths verified in real browser runtime with in-game state (playing + mawCleared) post-gesture. Ready for final commit/push/PR refresh before deadline. No blockers.
 
+### Final (Evidence Commit + PR URL Reported) — 2026-06-15
+- After p4 sign-off, the only pending items were untracked verification screenshots (verify-idle.png, verify-play.png in screenshots/) and explicit reporting of the GitHub PR URL.
+- Committed + pushed those exact files as part of "Pass 4 evidence artifacts" commit e8f884f (now on remote branch head).
+- gh pr view post-push: PR#77 at https://github.com/ystackai/studio-dragon-crew/pull/77 is OPEN with head matching the evidence commit, checks previously green, no CHANGES_REQUESTED or admin blocking feedback. REVIEW_REQUIRED is the expected state for human review gate.
+- Updated WORKLOG/PREVIEW/VERIFICATION + (via push) the branch to ensure the PR is current and the "report GitHub PR URL" gap from prior run is resolved.
+- All required verification per VERIFICATION.md header was executed in real browser (Chromium headless + instrumented copies) across passes; this final step adds the missing tracked artifacts to the reviewable PR.
+- Game remains clean: 1466-line self-contained index.html, ~53kB, direct entrypoint, verification hook live, no external deps, Game Feel items satisfied.
+- **Reported PR artifact for this Work Order:** https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical branch, full context + screenshots in `.factoryx/work-orders/work-order-1781501302523-7-9/`). Ready for FactoryX preview + review. No blockers.
+

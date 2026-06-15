@@ -49,3 +49,10 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Live preview post-push/deploy will show 60fps motion, gesture start, full Maw two-pass weave (or crash), session bests on crash overlay, juicy particles/flash/audio on collects/weaves/dashes, restart to living sky with occasional ally.
 - PR#77 to be refreshed with full original prompt + this + screenshots + "Pass 4: Maw escalation juiced to two heroic passes + weave audio+dragon-flare feedback; runtime clean in real browser".
 
+### Final Evidence Commit (2026-06-15)
+- Committed the `verify-idle.png` + `verify-play.png` (from the p4 instrumented browser run) into `.factoryx/work-orders/work-order-1781501302523-7-9/screenshots/` on the branch (they were the only untracked items at start of final step).
+- Pushed `e8f884f` to the canonical `factoryx/factory-dragon-crew/work-order-1781501302523-7-9` ref.
+- The reviewable PR artifact is https://github.com/ystackai/studio-dragon-crew/pull/77 — it now carries the complete evidence set (all screenshots referenced across passes + full FactoryX Work Order Context with original prompt in body). Direct preview entrypoint `games/92-emberflight-gauntlet/index.html` unchanged. No appended content, no homepage mutation.
+- Post-push: PR head OID advanced to match; CI re-triggered (facts/ci/deploy-preview expected to succeed as before). No blocking comments/reviews observed.
+- This closes the "report a GitHub PR URL" requirement for the code-producing Work Order. Live FactoryX preview will surface from the entrypoint tree on the PR branch.
+

@@ -120,3 +120,17 @@
 - Next: commit + push canonical only, update PR#77 body (full original prompt + this pass evidence + screenshots + "polish complete to deadline; reviewable + ambitious slice delivered"), re-inspect gh (no prior reviews/blocks). Live deployed preview will show full 60fps two-pass Maw + juicy weaves + bests.
 
 **Current HEAD after local:** (pre-commit) | Payload ~53kB | Deadline: within budget (final polish pass executed).
+
+### Final Evidence Commit + GitHub PR Artifact Reporting (2026-06-15)
+- Staged + committed the two previously untracked p4 browser verification screenshots: `.factoryx/work-orders/work-order-1781501302523-7-9/screenshots/verify-idle.png` and `verify-play.png` (these were produced by the instrumented Chromium headless run exercising the full play path including two-pass Maw, weaveFlare + playWeave audio, finite ember draws, etc.).
+- Local commit: `e8f884f` "Emberflight Gauntlet: Pass 4 evidence artifacts — ... branch now carries full reviewable evidence for PR#77"
+- Pushed to canonical ref only: `git push origin HEAD:factoryx/factory-dragon-crew/work-order-1781501302523-7-9` — succeeded, remote advanced 95c261c → e8f884f (no divergence).
+- Post-push re-inspect (`gh pr view`, fetch): PR#77 head now `e8f884f4fe60...`, updatedAt=2026-06-15T06:16:22Z, state=OPEN, reviewDecision=REVIEW_REQUIRED, mergeStateStatus=BLOCKED (standard for required review + branch protection; no human reviews present, no CHANGES_REQUESTED, prior CI checks were SUCCESS on previous head).
+- Updated this WORKLOG + PREVIEW.md + VERIFICATION.md with explicit PR URL reporting to address the noted prior-run gap ("agent completed successfully but did not report a GitHub PR URL; code-producing WorkOrders must leave a reviewable PR artifact").
+- The canonical PR already embeds the full original `<user_query>` (with Payload, instructions, WORKFLOW, Game Feel, etc.) in its "FactoryX Work Order Context" section per rules. Latest bot comment on PR summarizes p4 implementation + verification. This evidence commit ensures all referenced artifacts (screenshots) are present in the branch tree for reviewers and FactoryX preview attach.
+- No changes to `games/92-emberflight-gauntlet/index.html` in final step (implementation was complete and polished through Pass 4; only evidence tracking + memory + push to satisfy "leave a reviewable PR artifact").
+- Per instructions: used only the designated Work Order branch; one PR; preview root remains direct to the game index; browser verification was exercised in real runtime (multiple prior instrumented passes documented); Game Feel checklist items held through p4.
+- **Reviewable PR artifact:** https://github.com/ystackai/studio-dragon-crew/pull/77 (open on factoryx/factory-dragon-crew/work-order-1781501302523-7-9; full prompt + evidence + screenshots in branch context dir).
+
+**Final reported status:** Work Order complete with reviewable GitHub PR. HEAD e8f884f on canonical branch. All durable notes + evidence committed. Deadline budget not exhausted; stopped on PR artifact delivery + no blockers. Ready for live preview deploy verification + human review.
+
