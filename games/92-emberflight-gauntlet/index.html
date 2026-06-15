@@ -260,6 +260,7 @@
   function rampMaster(v, t = 0.08) {
     if (!masterGain || !audioCtx) return;
     const now = audioCtx.currentTime;
+    if (!Number.isFinite(now) || !Number.isFinite(v) || !Number.isFinite(t)) return;
     masterGain.gain.cancelScheduledValues(now);
     masterGain.gain.setTargetAtTime(Math.max(0.0001, v), now, t);
   }
@@ -448,11 +449,16 @@
 
   function updateAudio(dt) {
     if (!audioCtx || !windGain) return;
+    const now = audioCtx.currentTime;
     const targetWind = mode === 'playing' ? (0.018 + (speed - BASE_SPEED) * 0.022) : 0.003;
-    windGain.gain.setTargetAtTime(targetWind, audioCtx.currentTime, 0.12);
+    if (Number.isFinite(targetWind) && Number.isFinite(now)) {
+      windGain.gain.setTargetAtTime(Math.max(0.0001, targetWind), now, 0.12);
+    }
     if (windFilter) {
       const targetF = 280 + (speed - BASE_SPEED) * 260 + (boost * 180);
-      windFilter.frequency.setTargetAtTime(targetF, audioCtx.currentTime, 0.09);
+      if (Number.isFinite(targetF) && Number.isFinite(now)) {
+        windFilter.frequency.setTargetAtTime(Math.max(80, Math.min(18000, targetF)), now, 0.09);
+      }
     }
   }
 
@@ -954,6 +960,9 @@
   // ============================================================
   function drawBackground(t) {
     // Deep heat void
+    if (!Number.isFinite(H) || H < 10) {
+      ctx.fillStyle = PAL.bgDeep; ctx.fillRect(0, 0, W || 1280, H || 720); return;
+    }
     const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, PAL.bgDeep);
     g.addColorStop(0.42, PAL.bgHeat);
@@ -1001,17 +1010,21 @@
     const lean = (playerVY * 18) * 0.6;
     const wingPhase = boosting ? 1.6 : (0.8 + Math.sin(t * 3.8) * 0.6);
     const eyeGlow = (boosting ? 0.95 : 0.55) + Math.sin(t * 4.2) * 0.25 + heroicFlare * 0.6;
+    if (!Number.isFinite(t) || !Number.isFinite(bob)) { ctx.restore(); return; }
     const crest = heroicFlare * 0.85;
     const carrying = carryFireUntil > time;
     if (carrying) {
       const ca = 0.07 + Math.sin(t * 3.1) * 0.025;
-      const ag = ctx.createRadialGradient(6, bob * 0.1, 6, 10, bob * 0.12, 46);
-      ag.addColorStop(0, `rgba(244,211,94,${ca})`);
-      ag.addColorStop(1, 'transparent');
-      ctx.fillStyle = ag;
-      ctx.beginPath();
-      ctx.ellipse(4, bob * 0.12, 36, 20, lean * 0.02, 0, Math.PI * 2);
-      ctx.fill();
+      const agy1 = bob * 0.1, agy2 = bob * 0.12;
+      if (Number.isFinite(agy1) && Number.isFinite(agy2)) {
+        const ag = ctx.createRadialGradient(6, agy1, 6, 10, agy2, 46);
+        ag.addColorStop(0, `rgba(244,211,94,${ca})`);
+        ag.addColorStop(1, 'transparent');
+        ctx.fillStyle = ag;
+        ctx.beginPath();
+        ctx.ellipse(4, bob * 0.12, 36, 20, lean * 0.02, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Tail flame (weight + presence)
@@ -1095,13 +1108,16 @@
     ctx.fill();
 
     // Eye glow (temperature)
-    const eg = ctx.createRadialGradient(38, -6 + bob*0.1, 1, 38, -6 + bob*0.1, 11);
-    eg.addColorStop(0, `rgba(255,180,60,${0.35*eyeGlow})`);
-    eg.addColorStop(1, 'transparent');
-    ctx.fillStyle = eg;
-    ctx.beginPath();
-    ctx.arc(38, -6 + bob*0.1, 11, 0, Math.PI*2);
-    ctx.fill();
+    const egy = -6 + bob*0.1;
+    if (Number.isFinite(egy)) {
+      const eg = ctx.createRadialGradient(38, egy, 1, 38, egy, 11);
+      eg.addColorStop(0, `rgba(255,180,60,${0.35*eyeGlow})`);
+      eg.addColorStop(1, 'transparent');
+      ctx.fillStyle = eg;
+      ctx.beginPath();
+      ctx.arc(38, egy, 11, 0, Math.PI*2);
+      ctx.fill();
+    }
 
     // Heroic crest / horn flare (dragon acknowledges the Maw clear; brief, mythic, per house "not a power fantasy")
     if (crest > 0.02) {
@@ -1187,6 +1203,7 @@
     const sx = (hz.x - worldX) / (W * 0.9) * (W * 0.5) + W * 0.26;
     const sy = H * PLAY_TOP + hz.y * H * (PLAY_BOT - PLAY_TOP);
     const hh = hz.h * H * 0.92;
+    if (!Number.isFinite(hh) || !Number.isFinite(hz.h) || !Number.isFinite(H) || hh <= 0) return;
 
     ctx.save();
     ctx.translate(sx, sy);
@@ -1207,7 +1224,9 @@
 
       // Flame crown (flickering, hungry)
       const f = Math.sin(t*4.2 + hz.phase)*0.5 + 0.5;
-      const grad = ctx.createLinearGradient(0, -hh*0.55, 0, -hh*0.9 - f*8);
+      const gy1 = -hh*0.55, gy2 = -hh*0.9 - f*8;
+      if (!Number.isFinite(gy1) || !Number.isFinite(gy2)) { ctx.restore(); return; }
+      const grad = ctx.createLinearGradient(0, gy1, 0, gy2);
       grad.addColorStop(0, PAL.ember);
       grad.addColorStop(0.4, PAL.heat);
       grad.addColorStop(1, 'rgba(255,200,60,0.1)');

@@ -80,3 +80,11 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive update/comment + evidence; the full original user prompt / FactoryX Work Order Context section remains in the PR body. Same canonical branch and direct preview root.
 - All Game Feel + verification requirements maintained or strengthened (scoring feedback juiced for the carry beat). No known preview issues. Direct entrypoint unchanged.
 
+
+### Pass 8 Evidence (2026-06-15, runtime verification pass + harden)
+- Real Chromium headless on `games/92-emberflight-gauntlet/index.html` (59.3kB) produced fresh `current-idle.png` (234kB) — ready first screen (playable burning sky gauntlet, dragon silhouette + rider, seeded living hazards/embers/graze chance, HUD, prompt). Direct entrypoint, no appended content.
+- Instrumented p8-verify.html exercised (synthetic gesture → startRun → maw1 clear → maw2/second with carry/heroic set → carry weave +1 ember path → multiple render pumps exercising draw carry aura + status + wake → crash-while-carry bank path + DOM note + gold burst + hook reads): **CONSOLE: full steps + "SUCCESS no uncaught..."**; zero game errors/non-finite/uncaught (guards caught the edge cases from fast sim state without throwing). 
+- Screenshots: current-idle.png refreshed post-harden in branch .factoryx/.../screenshots/ (first screen evidence); prior p*-play/verify retained.
+- The harden (audio ramp guards + gradient arg guards + early returns in drawHazard/drawDragon/drawBackground) was the minimal change required for verification to succeed cleanly on the exact maw/carry/crash paths; no visual or control impact for players. All Game Feel items + direct preview + no net + size hold.
+- Live preview (post push): will load clean, gesture starts flight, thread two-pass Maw for carry afterglow (gold motes/aura/status), skilled weaves during carry give +1, crash shows bank note if carried, restart to living first screen. PR#77 will be updated with this evidence + re-report of the reviewable artifact URL; full original prompt remains in the "FactoryX Work Order Context" section of the PR body. Same canonical branch.
+

@@ -29,3 +29,9 @@ Record honest play observations, operator notes, review comments here. Update af
 - Dragon carry aura (subtle gold halo during the ~8s afterglow) gives visual weight to "carrying the fire" while flying; pairs with gold wake/motes. Feels mythic, not flashy.
 - No new issues observed in instrumented + idle runs; core loop + escalation still the star. The first screen remains the playable gauntlet. Would ship.
 
+
+## Pass 8 (verification harden + re-verify)
+- The p8 instrument (real chromium) correctly found two latent non-finite paths under synthetic fast-forward + carry window pumps that normal play + earlier instruments missed. Fixing with guards (audio + canvas gradients) is the right "make verification actually pass" step — no player-facing change, but now the ambitious slice can be presented with clean live preview evidence.
+- Carry + second Maw + crash bank still feel as juicy as p7 described; the first 30-60s delivers the heroic weave/dash through burning sky + clear escalation beat + "carry the fire" afterglow payoff.
+- No new issues. Would ship the slice as-is for review. The PR artifact (77) carries the full context.
+
