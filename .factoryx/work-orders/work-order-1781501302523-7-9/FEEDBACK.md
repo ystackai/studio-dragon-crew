@@ -78,3 +78,8 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - Play observations (instrument + idle): larger dragon reads as weighty ancient presence immediately; embers/graze now obvious collect targets; Maw gaps + vents more legible; "carry the fire" gold still pops on weaves/crash. First 10s now delivers clear heroic kinetic verb without squint.
 - No new issues; core loop + escalation + juice still the star. Would ship this pass for review.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 carries the evidence + full context.
+
+## Pass 16 (2026-06-15, redeploy reset verification + re-report)
+- Fresh real-browser verification (idle + full instrumented p16 driver exercising gesture → playing + sentinel, maw1/2 + carry + crash-while-carry bank) under Chromium on real committed source: clean exit 0, SUCCESS "no uncaught in maw/carry/weave/crash-bank/draw paths (real source post-redeploy-scrub; sentinel present)", zero game errors of any kind in logs. The p15 visual polish (brighter action, larger readable silhouettes, early launch burst) + all prior juicy carry/bank feedback remain intact and verified.
+- No new play observations (automated); prior manual notes from p3/p5/p7/p8/p15 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
+- PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png + instrument log). gh comment will re-report URL explicitly + note redeploy reset addressed. No issues. Would ship for human review.
