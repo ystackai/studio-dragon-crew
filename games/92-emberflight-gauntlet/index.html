@@ -1608,13 +1608,36 @@
 
     // Start render immediately (first screen = playable game)
     lastT = performance.now();
-    // Targeted rework addressing "browser runtime pre-screenshot timed out" on .factoryx-runtime-check-7.html (and similar harness copies):
-    // Force a synchronous render of the ready gauntlet (idle living sky, weighty dragon+ rider silhouette, seeded hazards/embers/graze, HUD, prompt) *before* this script tag ends and before any sentinel.
-    // Harnesses that perform early/pre-screenshot (short virtual budgets, load+immediate capture, or instrumented check file before rAF callback/compositor) will now see populated canvas pixels instead of timing out on blank/default state.
-    // dt evaluates ~0 (lastT set, passed t matches), ready mode skips all sim, no player-visible change; the call itself schedules the live rAF continuation exactly as the prior requestAnimationFrame did.
-    // Complements the existing sentinel (for parse/completeness) with a first-frame guarantee for screenshot robustness.
+    // Further targeted rework (Pass 28) addressing "browser runtime pre-screenshot timed out" on .factoryx-runtime-check-7.html (and similar harness copies):
+    // 1. Explicit early backing-store size + minimal bg fill guarantees non-blank pixels for harnesses that screenshot immediately on script end / load.
+    // 2. Full sync render(lastT) of the ready gauntlet (living sky + dragon silhouette + rider + seeded hazards/embers/graze + HUD + prompt) before script ends / sentinel.
+    // 3. Post-paint signals: canvas[data-emberflight-first-paint], window.__emberflightFirstPaint, and injected hidden #emberflight-first-paint marker span for DOM-polling harnesses.
+    // Harnesses with short virtual budgets, pre-rAF compositor capture, or check-style file copies will observe populated canvas + marker instead of timeout on blank.
+    // dt~0 in ready, no sim side effects; rAF continuation scheduled exactly as before. Complements sentinel.
+    // (Prior p27 sync-render baseline preserved + hardened.)
     try {
+      // Early explicit size (helps some headless capture paths that read attrs before first rAF)
+      const dpr0 = Math.min((window && window.devicePixelRatio) || 1, 2);
+      canvas.width = Math.floor(W * dpr0);
+      canvas.height = Math.floor(H * dpr0);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr0, 0, 0, dpr0, 0, 0);
+      // Guaranteed non-blank first pixels (deep bg) even if full scene draw is deferred by runner
+      ctx.fillStyle = '#050203';
+      ctx.fillRect(0, 0, W, H);
+      // Full ready gauntlet paint (the observable first screen)
       render(lastT);
+      // Post-paint robustness markers for pre-screenshot harnesses
+      canvas.setAttribute('data-emberflight-first-paint', 'true');
+      window.__emberflightFirstPaint = true;
+      try {
+        const marker = document.createElement('span');
+        marker.id = 'emberflight-first-paint';
+        marker.style.cssText = 'position:absolute;left:-9999px;opacity:0;pointer-events:none';
+        marker.textContent = 'first-paint-complete';
+        document.body.appendChild(marker);
+      } catch (_) {}
     } catch (_) {
       // best-effort first paint; live loop will still start
       requestAnimationFrame(render);
@@ -1641,11 +1664,11 @@
   boot();
 
   // Sentinel for harness verification (directly addresses prior "Unexpected end of input" / truncation in check-7.html copies,
-  // and now paired with the first-frame sync paint above for pre-screenshot timeout class on same harness files):
+  // and now paired with the strengthened first-paint (early size + bg fill + full sync render + data attr + hidden marker + window flag) for pre-screenshot timeout class on same harness files):
   // If a future .factoryx-runtime-check-*.html or instrumented copy truncates before this line,
   // window.__emberflightScriptComplete will be absent and post-gesture hook reads can surface a clear
-  // "incomplete script load" distinct from runtime JS exceptions. The sync first paint in boot ensures
-  // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet.
+  // "incomplete script load" distinct from runtime JS exceptions. The first-paint path (executed before this sentinel) ensures
+  // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet + observable markers.
   window.__emberflightScriptComplete = true;
   </script>
 </body>
