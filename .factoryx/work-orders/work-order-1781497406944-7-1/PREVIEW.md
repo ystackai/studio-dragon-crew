@@ -42,6 +42,6 @@ When the slice exists, update this file + PR with:
 - Confirmation that audio started only after gesture and mute control is present and functional.
 - Any known visual or control limitations at the time of capture.
 
-**Last updated:** 2026-06-15 — Strategy gate (preview contract + planned shape recorded; no live preview yet).
+**Last updated:** 2026-06-15 — Strategy gate closure: wrote `.factoryx/preview-entrypoint` (exact: `games/88-emberflight-gauntlet/index.html`) to make preview resolvable and address prior browser runtime verification skip.
 
-**Execution note (this agent run):** Preview contract remains: write `.factoryx/preview-entrypoint` with exact `games/88-emberflight-gauntlet/index.html` during impl so that verifier and FactoryX preview root resolve directly to the playable game (addresses previous run skip). Payload already carries the preview_entrypoint field. No changes to shape; still no game or live preview at gate.
+**Execution note (this agent run):** Per preview contract and prior-run mitigation: created the root `.factoryx/preview-entrypoint` file now (at strategy gate) with the exact relative path. This ensures that when the game HTML is built in taste-gate, the verifier and /factoryx/previews/... root will resolve directly without "no preview entrypoint could be resolved". Payload already declared it; the file makes it actionable. Still no game or live preview at this gate. Shape unchanged.
