@@ -266,10 +266,10 @@ function collideWalls(dy){
 
 function updateDragon(dt){
   const t = now() * 0.001;
-  // weighty flight: spring + damping
-  const stiffness = 3.8;
-  const damp = 2.6;
-  const maxVY = 215;
+  // weighty flight: spring + damping (heavier, more deliberate — dragon has mass and will)
+  const stiffness = 3.1;
+  const damp = 3.1;
+  const maxVY = 198;
   if (input.y != null){
     targetY = clamp(input.y, 52, LOGICAL_H-52);
   }
@@ -277,7 +277,7 @@ function updateDragon(dt){
   dragon.vy += (dy * stiffness - dragon.vy * damp) * dt;
   dragon.vy = clamp(dragon.vy, -maxVY, maxVY);
   dragon.y += dragon.vy * dt;
-  dragon.bank = clamp(dragon.vy * 0.0072, -0.92, 0.92);
+  dragon.bank = clamp(dragon.vy * 0.0078, -0.92, 0.92);
   // flap effort from |vy| and breath
   const effort = clamp(Math.abs(dragon.vy)/160, 0, 1) + (now() < breathUntil ? 0.4 : 0);
   dragon.flap = Math.sin(t * 7.4) * (0.55 + effort * 0.65);
