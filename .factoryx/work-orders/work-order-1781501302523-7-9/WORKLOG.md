@@ -103,3 +103,20 @@
 - Status: ambitious playable first-screen game delivered + polish passes complete within budget. The taste-gate slice (weave+timed-dash in burning sky) plus escalation (Sky Maw) + juice now match the goal description. Ready for live preview re-verify on deploy.
 
 **Current HEAD after local:** (will capture on commit) | Payload 49.5kB | Deadline budget: remaining until 2026-06-15T14:28:32Z.
+
+### Pass 4 — Pre-Deadline Maw Escalation + Weave Juice (2026-06-15, final hours)
+- Focused polish (small diff, high game-feel payoff):
+  - Sky Maw now has a true two-pass escalation beat: first clean passage at ~780m triggers "MAW CHAIN", then ~95-300m later a second "chase" Maw spawns with offset phase, heavier visuals (thicker lines, brighter vents/crown), bigger rewards on full clear ("MAW CLEARED +X", +5 embers, +3 combo). Status flips to "SKY MAW • SECOND PASS • WEAVE" then "MAW SURVIVED • DEEPER GAUNTLET". Dramatic re-entrance FX + particles. Makes the "clear boss/escalation beat" feel like a complete heroic mini-arc within the 30-60s slice.
+  - Weave verb now has dedicated audio + dragon flare: `playWeave()` (soft bandpass noise "heat sigh") + `weaveFlare` drives a brief bright edge stroke + eye pop on the player dragon silhouette on perfect dodges (ties skilled positioning to visible "dragon acknowledges" per house style). Decay is fast; only on high-value near-misses.
+  - Restart/boot idle reseed now occasionally includes a graze ally silhouette (small rescue witness) so the first screen always feels populated and "alive" with the core loop verbs present even before gesture.
+  - HUD/status, collision, draw, and getState hook extended for the second pass + cleared flag (tooling friendly).
+- Browser runtime verification (post-edit, real Chromium headless + instrumented auto-gesture copy exercising startRun → playing → embers draw (guarded radials) → hazard weaves → first Maw + second pass + weaveFlare + playWeave calls + crash/restart):
+  - Zero game errors (no TypeError, no non-finite, no Uncaught, no console.error from source). Only container dbus noise.
+  - P4 instrumented run logged playing states + "escalation cleared path exercised".
+  - Fresh screenshots: p4-play.png (244kB, in-flight with new second Maw possible), verify-*.png retained from pre-pass.
+- Size: ~53.3kB (delta for audio fn + flare draw + maw second logic + status). Still tiny, <2MB, 0 external, self-contained, offline ok.
+- Game Feel: core <100ms input + easing preserved; new "weave" audio+visual feedback <100ms on good positioning (satisfying "I did that" on dragon); Maw now has clear beginning/middle/end with consequence and big payoff on clean thread of both passes. Restart shows living world with rescue element. All prior checklist holds.
+- No blockers. The original reported radial non-finite (and TDZ) remain fixed; new paths exercised cleanly in real browser.
+- Next: commit + push canonical only, update PR#77 body (full original prompt + this pass evidence + screenshots + "polish complete to deadline; reviewable + ambitious slice delivered"), re-inspect gh (no prior reviews/blocks). Live deployed preview will show full 60fps two-pass Maw + juicy weaves + bests.
+
+**Current HEAD after local:** (pre-commit) | Payload ~53kB | Deadline: within budget (final polish pass executed).

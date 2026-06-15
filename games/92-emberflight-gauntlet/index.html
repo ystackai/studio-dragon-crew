@@ -84,9 +84,9 @@
   "use strict";
 
   // ============================================================
-  // EMBERFLIGHT GAUNTLET — Taste-Gate Slice
+  // EMBERFLIGHT GAUNTLET — playable first screen (weave/dash through burning sky + Sky Maw escalation)
   // One verb (weave + timed dash), one space (burning sky gauntlet)
-  // Dragon Crew house style: weight, heat, consequence, mythic presence
+  // Dragon Crew house style: weight, heat, consequence, mythic presence. Juicy feedback, session bests, two-pass Maw.
   // ============================================================
 
   const canvas = document.getElementById('c');
@@ -153,7 +153,9 @@
   let bestCombo = 1;
 
   // Escalation boss: Sky Maw (clear beat after distance gate)
-  let maw = null; // {x, phase, passed}
+  let maw = null; // {x, phase, passed, second?}
+  let mawClearedAt = -999;
+  let weaveFlare = 0;
 
   // Entities (lightweight, no class overhead in hot path)
   let hazards = []; // {x, y, kind:'spire'|'vent', h, phase}
@@ -349,6 +351,28 @@
     o.connect(g); g.connect(masterGain);
     o.start(now);
     o.stop(now + 1.1);
+  }
+
+  function playWeave() {
+    // Soft heat-sigh for skilled near-miss weave (Sea Dragon sparse audio)
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const n = audioCtx.createBufferSource();
+    const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.7, audioCtx.sampleRate);
+    const d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) * 0.6;
+    n.buffer = nb;
+    const nf = audioCtx.createBiquadFilter();
+    nf.type = 'bandpass';
+    nf.frequency.value = 420;
+    nf.Q.value = 0.9;
+    const ng = audioCtx.createGain();
+    ng.gain.value = 0.035;
+    ng.gain.setValueAtTime(0.035, now);
+    ng.gain.linearRampToValueAtTime(0.0001, now + 0.55);
+    n.connect(nf); nf.connect(ng); ng.connect(masterGain);
+    n.start(now);
+    n.stop(now + 0.6);
   }
 
   function playCrash() {
@@ -561,6 +585,9 @@
     }
     hazards.push({ x: 780, y: 0.36, kind:'spire', h:0.09, phase:0.9 });
     hazards.push({ x: 1060, y: 0.69, kind:'vent', h:0.07, phase:1.8 });
+    if (Math.random() < 0.55) {
+      grazes.push({ x: 540 + Math.random()*240, y: 0.33 + Math.random()*0.3 });
+    }
     // Ready for next gesture to start
   }
 
@@ -666,6 +693,7 @@
       if (!hit && Math.abs(hx - W*0.26) < 38 && Math.abs(py - hy) < hh * 0.72) {
         if (Math.random() < 0.38) {
           flash = Math.max(flash, 0.05);
+          weaveFlare = Math.max(weaveFlare, 0.65);
           const wy = (py + hy) * 0.5;
           for (let k=0; k<2; k++) {
             spawnParticle(hx + (Math.random()-0.5)*9, wy + (Math.random()-0.5)*7,
@@ -673,6 +701,7 @@
               0.26 + Math.random()*0.18, 0.9 + Math.random()*0.6, PAL.gold);
           }
           if (combo < 4.5) combo = Math.min(MAX_COMBO, combo + 0.12);
+          playWeave();
         }
       }
     }
@@ -735,16 +764,21 @@
     }
 
     // Sky Maw escalation (clear boss beat: undulating flame serpent with weave gaps)
-    if (!maw && distance > 780 && mode === 'playing') {
-      maw = { x: worldX + W * 1.05, phase: 0, passed: false };
-      // dramatic entrance FX
-      const my = playerScreenY();
-      for (let k=0; k<18; k++) {
-        spawnParticle(W*0.78, my + (k-9)*3.5, -0.6 - Math.random()*0.8, (Math.random()-0.5)*1.1,
-          0.6 + Math.random()*0.5, 2.2 + Math.random()*1.4, k%2 ? PAL.heat : PAL.ember);
+    if (!maw && mode === 'playing') {
+      const firstGate = (distance > 780 && mawClearedAt < 0);
+      const secondGate = (mawClearedAt > 0 && distance > mawClearedAt + 95 && distance < mawClearedAt + 320);
+      if (firstGate || secondGate) {
+        maw = { x: worldX + W * 1.05, phase: secondGate ? 2.4 : 0, passed: false, second: secondGate };
+        // dramatic entrance FX (stronger on second)
+        const my = playerScreenY();
+        const nparts = secondGate ? 11 : 18;
+        for (let k=0; k<nparts; k++) {
+          spawnParticle(W*0.78, my + (k-9)*3.5, -0.6 - Math.random()*0.8, (Math.random()-0.5)*1.1,
+            0.6 + Math.random()*0.5, 2.2 + Math.random()*1.4, k%2 ? PAL.heat : PAL.ember);
+        }
+        flash = Math.max(flash, secondGate ? 0.28 : 0.35);
+        shake = Math.max(shake, secondGate ? 5 : 7);
       }
-      flash = Math.max(flash, 0.35);
-      shake = Math.max(shake, 7);
     }
     if (maw) {
       maw.phase += dt * 1.8;
@@ -760,18 +794,21 @@
       maw.x -= mMove * 0.78; // slightly slower for presence/weight
       const sx = (maw.x - worldX);
       if (sx < -W * 0.6 && !maw.passed) {
-        // passed cleanly
+        // passed cleanly — escalation beat complete (first or second weave)
         maw.passed = true;
-        const bonus = 28 + Math.floor(combo * 1.8);
-        embers += 3;
-        combo = Math.min(MAX_COMBO, combo + 2.2);
+        const isSecond = !!maw.second;
+        const bonus = (isSecond ? 46 : 28) + Math.floor(combo * (isSecond ? 2.1 : 1.8));
+        embers += isSecond ? 5 : 3;
+        combo = Math.min(MAX_COMBO, combo + (isSecond ? 3.0 : 2.2));
         comboTimer = 0;
-        spawnFloatText('MAW CHAIN +' + bonus, W*0.5 - 40, H*0.42, 1400);
-        for (let k=0; k<16; k++) {
+        mawClearedAt = Math.max(mawClearedAt, distance);
+        spawnFloatText((isSecond ? 'MAW CLEARED +' : 'MAW CHAIN +') + bonus, W*0.5 - 40, H*0.42, 1400);
+        for (let k=0; k<(isSecond?22:16); k++) {
           spawnParticle(W*0.32, H*0.5 + (k-8)*2, -2.2 + Math.random()*1.4, (Math.random()-0.5)*2.6,
             0.7 + Math.random()*0.4, 1.6, PAL.gold);
         }
-        flash = Math.max(flash, 0.28);
+        flash = Math.max(flash, isSecond ? 0.38 : 0.28);
+        if (isSecond) shake = Math.max(shake, 4);
       }
       if (sx < -180) { maw = null; } // despawn after pass
       else if (mode === 'playing') {
@@ -812,6 +849,7 @@
     // Decay FX
     shake = Math.max(0, shake * 0.86 - dt * 3);
     flash = Math.max(0, flash - dt * 1.6);
+    weaveFlare = Math.max(0, weaveFlare - dt * 2.1);
   }
 
   let floatTexts = [];
@@ -998,6 +1036,22 @@
     ctx.quadraticCurveTo(18, -20 * wingSpread, 34, -6);
     ctx.stroke();
 
+    // Heroic weave-flare edge (juicy feedback on perfect dodge; brief heat signature on the dragon)
+    if (weaveFlare > 0.02) {
+      const fa = weaveFlare * 0.7;
+      ctx.strokeStyle = `rgba(255,200,90,${fa})`;
+      ctx.lineWidth = (1.6 + weaveFlare * 0.8) * DPR;
+      ctx.beginPath();
+      ctx.moveTo(-2, -9 + bob*0.25);
+      ctx.quadraticCurveTo(12, -18 * wingSpread + bob*0.2, 46, -2 + bob*0.1);
+      ctx.stroke();
+      // eye brightens on skilled weave
+      ctx.fillStyle = `rgba(255,230,120,${fa * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(38, -6 + bob*0.1, 3.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+
     // Rider (human witness, humble scale)
     ctx.fillStyle = PAL.rider;
     ctx.beginPath();
@@ -1113,9 +1167,10 @@
     const myBase = H * PLAY_TOP + (0.5 + Math.sin(m.phase * 1.3) * 0.26) * H * (PLAY_BOT - PLAY_TOP);
     ctx.translate(sx, myBase);
 
+    const isSecond = !!m.second;
     // Body segments (segmented like dragon, but hostile fire)
-    ctx.strokeStyle = 'rgba(40,18,12,0.95)';
-    ctx.lineWidth = 22 * DPR;
+    ctx.strokeStyle = isSecond ? 'rgba(55,22,14,0.97)' : 'rgba(40,18,12,0.95)';
+    ctx.lineWidth = (isSecond ? 25 : 22) * DPR;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     for (let s = -2; s <= 3; s++) {
@@ -1128,8 +1183,8 @@
     }
 
     // Heat core + edges (hungry fire)
-    ctx.strokeStyle = PAL.ember;
-    ctx.lineWidth = 9 * DPR;
+    ctx.strokeStyle = isSecond ? '#ff6a2a' : PAL.ember;
+    ctx.lineWidth = (isSecond ? 11 : 9) * DPR;
     ctx.shadowColor = PAL.ember;
     ctx.shadowBlur = 16;
     for (let s = -2; s <= 3; s++) {
@@ -1143,8 +1198,8 @@
     ctx.shadowBlur = 0;
 
     // Bright inner vents (the gaps player must read)
-    ctx.strokeStyle = 'rgba(255,210,120,0.9)';
-    ctx.lineWidth = 3.5 * DPR;
+    ctx.strokeStyle = isSecond ? 'rgba(255,230,140,0.95)' : 'rgba(255,210,120,0.9)';
+    ctx.lineWidth = (isSecond ? 4.2 : 3.5) * DPR;
     for (let s = -1; s <= 2; s++) {
       const sy = Math.sin(m.phase * 1.7 + s * 1.15) * 31;
       const ex = s * 19;
@@ -1164,8 +1219,8 @@
     ctx.beginPath();
     ctx.ellipse(58, Math.sin(m.phase*2.1)*7, 26, 19, 0.2, 0, Math.PI*2);
     ctx.fill();
-    // Head flame crown
-    ctx.fillStyle = PAL.flame;
+    // Head flame crown (brighter crown on second)
+    ctx.fillStyle = isSecond ? '#ffcc66' : PAL.flame;
     ctx.beginPath();
     ctx.ellipse(66, Math.sin(m.phase*2.1)*4 - 3, 11, 7, 0.1, 0, Math.PI*2);
     ctx.fill();
@@ -1203,7 +1258,8 @@
 
     // status line (subtle escalation hint after distance)
     const st = document.getElementById('status');
-    if (maw) st.textContent = 'SKY MAW • WEAVE THE GAPS';
+    if (maw) st.textContent = maw.second ? 'SKY MAW • SECOND PASS • WEAVE' : 'SKY MAW • WEAVE THE GAPS';
+    else if (mawClearedAt > 0 && distance - mawClearedAt < 220) st.textContent = 'MAW SURVIVED • DEEPER GAUNTLET';
     else if (distance > 820) st.textContent = 'THROUGH THE MAW • LAST CHAIN';
     else if (distance > 620) st.textContent = 'THE MAW OPENS • DASH THE GAP';
     else if (distance > 320) st.textContent = 'FEEL THE HEAT • CHAIN THE DASH';
@@ -1338,7 +1394,7 @@
 
     // Verification hook
     if (window.__emberflightGauntlet) {
-      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, bestEmbers, bestCombo };
+      window.__emberflightGauntlet.lastState = { mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), boosting, first: firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo };
     }
 
     requestAnimationFrame(render);
@@ -1364,7 +1420,7 @@
 
     // Expose for verification (in-game state after interaction)
     window.__emberflightGauntlet = {
-      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, bestEmbers, bestCombo }),
+      getState: () => ({ mode, embers, combo: Math.floor(combo), distance: Math.floor(distance), firstInteraction, maw: !!maw, mawCleared: mawClearedAt > 0, bestEmbers, bestCombo }),
       forceDash: () => { if (mode==='playing') dashRequested = true; },
       forceRestart: () => restart()
     };
@@ -1377,6 +1433,7 @@
     }
     hazards.push({ x: 820, y: 0.38, kind:'spire', h:0.10, phase:1.2 });
     hazards.push({ x: 1180, y: 0.71, kind:'vent', h:0.08, phase:0.4 });
+    if (Math.random() < 0.5) grazes.push({ x: 560, y: 0.41 + Math.random()*0.18 });
 
     // Gentle idle sway for dragon in ready
     playerY = 0.48;

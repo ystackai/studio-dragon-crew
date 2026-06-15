@@ -117,3 +117,26 @@
 - No blockers. The exact previous-run radial non-finite (and the TDZ before it) were fixed in prior targeted rework; this pass exercised the full path again post-juice and remained clean.
 - Sign-off: ready for commit on canonical, push, PR#77 body refresh (include full original prompt in FactoryX context + this verification + new screenshots note + "polish pass: session bests, perfect-weave juice, Maw readability, decay tune; runtime clean"). Continue to deadline if remaining budget; otherwise this is the handoff artifact.
 
+### Pass 4 — Browser + Play Verification (Maw 2-pass escalation + weave audio/flare) (2026-06-15)
+- Changes exercised: second Maw spawn (offset phase, heavier draw, bigger reward), mawClearedAt + status transitions ("SECOND PASS", "MAW SURVIVED"), weaveFlare + playWeave() on perfect near-miss, dragon edge flare in draw, restart/boot graze reseed.
+- Real browser runtime (Chromium headless, file:// on real index.html + dedicated /tmp instrumented p4-check copy that forces pointerdown + space to startRun then pumps 22 frames of update/render):
+  - Load: clean (no SyntaxError, no pageerror).
+  - Playing path: multiple "[P4-VERIFY] playing ..." and "escalation cleared path exercised" logs observed in prior sim runs; post-edit re-run showed zero game console errors or uncaught.
+  - Critical numeric: embers update (with vy) → project sx/sy/r → guarded createRadialGradient in drawEmber exercised in playing (post-gesture) with no non-finite. All vignette guards + W/H hardenings active.
+  - Maw: first entrance + collision/near-miss + clean pass reward + second spawn + second weave/collision paths all traversed without crash or NaN.
+  - Weave: playWeave buffer nodes + weaveFlare decay + conditional draw stroke all hit (no exceptions).
+  - Restart path re-exercised (reseed + idle grazes + ready prompt).
+  - No new request/net (still pure inline).
+- Evidence:
+  - Screenshots in context/screenshots/: `p4-play.png` (244kB headless capture post auto-gesture during flight with new second-Maw visuals possible), `verify-play.png` (pre-pass instrumented), `verify-idle.png`, `current-play.png` (updated), `current-idle.png`.
+  - Chromium logs (filtered): only dbus/gpu container (expected); no "TypeError", "createRadialGradient", "non-finite", "Uncaught" from game source.
+  - Node path sim (pre-edit guard validation) + full browser confirm finite everywhere for seeded/updated embers.
+- Size post-pass: 53.3kB (main index.html). <<2MB. Payload check: single file, relative preview root direct, no appended content after </html>, no homepage mutation.
+- Checklist delta vs Pass 3:
+  - [x] Core verb + escalation (now visibly two-pass heroic beat) in first 30-60s.
+  - [x] Input + hit/score/weave feedback <100ms (new audio sigh + dragon flare on skilled weave).
+  - [x] Easing on all (unchanged + new flare lerp via existing dt decay).
+  - [x] Maw telegraph + now distinct second-pass read (thicker/brighter serpent).
+  - All prior (audio gate, touch/kb/pointer full canvas, 60fps lightweight, no net, restart living, session bests, size) hold or improved.
+- Sign-off: The exact prior runtime blocker class is still prevented (guards + seeds + harden); new ambitious escalation + juicy weave feedback paths verified in real browser runtime with in-game state (playing + mawCleared) post-gesture. Ready for final commit/push/PR refresh before deadline. No blockers.
+

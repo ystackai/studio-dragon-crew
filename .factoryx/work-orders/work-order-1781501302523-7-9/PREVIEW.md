@@ -40,3 +40,12 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Known: play-state PNGs from headless virtual-time are smaller files (dark uniform + motion); idle capture is rich. Live deployed preview will show full 60fps motion + gesture start + Maw beat + bests on crash.
 - PR will be updated with these artifacts + "FactoryX Work Order Context" quoting the full original payload prompt.
 
+### Pass 4 Evidence (2026-06-15, final)
+- Runtime re-exercised on real `games/92-emberflight-gauntlet/index.html` (~53kB) + instrumented p4-check copy via Chromium headless + virtual-time + synthetic gesture: clean (no pageerror, no game console errors, no non-finite radial, full start→playing→Maw first+second+weaveFlare+audio exercised; VERIFY logs confirmed "playing" + "escalation cleared").
+- Screenshots added to `.factoryx/work-orders/work-order-1781501302523-7-9/screenshots/`:
+  - `p4-play.png` (244kB) — post-gesture flight state exercising the new two-pass Maw escalation visuals + weave feedback.
+  - Retained prior `verify-play.png`, `current-idle.png` etc for comparison.
+- Entrypoint remains direct: the index.html at `games/92-emberflight-gauntlet/` is the playable game (first screen = gauntlet ready state with prompt; gesture starts heroic kinetic flight). No links appended, no root homepage changes.
+- Live preview post-push/deploy will show 60fps motion, gesture start, full Maw two-pass weave (or crash), session bests on crash overlay, juicy particles/flash/audio on collects/weaves/dashes, restart to living sky with occasional ally.
+- PR#77 to be refreshed with full original prompt + this + screenshots + "Pass 4: Maw escalation juiced to two heroic passes + weave audio+dragon-flare feedback; runtime clean in real browser".
+
