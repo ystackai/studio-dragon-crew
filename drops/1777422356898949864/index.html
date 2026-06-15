@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Sanctuary Flight — The Dragon Crew</title>
+  <meta name="description" content="Fly a dragon through a procedural sanctuary world. Hold to charge, release to energize the sanctuary nodes.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="world" aria-label="Interactive dragon sanctuary canvas" role="img"></canvas>
+
+  <div id="start-overlay" aria-label="Click or tap to begin">
+    <div class="overlay-inner">
+      <h1>Sanctuary Flight</h1>
+      <p class="sub">The Dragon Crew</p>
+      <div class="cta">Tap to launch</div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="score-ring" aria-label="Nodes energized out of six">
+      <span id="score-text">0 / 6</span>
+    </div>
+    <div id="charge-bar">
+      <div id="charge-fill"></div>
+    </div>
+    <button id="mute-btn" class="hud-btn" aria-label="Toggle mute" title="Toggle mute">
+      <svg class="icon-snd" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-2.5-2-4.5-4.5-4.5v9c2.5 0 4.5-2 4.5-4.5z"/></svg>
+      <svg class="icon-mut" viewBox="0 0 24 24" width="22" height="22" style="display:none"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm14.6 5.3L19.7 11l1.3 1.3-3.4 3.4-1.3-1.3 3.3-3.1zM14 3.2v2.1A7 7 0 0114 18.7v2.1A9 9 0 0014 3.2z"/></svg>
+    </button>
+  </div>
+
+   <div id="msg" aria-live="polite"></div>
+
+   <div id="instructions">Hold or drag anywhere to fly the dragon · Release to energize nodes</div>
+   <button id="reset-btn">Reset</button>
+
+   <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
