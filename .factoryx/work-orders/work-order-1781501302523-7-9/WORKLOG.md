@@ -183,3 +183,19 @@
 
 **Current HEAD after local:** (pre-commit) | 57.5kB | Deadline budget: within.
 
+### Pass 7 — Carry legibility + crash bank callout (post-deadline polish within spirit) (2026-06-15)
+- Small, high-signal product-shaped polish to make the "carry the fire" escalation afterglow (from p6) legible and juicy in the failure state as well as success weaves: the heroic payoff of clearing both Maw passes is now visible even when the sky takes you.
+  - Added #carry-bank note in crash overlay (styled like session bests): "CARRIED +N • THE FIRE REACHES THE CREW" when bank triggers. JS computes banked, shows the div, sets span; hidden on reset/restart/crash entry. Crash burst now tints some particles gold when banking (immediate visual feedback).
+  - In drawDragon: when carrying, a subtle low-alpha gold radial aura ellipse behind the body silhouette (eased flicker via sin, low 0.07-0.1, positioned on core). Sells "the dragon carries warmth earned at cost" without cluttering the mythic weight or adding draw budget. Wake already gold-tinted on carry.
+  - Hook/reset/hide paths kept safe; no new audio (gate), no perf impact (one cheap gradient only during short ~8s window).
+- Browser runtime verification (real Chromium headless + instrument):
+  - Fresh `current-idle.png` (233.6kB) captured on real index.html ready first screen (playable gauntlet, living sky + dragon + prompt + graze chance). Entrypoint direct.
+  - Instrumented /tmp/p7-verify.html (copy + injected auto startRun + maw1/2 clear + carry set + weave hazard near + force crash-while-carry + multiple updateWorld/render pumps): exercised new carry-bank path (incl. gold burst + DOM note), aura draw path, reset hide, full prior maw/carry/weave. **Zero game errors, no TypeError/non-finite/uncaught** (CONSOLE captured P7-VERIFY logs incl. "SUCCESS no uncaught in carry/maw2/crash-bank/draw paths"; only dbus noise as always).
+  - In-game: crash while carrying hit, embers banked, hook lastState observed.
+- Size: 58.45kB (delta ~0.9kB for DOM note + bank logic + 1 conditional aura gradient + hides). Still <<2MB, 0 external, self-contained, offline.
+- Game Feel + Checklist (delta): now the escalation beat's "price paid, warmth carried" has consequence and reward visible on the crash screen (juicy scoring feedback + visual on dragon during the window). Core verb + two-pass still first 30-60s; input/easing/60fps/touch/audio-gate/size/net all hold from prior. The first screen (ready) unchanged, restart still living.
+- Evidence: current-idle.png refreshed in screenshots/ (first screen = playable game); runtime log from p7 instrument; prior screenshots retained. No blockers.
+- Sign-off: PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) remains the reviewable GitHub PR artifact. Will commit game + screenshot + memory, push only to canonical `factoryx/factory-dragon-crew/work-order-1781501302523-7-9`, add PR comment re-confirming the URL + this pass evidence + full original prompt context (already in body), refresh the durable notes. All Game Feel items satisfied; verification exercised real browser runtime with post-interaction state (carrying + crash bank). Ready for live preview + human review. This addresses the prior-run note about reporting the reviewable PR artifact (re-reported here and in prior evidence commits).
+
+**Current HEAD after local:** (will capture on commit) | 58.45kB | PR artifact: https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical, one PR, full context + evidence).
+

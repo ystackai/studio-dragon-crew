@@ -179,3 +179,14 @@
 - Evidence in `.factoryx/.../screenshots/`: current-idle.png (fresh), p5-play.png, verify-*.png, p4 etc. All tracked on branch.
 - Sign-off: runtime verified for the new carry paths + full prior. Ready to push + PR update. PR#77 is the reviewable artifact.
 
+### Pass 7 — Carry legibility + crash bank callout verification (2026-06-15)
+- Changes: carry-bank DOM note + gold-tinted burst in crash when banking; subtle carry aura gradient in drawDragon; hide in resetWorld. (See WORKLOG for full delta.)
+- Real browser runtime verification (Chromium headless on real index + dedicated instrumented `/tmp/p7-verify.html`):
+  - Idle load + screenshot: clean (no pageerror/SyntaxError/game errors); `current-idle.png` (233.6kB) fresh capture of ready first screen.
+  - Instrumented play/carry/crash path (forced startRun, maw1+2 clears to set carryFireUntil + heroic, pumps update+render, hazard near-miss under carry, explicit crash() while carrying, hook reads): **CONSOLE logged multiple [P7-VERIFY] steps + "SUCCESS no uncaught in carry/maw2/crash-bank/draw paths"**; zero [P7-VERIFY-ERROR], no TypeError, no "non-finite", no createRadial/NaN, no Uncaught from game source (only dbus/gpu noise, same as p0-p6). The sync JS execution of new bank note, gold col choice, aura gradient, and prior guarded paths all completed without throw.
+  - Post "interaction" (instrument): carrying state set, crash hit, embers included bank, hook.lastState.carrying exercised.
+- Size 58.45kB still fine; all prior guards (finite in drawEmber etc) untouched and sufficient for new paths.
+- Checklist: hit/score feedback now includes carry bank callout + gold burst on the crash screen (escalation payoff legible in defeat); dragon visually carries aura during window. All other Game Feel items hold (core verb first 30s, <100ms, easing, audio gate, touch/kb/pointer, 60fps lightweight, <2MB, no net, no placeholders, restart living).
+- Evidence artifacts: current-idle.png updated in work order screenshots/; p7 instrument log (via CONSOLE in chromium run) confirms clean runtime for the new scoring/carry visual paths. Prior verify-*.png + p*-play retained.
+- Sign-off: verification executed in real browser runtime (pageerror/console/request clean; in-game state + crash bank + carrying exercised post "gesture" in instrument). No blockers. PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) is the reviewable PR artifact with full FactoryX Work Order Context (original prompt) in body + this + prior evidence. Direct preview entrypoint unchanged.
+

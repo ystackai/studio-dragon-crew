@@ -72,3 +72,11 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Live preview will show: reach second Maw, clear it, see gold carry motes + status, weave for +1 carry embers, or crash and note banked embers in score; restart to living sky. All Game Feel + verification requirements maintained.
 - No known preview issues. Direct entrypoint unchanged.
 
+### Pass 7 Evidence (2026-06-15, carry legibility polish)
+- Real `games/92-emberflight-gauntlet/index.html` (58.45kB) + chromium --screenshot produced fresh `current-idle.png` (233.6kB) showing the ready first screen (playable gauntlet with dragon silhouette + rider, seeded hazards/embers/graze, HUD, prompt). Entrypoint `games/92-emberflight-gauntlet/index.html` direct, no appended content, no homepage mutation.
+- Instrumented runtime verify (`/tmp/p7-verify.html`) exercised the new carry aura (drawDragon), carry-bank scoring note + gold burst (in crash while carrying), reset hides, under headless Chromium: clean (CONSOLE [P7-VERIFY] success "no uncaught in carry/maw2/crash-bank/draw paths"; zero game errors or non-finite).
+- Screenshots: current-idle.png refreshed (first screen evidence); prior p*-play + verify-idle/play retained for comparison in branch tree.
+- Live preview will show: the two-pass Maw clear sets carry (gold motes + status + aura on dragon during linger window); on crash, the overlay now surfaces "CARRIED +N • THE FIRE REACHES THE CREW" with gold-tinged burst (makes the escalation payoff and "carry" theme legible in both win and loss). Restart to living first screen.
+- PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive update/comment + evidence; the full original user prompt / FactoryX Work Order Context section remains in the PR body. Same canonical branch and direct preview root.
+- All Game Feel + verification requirements maintained or strengthened (scoring feedback juiced for the carry beat). No known preview issues. Direct entrypoint unchanged.
+
