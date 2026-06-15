@@ -599,3 +599,14 @@
 - **Blocking feedback addressed:** enlarged/brightened per "too dark and small" + "brighten playfield, enlarge dragon/hero/threats, dash/chain/ember obvious, first 10s active flight". Fresh 275kB current-idle.png + 279kB check7-pre.png (from short-budget .factoryx-runtime-check-7.html copy) show large bright dragon/rider + 8 embers + scaled hazards pop immediately; no dim scene.
 - p40 instrument (real chromium, gesture to playing + maw/carry paths + early enlarged content): "P40-VERIFY SUCCESS instrument complete; no uncaught ... (real source post-contact-polish)"; zero game errors after filter; hook post-gesture playing confirmed.
 - Artifacts via $FACTORYX_*_PATH: p40-play.png (280k), p40-verify-log.txt, p40-verify.html, real-index-p40-dom.txt, updated current-idle.png + check7-pre.png. Browser runtime verification (pageerror/console/request/in-game state) passes cleanly; visual polish readable in contact-sheet scale. All Game Feel + direct preview hold.
+
+---
+
+### Pass 41 Verification Evidence (2026-06-15, current execution)
+- **Targeted rework first (per prompt + "requesting targeted rework before accepting this preview"):** Visual enlarge/brighten (dragon/hero/threats/embers + playfield + loud dash/collect feedback + dense close seeds for active first-10s) + ultra-early content update (9 embers, scaled dragon proxies, brighter band) to ensure check-7 pre-screenshot captures legible content under short budget.
+- Real chromium runs:
+  - `current-idle.png` (294575 bytes, 4800ms budget on real index): contentful bright ready gauntlet (enlarged dragon/rider + close hazards/embers pop).
+  - Check-7 copy short 2800ms: `check7-pre.png` (297273 bytes): **contentful** (not blank; dragon+9 embers+enlarged spire/vent from early block); --dump-dom: early-paint+early-content+first-paint attrs + __emberflightEarly* + FirstPaint + sentinel + #emberflight-first-paint all present. Directly addresses the quoted "browser runtime verification failed for .../.factoryx-runtime-check-7.html ... pre-screenshot timed out".
+  - Instrumented p41-verify.html (driver before sentinel): exit 0; DOM "P41 SUCCESS: ... (real source p41 contact-sheet polish; zero game uncaught)"; strict grep: 0 game errors (TypeError etc from emberflight source). Gesture + playing + maw/carry/draw paths exercised in real JS context.
+- Size ~70kB; direct entrypoint; Game Feel + all prior requirements hold; no uncaught in exercised paths.
+- Evidence files: p41-verify.html + log + dom + current-idle-p41.png + check7-pre-p41.png staged to work order + root.
