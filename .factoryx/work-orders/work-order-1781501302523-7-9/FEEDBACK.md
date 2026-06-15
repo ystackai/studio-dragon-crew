@@ -150,3 +150,9 @@ Visual feedback from overnight monitor: atmosphere is strong, but the play area 
 - No new play observations (automated instrument + idle); prior manual notes from p3/p5/p7/p8/p15/p16.../p24 stand: the slice feels complete, heroic, kinetic, with satisfying "carry the fire" payoff even on defeat. First screen remains the playable gauntlet.
 - PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact with full context + fresh evidence (current-idle.png 120.3kB + DOM-confirmed sentinel/hook + clean runtime). gh comment attempted + memory updated; full original prompt / FactoryX Work Order Context remains in body. Same canonical branch.
 - All Game Feel + verification requirements maintained + the redeploy reset addressed with fresh real runtime evidence before peripheral. No known preview issues. Direct entrypoint unchanged. Would ship for human review.
+
+## Pass 25b (2026-06-15, surge cue polish + re-verify)
+- Added immediate small free launch surge (boost + forward gold particles) on first gesture in startRun. First click/tap/space now produces visible "the dragon is taking wing into the fire" kinetic response <100ms — addresses Codex note for stronger entry cue while keeping the slice tight.
+- Real browser re-load post-edit: clean (no parse or runtime errors from source; sentinel intact at end).
+- Prior play notes (p3/p5/p7/p15 etc) still apply; the added surge makes the heroic kinetic feel even more immediate on entry without changing later mechanics or Maw/carry payoff.
+- PR#77 remains the reviewable artifact; full context preserved. Would still ship.

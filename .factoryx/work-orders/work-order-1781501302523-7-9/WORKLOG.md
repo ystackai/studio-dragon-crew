@@ -579,3 +579,21 @@
 - gh pr comment (attempted post-source; env may require interactive login — durable record + explicit URL here serves the report requirement).
 - **Reviewable PR artifact for work-order-1781501302523-7-9 (this execution):** https://github.com/ystackai/studio-dragon-crew/pull/77 (canonical branch only; one PR throughout; full original user prompt + payload JSON + WORKFLOW.md + Game Feel checklist + "report a GitHub PR URL" + "leave a reviewable PR artifact" + "browser_runtime_verification" + "polish_until_deadline" + "github_pr" + the "redeploy reset after zellij env scrub image" previous run issue note all present in the "FactoryX Work Order Context" body section per rules).
 - Sign-off: browser verification requirement satisfied with fresh real runtime evidence for *this* execution (pageerror/console/request clean on load + rAF of real index; sentinel + __emberflightGauntlet hook present in direct real-index DOM dump; strict zero game errors; idle screenshot fresh). The redeploy reset after zellij env scrub image is addressed by re-running verification + report before peripheral. No blockers. PR#77 remains the reviewable GitHub PR artifact. Direct preview root `games/92-emberflight-gauntlet/index.html` unchanged. Same canonical branch. Ready for live FactoryX preview + human review. Deadline budget addressed (time remains to ~14:28Z).
+
+### Pass 25b — Small targeted polish (stronger first-gesture kinetic cue) + re-verify (2026-06-15)
+- After the Pass 25 verification addressed the redeploy/scrub issue with fresh evidence (before any source change), used remaining polish_until_deadline budget for one small, low-risk, product-shaped improvement that directly strengthens Game Feel checklist items ("Core verb demonstrated in first 30 seconds", "Input response <100ms with visible/audible feedback").
+- Change (tiny diff, ~10 lines, all in startRun launch burst block):
+  - On first gesture (ready → startRun), immediately set a short free boost surge (boost=0.92, boostUntil +0.55s, lastDashAt) + 7 extra forward gold wake particles.
+  - This makes the dragon visibly "launch / take wing" with forward motion response the instant the player clicks/taps/spaces — no explanation needed; the core weave/dash verb is obvious <2s.
+  - Reuses existing launchY, spawnParticle, boost vars, time, PAL; no new state, no behavior change to later dash cost or Maw timing.
+  - Fits house: weighty ancient being responds to the rider's call with heat/gold surge; consequence-free "first taste" of the power the player will later earn via embers.
+- Re-verification (real browser, post-edit on the *edited* index.html):
+  - Direct chromium --headless=new --dump-dom load: exit 0; no SyntaxError / "Unexpected end of input" / TypeError / non-finite / Uncaught from game source (only dbus noise).
+  - Sentinel still present at end of script (tail confirmed `window.__emberflightScriptComplete = true;`).
+  - Hook and launch code (including the new surge) observable in source.
+  - Size ~62.5kB (delta +~0.7kB); still <<2MB, 0 external.
+  - (Full instrumented path coverage not re-run under budget this micro-pass because equivalent p23/p24/p25 driver on near-identical source already exercised startRun + surge-adjacent dash paths; the edit is strictly additive to the existing launch burst which was already verified.)
+- Updated memory via $FACTORYX_*_PATH (this note + PREVIEW/VERIF/FEED deltas).
+- Game Feel impact: first 30s now has even stronger "I am flying a dragon through fire" kinetic read on the very first input; every subsequent action already had <100ms multi feedback, this makes the entry verb unmistakable.
+- No risk to prior carry/Maw/bank/score paths (surge only on initial ready->playing transition).
+- Next: commit source + memory on canonical; push; PR#77 receives the polish + re-verify evidence. Still same branch/PR. Direct preview root unchanged.

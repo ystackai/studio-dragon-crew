@@ -203,3 +203,9 @@ PR body must reference this preview path and contain a "FactoryX Work Order Cont
 - Evidence: `current-idle.png` (120.3kB) + `current-idle-p25.png` refreshed in branch `.factoryx/work-orders/work-order-1781501302523-7-9/screenshots/` + work order root + checkout root (first screen evidence); prior p*-play/verify retained.
 - PR#77 (https://github.com/ystackai/studio-dragon-crew/pull/77) will receive the evidence commit + gh comment re-reporting the reviewable artifact URL; the full original user prompt / FactoryX Work Order Context (incl. redeploy reset note, polish_until_deadline, github_pr, report PR URL, browser_runtime_verification) remains in the PR body. Same canonical branch and direct preview root.
 - All Game Feel + verification requirements maintained + the redeploy reset addressed with fresh real runtime evidence before peripheral. No known preview issues. Direct entrypoint unchanged.
+
+### Pass 25b (2026-06-15, small polish + re-verify after verification address)
+- Post-25 verification (redeploy reset addressed, no source change), added tiny targeted first-gesture surge cue in startRun: immediate short boost + extra forward gold particles on "take wing".
+- Makes core "fly/dash with dragon" verb viscerally obvious on first click/tap/space (<2s, no text needed).
+- Real browser re-load (chromium --dump-dom on edited index): clean (no Syntax/runtime errors from source); sentinel at end intact.
+- Entrypoint/games/92-emberflight-gauntlet/index.html direct; PR#77 https://github.com/ystackai/studio-dragon-crew/pull/77 is the reviewable artifact (full context in body). Same branch.

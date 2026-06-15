@@ -604,6 +604,17 @@
     }
     flash = Math.max(flash, 0.16);
     shake = Math.max(shake, 2.5);
+    // Stronger first-interaction kinetic cue (per Codex feedback + Game Feel): immediate small free surge on "take wing".
+    // Gives perceptible forward response <100ms so new player feels the dragon *launch* into the gauntlet on first gesture.
+    boost = Math.max(boost, 0.92);
+    boostUntil = time + 0.55;
+    lastDashAt = time;
+    // Extra forward wake particles for visible "we are moving now" (reuses launchY from burst block).
+    for (let i=0; i<7; i++) {
+      spawnParticle(W*0.18 + (Math.random()-0.5)*12, launchY + (Math.random()-0.5)*18,
+        -3.8 - Math.random()*1.1, (Math.random()-0.5)*0.9,
+        0.28 + Math.random()*0.18, 1.1 + Math.random()*0.5, PAL.gold);
+    }
   }
 
   function crash() {
