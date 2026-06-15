@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Emberflight Gauntlet • Dragon Crew</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#05070a;color:#e8d9c2;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#hud{position:fixed;top:12px;left:12px;right:12px;z-index:5;display:flex;justify-content:space-between;pointer-events:none;font-size:13px;letter-spacing:.5px}
+#hud .left,#hud .right{background:rgba(5,7,10,0.55);padding:4px 10px;border:1px solid rgba(232,217,194,0.15);border-radius:6px}
+#hud .score{font-weight:600;color:#f5c16c}
+#hud .combo{color:#ff9f5a}
+#hud .stat{opacity:.75;margin-left:8px}
+#start,#end{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:10;background:linear-gradient(180deg,rgba(5,7,10,0.92),rgba(5,7,10,0.96));transition:opacity .6s ease}
+#start.hidden,#end.hidden{opacity:0;pointer-events:none}
+#start h1{font-size:clamp(28px,7vw,52px);font-weight:300;letter-spacing:3px;color:#f5c16c;margin-bottom:6px}
+#start p,#end p{max-width:420px;text-align:center;opacity:.75;line-height:1.45;margin:8px 0 18px;font-size:14px}
+#start .cta,#end .cta{margin-top:6px;padding:14px 42px;border:1px solid rgba(245,193,108,0.4);background:rgba(245,193,108,0.06);color:#e8d9c2;font-size:15px;border-radius:999px;cursor:pointer;letter-spacing:1px;transition:all .2s}
+#start .cta:hover,#end .cta:hover{background:rgba(245,193,108,0.18);border-color:rgba(245,193,108,0.7)}
+#mute{position:fixed;bottom:14px;right:14px;z-index:6;padding:6px 10px;border:1px solid rgba(232,217,194,0.2);background:rgba(5,7,10,0.6);color:#e8d9c2;font-size:11px;border-radius:4px;cursor:pointer;user-select:none}
+#mute.muted{opacity:.5}
+#legend{position:fixed;bottom:14px;left:14px;z-index:6;font-size:10px;opacity:.35;letter-spacing:1px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div class="left"><span class="score" id="score">00000</span><span class="stat" id="dist">0m</span></div>
+  <div class="right"><span id="combo">×1</span><span class="stat" id="rescued">0 rescued</span></div>
+</div>
+<div id="start">
+  <h1>EMBERFLIGHT GAUNTLET</h1>
+  <p>Weave the burning sky. Dash through embers. Rescue the crew. Face the Sovereign.</p>
+  <button id="start-btn" class="cta">CLICK OR TAP TO TAKE WING</button>
+</div>
+<div id="end" class="hidden">
+  <h2 id="end-title" style="font-weight:300;letter-spacing:2px;font-size:26px;color:#f5c16c;margin-bottom:4px"></h2>
+  <p id="end-sub"></p>
+  <div id="end-stats" style="font-size:12px;opacity:.7;margin:4px 0 16px;line-height:1.6"></div>
+  <button id="retry-btn" class="cta">FLY AGAIN</button>
+</div>
+<div id="mute">AUDIO</div>
+<div id="legend">DRAG TO WEAVE • TAP / SPACE TO DASH • M TO MUTE • R TO RESTART</div>
+<script>
+// Emberflight Gauntlet — Dragon Crew
+// Single-file, self-contained, gesture-audio, responsive 2D canvas action game.
+// House style: weight, temperature, consequence, ember trails, ancient presence.
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d', { alpha: true });
+let W = 0, H = 0, DPR = 1;
+let last = 0, running = false, paused = false;
+let mode = 'ready'; // ready | flying | crashed | victory
+let shake = 0, flash = 0, flashColor = '#ff9f5a';
+
+const COLORS = {
+  bg: '#05070a',
+  skyTop: '#0a0c12',
+  skyMid: '#120e0a',
+  ember: '#ff9f5a',
+  gold: '#f5c16c',
+  copper: '#c46a2f',
+  rock: '#2a2520',
+  rockEdge: '#3f3730',
+  smoke: '#3a2f2a',
+  crew: '#a38a6b',
+  boss: '#1a1614',
+  bossEmber: '#ff6a2a'
+};
+
+let player = { x: 0, y: 0, vy: 0, targetY: 0, tilt: 0, boost: 0, boostT: 0 };
+let world = { scroll: 0, speed: 82, baseSpeed: 82 };
+let score = 0, best = 0, combo = 0, comboT = 0, rescued = 0, distance = 0;
+let embers = [], hazards = [], allies = [], particles = [], boss = null;
+let chainWindow = 1.35, lastCollectT = 0;
+let input = { dy: 0, dashPending: false };
+let t = 0, nextSpawn = 0, bossTimer = 0, sessionBest = 0;
+
+const MAX_PART = 170;
+let audioReady = false, muted = false;
+
+// ---------- Audio (gesture only, procedural, fire-tempered) ----------
+const Audio = (() => {
+  let ac = null, master = null, bedGain = null, sfxGain = null;
+  let drone = [], wind = null, windF = null;
+  let initDone = false;
+  function init() {
+    if (initDone) return;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = muted ? 0 : 0.82;
+    bedGain = ac.createGain(); bedGain.gain.value = 0.32;
+    sfxGain = ac.createGain(); sfxGain.gain.value = 0.9;
+    const comp = ac.createDynamicsCompressor();
+    bedGain.connect(master); sfxGain.connect(master); master.connect(comp); comp.connect(ac.destination);
+
+    // warm detuned drone bed (fire canyon)
+    const freqs = [138.6, 155.6, 185.0, 220.0, 277.2];
+    drone = freqs.map((f, i) => {
+      const o = ac.createOscillator(); o.type = (i % 2 === 0) ? 'sine' : 'triangle'; o.frequency.value = f * (0.996 + (i % 3) * 0.002);
+      const g = ac.createGain(); g.gain.value = 0.022 + (i < 2 ? 0.01 : 0);
+      const lfo = ac.createOscillator(); lfo.frequency.value = 0.11 + i * 0.013;
+      const lg = ac.createGain(); lg.gain.value = 2.6;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start();
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 920 + i * 40;
+      o.connect(g); g.connect(lp); lp.connect(bedGain); o.start();
+      return { o, g, lfo };
+    });
+
+    // wind layer
+    wind = ac.createBufferSource();
+    const len = ac.sampleRate * 3.2;
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) * 0.6;
+    wind.buffer = buf; wind.loop = true;
+    windF = ac.createBiquadFilter(); windF.type = 'bandpass'; windF.frequency.value = 420; windF.Q.value = 0.6;
+    const wg = ac.createGain(); wg.gain.value = 0.018;
+    wind.connect(windF); windF.connect(wg); wg.connect(bedGain);
+    wind.start();
+
+    initDone = true;
+  }
+  function setMaster(v) { if (master) master.gain.value = muted ? 0 : v; }
+  function setMute(m) { muted = m; if (master) master.gain.value = muted ? 0 : 0.82; }
+  function playWhoosh(strong = false) {
+    if (!ac) return;
+    const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = strong ? 68 : 92;
+    const n = ac.createBufferSource(); const bl = ac.sampleRate * 0.7;
+    const nb = ac.createBuffer(1, bl, ac.sampleRate);
+    const nd = nb.getChannelData(0); for (let i = 0; i < bl; i++) nd[i] = Math.random() * 2 - 1;
+    n.buffer = nb;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = strong ? 520 : 780; bp.Q.value = 1.4;
+    const g = ac.createGain(); g.gain.value = strong ? 0.55 : 0.32;
+    g.gain.linearRampToValueAtTime(0.0001, ac.currentTime + (strong ? 0.85 : 0.48));
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = strong ? 1400 : 2100;
+    o.connect(bp); n.connect(bp); bp.connect(lp); lp.connect(g); g.connect(sfxGain);
+    o.start(); n.start(); o.stop(ac.currentTime + 0.9); n.stop(ac.currentTime + 0.9);
+  }
+  function playEmberChime(mult = 1) {
+    if (!ac) return;
+    const f = 620 + (mult - 1) * 38;
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    const g = ac.createGain(); g.gain.value = 0.16 * Math.min(1.6, mult * 0.6);
+    g.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.6);
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
+    o.connect(hp); hp.connect(g); g.connect(sfxGain); o.start(); o.stop(ac.currentTime + 0.7);
+    if (mult > 2) {
+      const o2 = ac.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f * 1.5;
+      const g2 = ac.createGain(); g2.gain.value = 0.08; g2.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.5);
+      o2.connect(g2); g2.connect(sfxGain); o2.start(); o2.stop(ac.currentTime + 0.55);
+    }
+  }
+  function playRescue() {
+    if (!ac) return;
+    const now = ac.currentTime;
+    [420, 560, 710].forEach((f, i) => {
+      const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ac.createGain(); g.gain.value = 0.12; g.gain.linearRampToValueAtTime(0.0001, now + 0.9 + i * 0.06);
+      o.connect(g); g.connect(sfxGain); o.start(now + i * 0.03); o.stop(now + 1.1);
+    });
+  }
+  function playCrash() {
+    if (!ac) return;
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = 48;
+    const g = ac.createGain(); g.gain.value = 0.7; g.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 1.1);
+    const n = ac.createBufferSource(); const bl = ac.sampleRate * 1.0;
+    const nb = ac.createBuffer(1, bl, ac.sampleRate); const nd = nb.getChannelData(0);
+    for (let i = 0; i < bl; i++) nd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bl, 1.8);
+    n.buffer = nb;
+    const bp = ac.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 420;
+    o.connect(bp); n.connect(bp); bp.connect(g); g.connect(sfxGain);
+    o.start(); n.start(); o.stop(ac.currentTime + 1.2); n.stop(ac.currentTime + 1.2);
+  }
+  function playVent(vol = 0.4) {
+    if (!ac) return;
+    const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 58;
+    const g = ac.createGain(); g.gain.value = vol; g.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.7);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 260; bp.Q.value = 2.2;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 980;
+    o.connect(bp); bp.connect(lp); lp.connect(g); g.connect(sfxGain);
+    o.start(); o.stop(ac.currentTime + 0.75);
+  }
+  function playShatter() {
+    if (!ac) return;
+    const now = ac.currentTime;
+    for (let k = 0; k < 5; k++) {
+      const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = 180 + k * 37;
+      const g = ac.createGain(); g.gain.value = 0.22 - k * 0.02;
+      g.gain.linearRampToValueAtTime(0.0001, now + 1.6 + k * 0.04);
+      o.connect(g); g.connect(sfxGain); o.start(now + k * 0.02); o.stop(now + 1.9);
+    }
+    // noise tail
+    const n = ac.createBufferSource(); const bl = ac.sampleRate * 1.8;
+    const nb = ac.createBuffer(1, bl, ac.sampleRate); const nd = nb.getChannelData(0);
+    for (let i = 0; i < bl; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / bl) * 0.8;
+    n.buffer = nb;
+    const g = ac.createGain(); g.gain.value = 0.35; g.gain.linearRampToValueAtTime(0.0001, now + 1.8);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 820; bp.Q.value = 0.9;
+    n.connect(bp); bp.connect(g); g.connect(sfxGain); n.start(now); n.stop(now + 1.9);
+  }
+  return { init, playWhoosh, playEmberChime, playRescue, playCrash, playVent, playShatter, setMute, setMaster };
+})();
+
+// ---------- Particles ----------
+class P {
+  constructor(x, y, vx, vy, life, kind) {
+    this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.life = life; this.kind = kind; this.age = 0;
+  }
+  step(dt) {
+    this.age += dt; this.x += this.vx * dt; this.y += this.vy * dt;
+    this.vx *= 0.985; this.vy *= 0.985; this.vy += 14 * dt; // light gravity
+    this.life -= dt;
+  }
+  draw(c, alphaMul = 1) {
+    const a = Math.max(0.02, (this.life / 1.2) * alphaMul);
+    if (this.kind === 'ember') {
+      c.fillStyle = `rgba(255,159,90,${a})`;
+      c.beginPath(); c.arc(this.x, this.y, 1.8 + Math.sin(this.age * 18) * 0.4, 0, Math.PI * 2); c.fill();
+      c.fillStyle = `rgba(245,193,108,${a * 0.6})`;
+      c.fillRect(this.x - 0.6, this.y - 0.6, 1.2, 1.2);
+    } else if (this.kind === 'smoke') {
+      c.fillStyle = `rgba(58,47,42,${a * 0.7})`;
+      c.beginPath(); c.arc(this.x, this.y, 3.5 + this.age * 1.8, 0, Math.PI * 2); c.fill();
+    } else if (this.kind === 'spark') {
+      c.fillStyle = `rgba(255,240,200,${a})`;
+      c.fillRect(this.x - 0.5, this.y - 0.5, 1, 1);
+    } else if (this.kind === 'glint') {
+      c.fillStyle = `rgba(232,217,194,${a})`;
+      c.fillRect(this.x - 1, this.y - 1, 2, 2);
+    } else {
+      c.fillStyle = `rgba(255,106,42,${a})`;
+      c.beginPath(); c.arc(this.x, this.y, 2.2, 0, Math.PI * 2); c.fill();
+    }
+  }
+}
+function emit(x, y, count, kind, spread = 60, speed = 80) {
+  for (let i = 0; i < count && particles.length < MAX_PART; i++) {
+    const ang = (Math.random() - 0.5) * spread * (Math.PI / 180);
+    const sp = speed * (0.6 + Math.random() * 0.8);
+    particles.push(new P(x, y, Math.cos(ang) * sp, Math.sin(ang) * sp * 0.6 - 20, 0.6 + Math.random() * 0.9, kind));
+  }
+}
+function addScorePop(x, y, val, mult = 1) {
+  // lightweight text particles via special kind
+  particles.push(new P(x, y - 8, (Math.random() - 0.5) * 18, -38 - Math.random() * 12, 0.9, 'pop'));
+  particles[particles.length - 1].val = (mult > 1 ? '+' : '') + val + (mult > 1 ? '×' + mult : '');
+}
+
+// ---------- Input ----------
+function onPointerDown(e) {
+  const rect = canvas.getBoundingClientRect();
+  const cy = (e.clientY - rect.top) / rect.height * H;
+  if (!audioReady) { Audio.init(); audioReady = true; }
+  if (mode === 'ready') {
+    startFlight();
+  } else if (mode === 'flying') {
+    input.dashPending = true;
+    Audio.playWhoosh(true);
+  } else if (mode === 'crashed' || mode === 'victory') {
+    restart();
+  }
+  player.targetY = cy;
+}
+function onPointerMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  const cy = (e.clientY - rect.top) / rect.height * H;
+  if (mode === 'flying') player.targetY = cy;
+}
+function onKey(e) {
+  if (e.key === 'm' || e.key === 'M') { muted = !muted; Audio.setMute(muted); document.getElementById('mute').classList.toggle('muted', muted); return; }
+  if (e.key.toLowerCase() === 'r' && (mode === 'crashed' || mode === 'victory')) { restart(); return; }
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    if (!audioReady) { Audio.init(); audioReady = true; }
+    if (mode === 'ready') startFlight();
+    else if (mode === 'flying') { input.dashPending = true; Audio.playWhoosh(true); }
+    else if (mode === 'crashed' || mode === 'victory') restart();
+  }
+  if (mode === 'flying') {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') input.dy = -1;
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') input.dy = 1;
+  }
+}
+function onKeyUp(e) {
+  if (mode === 'flying' && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'w' || e.key === 's' || e.key === 'W' || e.key === 'S')) input.dy = 0;
+}
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+window.addEventListener('keydown', onKey);
+window.addEventListener('keyup', onKeyUp);
+document.getElementById('start-btn').addEventListener('click', (e) => { e.preventDefault(); if (!audioReady) { Audio.init(); audioReady = true; } startFlight(); });
+document.getElementById('retry-btn').addEventListener('click', (e) => { e.preventDefault(); restart(); });
+document.getElementById('mute').addEventListener('click', () => { muted = !muted; Audio.setMute(muted); document.getElementById('mute').classList.toggle('muted', muted); });
+
+// ---------- Resize & State ----------
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.floor(window.innerWidth * DPR);
+  H = Math.floor(window.innerHeight * DPR);
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  if (!player.x) player.x = Math.floor(W * 0.22);
+  if (!player.y) { player.y = H * 0.48; player.targetY = player.y; }
+}
+window.addEventListener('resize', resize);
+resize();
+
+function resetState(keepBest = true) {
+  player = { x: Math.floor(W * 0.22), y: H * 0.48, vy: 0, targetY: H * 0.48, tilt: 0, boost: 0, boostT: 0 };
+  world = { scroll: 0, speed: 82, baseSpeed: 82 };
+  score = 0; combo = 0; comboT = 0; rescued = 0; distance = 0;
+  embers = []; hazards = []; allies = []; particles = []; boss = null;
+  input = { dy: 0, dashPending: false };
+  t = 0; nextSpawn = 0; bossTimer = 18 + Math.random() * 7;
+  shake = 0; flash = 0;
+  if (!keepBest) sessionBest = 0;
+}
+
+function startFlight() {
+  document.getElementById('start').classList.add('hidden');
+  mode = 'flying';
+  resetState(true);
+  // seed first few
+  for (let i = 0; i < 3; i++) spawnHazard(W + i * 220);
+  for (let i = 0; i < 2; i++) spawnEmber(W + 140 + i * 110, H * (0.35 + Math.random() * 0.3));
+  for (let i = 0; i < 1; i++) spawnAlly(W + 260 + i * 180, H * (0.4 + Math.random() * 0.2));
+  if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
+}
+
+function restart() {
+  document.getElementById('end').classList.add('hidden');
+  mode = 'flying';
+  const prevBest = sessionBest;
+  resetState(true);
+  sessionBest = prevBest;
+  // reseed
+  for (let i = 0; i < 2; i++) spawnHazard(W + i * 190);
+  spawnEmber(W + 120, H * 0.42);
+  spawnAlly(W + 210, H * 0.55);
+  bossTimer = 19 + Math.random() * 6;
+}
+
+function endRun(victory = false) {
+  mode = victory ? 'victory' : 'crashed';
+  if (score > sessionBest) sessionBest = score;
+  const el = document.getElementById('end');
+  document.getElementById('end-title').textContent = victory ? 'SOVEREIGN SHATTERED' : 'THE SKY CLAIMS ITS DUE';
+  document.getElementById('end-sub').textContent = victory
+    ? 'The ember crown yields. The crew remembers.'
+    : 'Weight and heat are honest. One more flight.';
+  const mult = Math.max(1, Math.floor(combo * 0.6) + 1);
+  document.getElementById('end-stats').innerHTML =
+    `Score <b>${score}</b> &nbsp;•&nbsp; Distance <b>${Math.floor(distance)}m</b> &nbsp;•&nbsp; Rescued <b>${rescued}</b><br>` +
+    `Peak chain ×<b>${mult}</b> &nbsp;•&nbsp; Session best <b>${sessionBest}</b>`;
+  el.classList.remove('hidden');
+  Audio.playCrash();
+  shake = Math.max(shake, 14);
+}
+
+// ---------- Spawns ----------
+function spawnHazard(baseX) {
+  const kind = Math.random() < 0.55 ? 'spire' : 'debris';
+  const y = (kind === 'spire') ? (Math.random() < 0.5 ? 60 : H - 70) : H * (0.22 + Math.random() * 0.56);
+  const h = (kind === 'spire') ? 92 + Math.random() * 48 : 18 + Math.random() * 14;
+  hazards.push({ x: baseX + Math.random() * 40, y, kind, h, w: kind === 'spire' ? 22 : 28, phase: Math.random() * Math.PI * 2 });
+}
+function spawnEmber(x, y) {
+  embers.push({ x, y, r: 5.5 + Math.random() * 1.2, phase: Math.random() * Math.PI * 2 });
+}
+function spawnAlly(x, y) {
+  allies.push({ x, y, vy: (Math.random() - 0.5) * 18, phase: Math.random() * 6.28 });
+}
+function triggerBoss() {
+  if (boss) return;
+  boss = { x: W + 140, y: H * 0.5, hp: 3, phase: 0, ventT: [0, 0, 0], ventOpen: [0, 0, 0], flame: [], enter: 0 };
+  emit(boss.x - 30, boss.y, 26, 'smoke', 50, 30);
+}
+
+// ---------- Update ----------
+function update(dt) {
+  t += dt;
+  if (mode !== 'flying') {
+    // still some particles + shake decay
+    for (let i = particles.length - 1; i >= 0; i--) {
+      particles[i].step(dt * 0.6);
+      if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+    shake = Math.max(0, shake - dt * 22);
+    flash = Math.max(0, flash - dt * 1.8);
+    return;
+  }
+
+  // input + dynamics (weighty, eased)
+  const steer = (player.targetY - player.y) * 5.2;
+  player.vy = player.vy * 0.82 + steer * dt * 0.9 + input.dy * 120 * dt;
+  player.y += player.vy * dt;
+  player.tilt = player.vy * 0.018; // ~ +/- 0.6 rad max
+  player.y = Math.max(42, Math.min(H - 42, player.y));
+
+  // dash / boost
+  let boosted = false;
+  if (input.dashPending && player.boostT <= 0.05) {
+    player.boost = 1; player.boostT = 0.82;
+    world.speed = world.baseSpeed * 1.7;
+    emit(player.x + 18, player.y + 2, 11, 'spark', 28, 160);
+    emit(player.x - 6, player.y, 7, 'smoke', 36, 40);
+    input.dashPending = false;
+    boosted = true;
+  }
+  if (player.boostT > 0) {
+    player.boostT -= dt;
+    if (player.boostT <= 0) { player.boost = 0; world.speed = world.baseSpeed; }
+    else {
+      player.boost = Math.max(0.4, player.boostT / 0.82);
+      world.speed = world.baseSpeed * (1 + 0.65 * player.boost);
+    }
+    boosted = true;
+  }
+
+  // world advance + distance
+  const spd = world.speed;
+  world.scroll += spd * dt;
+  distance += spd * dt * 0.028;
+
+  // combo decay
+  if (comboT > 0) comboT -= dt;
+  if (comboT <= 0 && combo > 0) { combo = 0; }
+
+  // spawn cadence (alive canyon)
+  nextSpawn -= spd * dt * 0.018;
+  if (nextSpawn <= 0) {
+    nextSpawn = 46 + Math.random() * 22;
+    if (Math.random() < 0.82) spawnHazard(W + 18);
+    if (Math.random() < 0.64) spawnEmber(W + 60 + Math.random() * 70, H * (0.28 + Math.random() * 0.44));
+    if (Math.random() < 0.18) spawnAlly(W + 90, H * (0.32 + Math.random() * 0.36));
+  }
+
+  // hazards scroll + cull
+  for (let i = hazards.length - 1; i >= 0; i--) {
+    const hz = hazards[i];
+    hz.x -= spd * dt;
+    hz.phase += dt * 3.2;
+    if (hz.x < -40) hazards.splice(i, 1);
+  }
+  // embers
+  for (let i = embers.length - 1; i >= 0; i--) {
+    const e = embers[i];
+    e.x -= spd * dt * (0.96 + Math.sin(e.phase) * 0.03);
+    e.phase += dt * 4.8;
+    if (e.x < -10) embers.splice(i, 1);
+  }
+  // allies (gentle bob)
+  for (let i = allies.length - 1; i >= 0; i--) {
+    const a = allies[i];
+    a.x -= spd * dt * 0.94;
+    a.y += a.vy * dt * 0.6;
+    a.phase += dt * 2.2;
+    if (a.x < -10) allies.splice(i, 1);
+  }
+
+  // boss
+  if (!boss && t > bossTimer) triggerBoss();
+  if (boss) {
+    boss.enter = Math.min(1, boss.enter + dt * 0.7);
+    const targetX = W * 0.62 + Math.sin(t * 0.7) * 18;
+    boss.x = boss.x * 0.94 + targetX * 0.06;
+    boss.y = boss.y * 0.96 + (player.y * 0.4 + H * 0.32) * 0.04 + Math.sin(t * 0.4) * 6;
+    boss.phase += dt * 1.6;
+
+    // vent timing & flame
+    for (let v = 0; v < 3; v++) {
+      boss.ventT[v] += dt * (1.1 + v * 0.2);
+      const open = (Math.sin(boss.ventT[v] * 1.6 + v) > 0.2) ? 1 : 0;
+      boss.ventOpen[v] = open;
+      if (open && Math.random() < 0.12) {
+        // emit flame zone particle toward player-ish
+        const vyOff = (player.y - boss.y) * (0.4 + 0.3 * v);
+        for (let k = 0; k < 2; k++) {
+          const px = boss.x - 36 + v * 11;
+          const py = boss.y - 22 + v * 22 + (v === 1 ? 6 : 0);
+          particles.push(new P(px, py, -92 - Math.random() * 30, vyOff * (0.6 + Math.random() * 0.5) + (Math.random() - 0.5) * 30, 0.7 + Math.random() * 0.4, 'flame'));
+        }
+      }
+    }
+
+    // flame hazards move & cull
+    for (let i = boss.flame.length - 1; i >= 0; i--) {
+      const f = boss.flame[i];
+      f.x -= (spd * 0.7 + 26) * dt;
+      f.life -= dt;
+      if (f.life <= 0 || f.x < -20) boss.flame.splice(i, 1);
+    }
+
+    // strike check (dash close when vent open)
+    if (player.boost > 0.3) {
+      for (let v = 0; v < 3; v++) if (boss.ventOpen[v]) {
+        const vx = boss.x - 38 + v * 11;
+        const vy = boss.y - 18 + v * 22;
+        const dx = player.x - vx, dy = player.y - vy;
+        if (dx * dx + dy * dy < 42 * 42) {
+          // strike!
+          boss.hp--;
+          emit(vx, vy, 22, 'spark', 70, 120);
+          emit(vx - 10, vy, 9, 'smoke', 40, 50);
+          shake = Math.max(shake, 9 + boss.hp);
+          flash = 0.55; flashColor = '#ff6a2a';
+          Audio.playVent(0.55);
+          score += 140 * Math.max(1, combo);
+          if (boss.hp <= 0) {
+            // shatter
+            for (let k = 0; k < 5; k++) emit(boss.x - 10 + k * 7, boss.y - 18 + k * 9, 16, 'ember', 120, 110);
+            for (let k = 0; k < 3; k++) spawnAlly(boss.x + 30, boss.y + (k - 1) * 28);
+            Audio.playShatter();
+            score += 620;
+            const b = boss; boss = null;
+            endRun(true);
+            return;
+          }
+          // boss flinch
+          boss.x += 11;
+          break;
+        }
+      }
+    }
+
+    // collision with flame zones or body
+    for (let i = 0; i < boss.flame.length; i++) {
+      const f = boss.flame[i];
+      const dx = player.x - f.x, dy = player.y - f.y;
+      if (dx * dx + dy * dy < 18 * 18) { hitHazard(); return; }
+    }
+    // body clip
+    const bx = boss.x - 18, by = boss.y;
+    const dx = player.x - bx, dy = player.y - by;
+    if (dx * dx + dy * dy < 46 * 46 && player.boost < 0.5) { hitHazard(); return; }
+  }
+
+  // collision with hazards
+  for (let i = 0; i < hazards.length; i++) {
+    const hz = hazards[i];
+    const px = player.x + 8, py = player.y;
+    let hit = false;
+    if (hz.kind === 'spire') {
+      const top = hz.y < H / 2;
+      const hy = top ? (hz.y + hz.h) : hz.y;
+      if (Math.abs(px - hz.x) < 18 && Math.abs(py - hy) < 13) hit = true;
+    } else {
+      if (Math.abs(px - hz.x) < 16 && Math.abs(py - hz.y) < 13) hit = true;
+    }
+    if (hit) { hitHazard(); return; }
+  }
+
+  // collect embers
+  for (let i = embers.length - 1; i >= 0; i--) {
+    const e = embers[i];
+    const dx = player.x + 6 - e.x, dy = player.y - e.y;
+    if (dx * dx + dy * dy < (14 + e.r) * (14 + e.r)) {
+      embers.splice(i, 1);
+      const mult = Math.max(1, Math.floor(combo * 0.55) + 1);
+      score += Math.floor(11 * mult);
+      combo++; comboT = chainWindow;
+      lastCollectT = t;
+      emit(e.x, e.y, 7, 'ember', 48, 55);
+      addScorePop(e.x, e.y, 11, mult);
+      Audio.playEmberChime(mult);
+      // chain boost?
+      if (combo >= 4 && player.boostT < 0.2) {
+        player.boost = 0.9; player.boostT = 1.1;
+        world.speed = world.baseSpeed * 1.55;
+        emit(player.x - 4, player.y, 8, 'spark', 22, 90);
+      }
+    }
+  }
+
+  // rescue allies (high value + chain)
+  for (let i = allies.length - 1; i >= 0; i--) {
+    const a = allies[i];
+    const dx = player.x + 4 - a.x, dy = player.y - a.y;
+    if (dx * dx + dy * dy < 28 * 28) {
+      allies.splice(i, 1);
+      rescued++;
+      score += 52 * Math.max(1, Math.floor(combo * 0.7) + 1);
+      combo += 2; comboT = chainWindow + 0.4;
+      emit(a.x, a.y, 13, 'glint', 55, 48);
+      emit(a.x - 6, a.y, 5, 'smoke', 30, 22);
+      addScorePop(a.x, a.y, 52, Math.max(1, Math.floor(combo * 0.5)));
+      Audio.playRescue();
+      // rescue grants chain boost
+      if (player.boostT < 0.3) {
+        player.boost = 1; player.boostT = 0.95;
+        world.speed = world.baseSpeed * 1.6;
+      }
+      // small visual crew flies along briefly
+      emit(player.x - 22, player.y + (Math.random() - 0.5) * 10, 4, 'glint', 20, 30);
+    }
+  }
+
+  // wind gusts (subtle push zones)
+  const gustY = H * (0.33 + Math.sin(t * 0.3) * 0.11);
+  if (Math.abs(player.y - gustY) < 48) {
+    player.vy += Math.sin(t * 1.8) * 28 * dt;
+  }
+
+  // particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].step(dt);
+    if (particles[i].life <= 0) particles.splice(i, 1);
+  }
+  // trail embers when boosting or fast
+  if (player.boost > 0.25 || world.speed > world.baseSpeed * 1.2) {
+    if (particles.length < MAX_PART - 2) {
+      particles.push(new P(player.x - 11 + (Math.random() - 0.5) * 3, player.y + (Math.random() - 0.5) * 3, -62 - player.boost * 30, (Math.random() - 0.5) * 18, 0.55, 'ember'));
+    }
+  }
+
+  // scoring (distance + slight)
+  score = Math.max(score, Math.floor(distance * 0.7));
+  if (score > best) best = score;
+
+  // clamp
+  shake = Math.max(0, shake - dt * 19);
+  flash = Math.max(0, flash - dt * 1.6);
+
+  // update HUD
+  document.getElementById('score').textContent = String(score).padStart(5, '0');
+  document.getElementById('dist').textContent = Math.floor(distance) + 'm';
+  const mult = Math.max(1, Math.floor(combo * 0.55) + 1);
+  document.getElementById('combo').textContent = '×' + mult + (player.boost > 0.3 ? ' BOOST' : '');
+  document.getElementById('rescued').textContent = rescued + ' rescued';
+}
+
+function hitHazard() {
+  // consequence
+  combo = 0; comboT = 0;
+  player.vy = (player.vy * 0.3) - 180;
+  player.boost = 0; player.boostT = 0; world.speed = world.baseSpeed * 0.6;
+  emit(player.x + 4, player.y, 18, 'spark', 85, 95);
+  emit(player.x - 8, player.y, 9, 'smoke', 55, 35);
+  shake = Math.max(shake, 11);
+  flash = 0.7; flashColor = '#ff6a2a';
+  setTimeout(() => { if (mode === 'flying') world.speed = world.baseSpeed; }, 240);
+  endRun(false);
+}
+
+// ---------- Draw ----------
+function drawDragon(c, px, py, tilt, flap, boost, tt) {
+  c.save();
+  c.translate(px, py);
+  c.rotate(tilt * 0.7);
+
+  const s = 1.0;
+  const wingFlap = Math.sin(flap) * (0.7 + boost * 0.4);
+  const emberGlow = 0.6 + Math.sin(tt * 9) * 0.4 + boost * 0.5;
+
+  // tail
+  c.strokeStyle = COLORS.rockEdge; c.lineWidth = 3.5 * s;
+  c.beginPath(); c.moveTo(-26 * s, 1); c.quadraticCurveTo(-38 * s, 4 + wingFlap * 2, -52 * s, 2 - wingFlap * 3);
+  c.stroke();
+  c.strokeStyle = COLORS.smoke; c.lineWidth = 1.6 * s;
+  c.beginPath(); c.moveTo(-26 * s, 1); c.quadraticCurveTo(-38 * s, 4 + wingFlap * 2, -52 * s, 2 - wingFlap * 3);
+  c.stroke();
+
+  // body (weighty)
+  c.fillStyle = '#1f1b18';
+  c.beginPath();
+  c.moveTo(-18 * s, -7 * s); c.quadraticCurveTo(6 * s, -11 * s, 22 * s, -3 * s);
+  c.quadraticCurveTo(24 * s, 5 * s, 8 * s, 9 * s); c.quadraticCurveTo(-12 * s, 7 * s, -18 * s, -7 * s);
+  c.fill();
+  // belly glow
+  c.fillStyle = `rgba(255,106,42,${0.18 + emberGlow * 0.11})`;
+  c.beginPath(); c.ellipse(4 * s, 3 * s, 11 * s, 5 * s, 0, 0, Math.PI * 2); c.fill();
+
+  // wing upper
+  c.fillStyle = '#2a2420';
+  c.beginPath();
+  c.moveTo(-4 * s, -6 * s);
+  c.quadraticCurveTo(-2 * s, -26 * s - wingFlap * 11, -18 * s, -19 * s - wingFlap * 7);
+  c.quadraticCurveTo(-24 * s, -8 * s, -4 * s, -6 * s);
+  c.fill();
+  // wing membrane light
+  c.fillStyle = `rgba(196,106,47,${0.22 + boost * 0.25})`;
+  c.beginPath(); c.moveTo(-4 * s, -6 * s); c.quadraticCurveTo(-3 * s, -21 * s - wingFlap * 8, -15 * s, -16 * s - wingFlap * 5); c.fill();
+
+  // wing lower
+  c.fillStyle = '#2a2420';
+  c.beginPath();
+  c.moveTo(-2 * s, 4 * s);
+  c.quadraticCurveTo(1 * s, 22 * s + wingFlap * 7, -14 * s, 16 * s + wingFlap * 4);
+  c.quadraticCurveTo(-18 * s, 6 * s, -2 * s, 4 * s);
+  c.fill();
+
+  // neck + head
+  c.fillStyle = '#1f1b18';
+  c.beginPath(); c.moveTo(12 * s, -4 * s); c.quadraticCurveTo(19 * s, -7 * s, 27 * s, -2 * s); c.quadraticCurveTo(26 * s, 3 * s, 17 * s, 4 * s); c.fill();
+  // head
+  c.beginPath(); c.moveTo(26 * s, -3 * s); c.lineTo(34 * s, -1 * s); c.lineTo(27 * s, 5 * s); c.closePath(); c.fill();
+  // crest
+  c.strokeStyle = COLORS.copper; c.lineWidth = 1.6 * s;
+  c.beginPath(); c.moveTo(28 * s, -4 * s); c.lineTo(31 * s, -11 * s); c.lineTo(34 * s, -4 * s); c.stroke();
+  // eye
+  c.fillStyle = `rgba(255,240,180,${0.95 + Math.sin(tt * 11) * 0.05})`;
+  c.fillRect(29 * s, -1.5 * s, 2.6 * s, 1.8 * s);
+  // ember vents on chest
+  c.fillStyle = `rgba(255,106,42,${0.5 + emberGlow * 0.35})`;
+  c.fillRect(6 * s, -1 * s, 3 * s, 1.6 * s);
+  c.fillRect(10 * s, 1 * s, 2.5 * s, 1.4 * s);
+
+  // flame jet when boosting
+  if (boost > 0.25) {
+    c.fillStyle = `rgba(255,140,60,${0.55 + boost * 0.35})`;
+    c.beginPath(); c.moveTo(34 * s, 1 * s); c.lineTo(48 * s + boost * 12, -1 * s + wingFlap * 2);
+    c.lineTo(46 * s + boost * 9, 2 * s); c.closePath(); c.fill();
+    c.fillStyle = `rgba(245,193,108,${0.35 + boost * 0.25})`;
+    c.beginPath(); c.moveTo(34 * s, 1 * s); c.lineTo(42 * s + boost * 6, 0); c.lineTo(40 * s + boost * 4, 2 * s); c.closePath(); c.fill();
+  }
+
+  c.restore();
+}
+
+function draw() {
+  ctx.save();
+  if (shake > 0.3) {
+    const sx = Math.sin(t * 37) * shake * 0.6;
+    const sy = Math.cos(t * 29) * shake * 0.4;
+    ctx.translate(sx, sy);
+  }
+
+  // sky
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, COLORS.skyTop);
+  g.addColorStop(0.38, COLORS.skyMid);
+  g.addColorStop(1, '#1a120d');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // distant ember haze / god rays
+  ctx.fillStyle = 'rgba(255,159,90,0.035)';
+  for (let i = 0; i < 3; i++) {
+    const ox = ((world.scroll * 0.12 + i * 180) % (W + 220)) - 40;
+    ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox + 110, H); ctx.lineTo(ox + 210, H); ctx.lineTo(ox + 90, 0); ctx.fill();
+  }
+
+  // parallax mid clouds / floating strata
+  ctx.strokeStyle = 'rgba(58,47,42,0.45)'; ctx.lineWidth = 1.5;
+  for (let k = 0; k < 5; k++) {
+    const lx = ((world.scroll * (0.18 + k * 0.02) + k * 97) % (W * 1.6)) - W * 0.3;
+    const ly = 90 + k * 38 + Math.sin(k) * 12;
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 64, ly - 6); ctx.lineTo(lx + 140, ly + 4); ctx.stroke();
+  }
+
+  // near floating basalt islands / spire silhouettes (depth)
+  ctx.fillStyle = COLORS.rock;
+  for (let k = 0; k < 3; k++) {
+    const sx = ((world.scroll * 0.42 + k * 310) % (W + 260)) - 60;
+    const sy = 120 + (k % 2) * (H - 260);
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 38, sy - 14); ctx.lineTo(sx + 72, sy + 7); ctx.lineTo(sx + 31, sy + 19); ctx.closePath(); ctx.fill();
+  }
+
+  // hazards
+  for (const hz of hazards) {
+    const hx = hz.x, hy = hz.y;
+    ctx.fillStyle = COLORS.rock;
+    if (hz.kind === 'spire') {
+      const top = hy < H / 2;
+      ctx.beginPath();
+      if (top) {
+        ctx.moveTo(hx - 7, hy); ctx.lineTo(hx + 8, hy); ctx.lineTo(hx + 3, hy + hz.h); ctx.lineTo(hx - 4, hy + hz.h - 6);
+      } else {
+        ctx.moveTo(hx - 6, hy); ctx.lineTo(hx + 9, hy); ctx.lineTo(hx + 2, hy - hz.h); ctx.lineTo(hx - 5, hy - hz.h + 8);
+      }
+      ctx.closePath(); ctx.fill();
+      // cracks
+      ctx.strokeStyle = 'rgba(255,106,42,0.35)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(hx - 1, hy + (top ? 14 : -hz.h + 11)); ctx.lineTo(hx + 2, hy + (top ? 38 : -hz.h + 33)); ctx.stroke();
+      ctx.strokeStyle = COLORS.rockEdge;
+    } else {
+      ctx.fillRect(hx - hz.w / 2, hy - 4, hz.w, 9);
+      ctx.fillStyle = 'rgba(255,106,42,0.25)';
+      ctx.fillRect(hx - hz.w / 2 + 3, hy - 2, 6, 4);
+    }
+  }
+
+  // embers
+  for (const e of embers) {
+    const ex = e.x, ey = e.y;
+    const p = (Math.sin(e.phase) + 1) * 0.5;
+    ctx.fillStyle = `rgba(255,159,90,${0.55 + p * 0.35})`;
+    ctx.beginPath(); ctx.arc(ex, ey, e.r * (0.8 + p * 0.3), 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(245,193,108,${0.7 + p * 0.3})`;
+    ctx.fillRect(ex - 1.2, ey - 1.2, 2.4, 2.4);
+  }
+
+  // allies (small crew silhouettes)
+  for (const a of allies) {
+    const ax = a.x, ay = a.y + Math.sin(a.phase) * 2.5;
+    ctx.fillStyle = COLORS.crew;
+    // cloak/body
+    ctx.beginPath(); ctx.moveTo(ax - 3, ay - 5); ctx.lineTo(ax + 3, ay - 5); ctx.lineTo(ax + 2, ay + 6); ctx.lineTo(ax - 2, ay + 6); ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillRect(ax - 1.5, ay - 8, 3, 3);
+    // wing stubs / arms
+    ctx.fillStyle = 'rgba(163,138,107,0.6)';
+    ctx.fillRect(ax - 5, ay - 2, 3, 1.5);
+    ctx.fillRect(ax + 2, ay - 2, 3, 1.5);
+    // rescue glow
+    ctx.fillStyle = 'rgba(245,193,108,0.25)';
+    ctx.beginPath(); ctx.arc(ax, ay, 9 + Math.sin(a.phase * 1.7) * 1.5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // boss
+  if (boss && boss.enter > 0.05) {
+    const bx = boss.x, by = boss.y;
+    const bs = 0.7 + boss.enter * 0.3;
+    ctx.save(); ctx.translate(bx, by); ctx.scale(bs, bs);
+    // vast body
+    ctx.fillStyle = COLORS.boss;
+    ctx.beginPath(); ctx.moveTo(-48, -18); ctx.quadraticCurveTo(12, -32, 46, -11); ctx.quadraticCurveTo(48, 14, 8, 19); ctx.quadraticCurveTo(-28, 16, -48, -18); ctx.closePath(); ctx.fill();
+    // rim
+    ctx.strokeStyle = 'rgba(58,47,42,0.7)'; ctx.lineWidth = 3; ctx.stroke();
+    // vents
+    for (let v = 0; v < 3; v++) {
+      const vx = -32 + v * 14, vy = -13 + v * 14;
+      const open = boss.ventOpen[v];
+      ctx.fillStyle = open ? `rgba(255,106,42,${0.7 + Math.sin(boss.phase * 2 + v) * 0.25})` : 'rgba(120,70,30,0.6)';
+      ctx.fillRect(vx - 3, vy - 2, 7, 4 + open * 3);
+      if (open) {
+        ctx.fillStyle = 'rgba(255,180,90,0.5)';
+        ctx.fillRect(vx - 1, vy - 1, 3, 2);
+      }
+    }
+    // ember seams
+    ctx.fillStyle = `rgba(255,106,42,${0.25 + Math.sin(boss.phase * 1.3) * 0.1})`;
+    ctx.fillRect(-18, 2, 28, 2);
+    ctx.restore();
+  }
+
+  // flame zones from boss
+  if (boss) {
+    for (const f of boss.flame) {
+      ctx.fillStyle = `rgba(255,106,42,${0.45 * (f.life / 0.8)})`;
+      ctx.beginPath(); ctx.arc(f.x, f.y, 7 + (0.8 - f.life) * 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // dragon (hero)
+  const flapPhase = t * (5.5 + player.boost * 3.2);
+  drawDragon(ctx, player.x, player.y, player.tilt, flapPhase, player.boost, t);
+
+  // particles (additive-ish for embers)
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of particles) {
+    if (p.kind === 'pop') {
+      ctx.fillStyle = `rgba(245,193,108,${Math.max(0.1, p.life * 0.9)})`;
+      ctx.font = `${10 + (1 - p.life) * 6}px system-ui`;
+      ctx.fillText(p.val || '+', p.x, p.y);
+    } else p.draw(ctx, 1);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  // heat haze lines (cheap)
+  if (player.boost > 0.2 || (boss && boss.enter > 0.6)) {
+    ctx.strokeStyle = 'rgba(255,159,90,0.07)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const hx = player.x + 22 + i * 7 + Math.sin(t * 6 + i) * 2;
+      const hy = player.y - 9 + i * 4;
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 18 + Math.sin(t * 4 + i) * 3, hy + Math.cos(t * 5) * 2); ctx.stroke();
+    }
+  }
+
+  // flash overlay
+  if (flash > 0.02) {
+    ctx.fillStyle = flashColor + Math.floor(flash * 110).toString(16).padStart(2, '0');
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  ctx.restore();
+
+  // subtle vignette
+  const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, Math.min(W, H) * 0.35, W * 0.5, H * 0.5, Math.max(W, H) * 0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+function frame(now) {
+  if (!running || paused) { last = now; requestAnimationFrame(frame); return; }
+  const raw = (now - last) / 1000; last = now;
+  const dt = Math.min(Math.max(raw, 0.0005), 0.085);
+
+  update(dt);
+  draw();
+
+  // idle draw when ready
+  if (mode === 'ready' && !document.getElementById('start').classList.contains('hidden')) {
+    // faint dragon silhouette behind title
+    ctx.save(); ctx.globalAlpha = 0.18;
+    drawDragon(ctx, W * 0.5, H * 0.56, Math.sin(t * 0.6) * 0.06, t * 3.2, 0, t);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+// idle first paint + ready dragon
+function idlePaint() {
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 0.22;
+  drawDragon(ctx, W * 0.5, H * 0.54, 0.02, performance.now() / 280, 0, performance.now() / 1000);
+  ctx.globalAlpha = 1;
+}
+setTimeout(idlePaint, 40);
+
+// boot: show ready, seed a couple particles for life
+setTimeout(() => {
+  if (mode === 'ready') {
+    emit(W * 0.5 - 30, H * 0.54, 6, 'ember', 30, 25);
+  }
+}, 180);
+
+// pause handling
+document.addEventListener('visibilitychange', () => {
+  paused = document.hidden;
+  if (!paused && running && last === 0) last = performance.now();
+});
+window.addEventListener('blur', () => { paused = true; });
+window.addEventListener('focus', () => { paused = false; if (running) last = performance.now(); });
+
+// initial HUD
+document.getElementById('score').textContent = '00000';
+document.getElementById('combo').textContent = '×1';
+document.getElementById('rescued').textContent = '0 rescued';
+
+// expose tiny for debug (not used by game)
+window.__emberflight = { getState: () => ({ mode, score, combo, rescued, boss: !!boss }) };
+</script>
+</body>
+</html>
