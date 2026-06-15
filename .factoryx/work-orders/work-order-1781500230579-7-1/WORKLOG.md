@@ -79,3 +79,18 @@ Inspected PR before changes: gh pr list for head showed none for this exact 1781
 **PR:** (pending first push; will be the canonical one, include `- Work Order: work-order-1781500230579-7-1` + full prompt)
 
 **Last updated:** Pass 1 — 2026-06-15 ~ implementation + local runtime verification complete; ready for commit/push/PR.
+
+**PR created:** https://github.com/ystackai/studio-dragon-crew/pull/76 (canonical for this WO; inspected post-create; no reviews/comments yet at creation time).
+- gh pr view confirmed open, head on our branch.
+- Will update this PR (not create others) with future polish, live screenshots, re-verification output.
+- Per instructions, full prompt + context included in body.
+
+**Post-push actions:** appended PR to logs; uncommitted evidence png in preview/ (from chromium load); status clean after (png can stay local or be added as evidence in next micro).
+
+**Next (polish passes to deadline):** 
+- Re-verify on live FactoryX preview URL (cache-bust + full 60s interact + new screenshots of powered flight/dash/rescue/boss/shatter/crashed+mobile).
+- Minor targeted edits if live feedback or self-play shows (boss telegraph, balance, more juice).
+- Optionally invoke autoreview skill + crew agents for closeout polish.
+- Keep using same branch + this PR.
+
+**Last updated:** 2026-06-15 after push + PR #76 creation + PR inspection.
