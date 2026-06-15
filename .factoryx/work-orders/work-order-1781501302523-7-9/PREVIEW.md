@@ -12,7 +12,8 @@
 ## Current Preview State
 - (Updated after each pass with observations from live deployed preview + local.)
 - Pass 0 (slice): First load (file:// + headless Chromium) renders burning sky + dragon silhouette + idle hazards/embers + HUD + prompt. 41kB self-contained. No runtime fatal errors in 5-8s rAF execution. Screenshots: firstframe.png (ready), play-sim.png (simulated play time). See VERIFICATION.md for full browser evidence.
-- Real live preview (post push/deploy): will exercise actual gesture (tap/click/space) to start flight, collect embers, dash, crash + restart. Will update with live console + state observations + cache-busted screenshots.
+- Pass 1 (TDZ fix + Maw): Re-verified headless clean (no Uncaught/ReferenceError during full render loop + sim). Added Sky Maw serpent as the escalation/boss beat (distance ~780m trigger, undulating weave challenge with clear visual + consequence + reward on clean thread). Screenshots refreshed: firstframe.png, play-maw.png (Maw in motion). ~46.7kB. See VERIFICATION.md.
+- Real live preview (post push/deploy): will exercise actual gesture (tap/click/space) to start flight, collect embers, dash, crash + restart, and reach/beat the Sky Maw. Will update with live console + state observations + cache-busted screenshots.
 - Entrypoint direct: games/92-emberflight-gauntlet/index.html opens the game surface immediately.
 
 ## Evidence Artifacts

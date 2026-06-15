@@ -52,6 +52,21 @@
 
 ## Blockers / Residual
 - List any that must be addressed before review handoff or next push.
+- (Pass 1) Prior TDZ `boosting` fixed before any further polish; re-verified clean.
+
+## Pass 1 — TDZ Fix + Sky Maw Boss + Re-Verification (2026-06-15)
+- Root cause addressed: `const boosting` declaration moved before first read (the boost speed-lines `if (boosting)`) in `render()`. TDZ was the exact error from prior `.factoryx-runtime-check`.
+- Browser runtime re-check (headless Chromium, file:// + http serve variants, virtual-time rAF execution ~5-9s):
+  - No `Uncaught`, `ReferenceError`, `pageerror`, or console.error in game path (only dbus/gpu container noise).
+  - `window.__emberflightGauntlet.getState()` and `.lastState` observable; `maw` flag now included.
+  - Size now ~46.7kB (added boss draw + logic; still <<2MB, zero net).
+- Sky Maw escalation implemented: distance-gated (~780m) large segmented flame serpent sweeps with sin undulation + breathing thickness. Player must weave its body curve (gaps form from the wave); collision = crash. Clean pass awards big combo/ember bonus + float + particles. Visual: heavy silhouette, heat core lines, bright gap vents, head crown. Status HUD updates to "SKY MAW • WEAVE THE GAPS" while active. Dramatic entrance FX (shake/flash/particles).
+- Screenshots refreshed:
+  - `firstframe.png` — ready state, dragon + prompt + seeded hazards/embers.
+  - `play-maw.png` — auto-simulated flight through gauntlet with Maw visible in frame (head + body segments crossing play area).
+- Game Feel deltas: maw adds clear "boss beat" with consequence (precise positioning + timing feels heroic), near-miss flash on body edges, collect/graze still juicy, dash during maw useful for threading speed.
+- Checklist updates: escalation beat now concrete and playable; still no explicit on-screen FPS (motion profile clean in prior + new runs; lightweight draw calls preserved); responsive band + DPR unchanged and functional.
+- No new blockers.
 
 ## Sign-off
 - After verification passes, update PR body with summary + links to evidence. Do not present as healthy until live preview opens cleanly and verification exercised the runtime.

@@ -58,6 +58,19 @@
 - No external: yes.
 - No placeholder/static/menu: first load is the gauntlet sky with live dragon; interaction launches play.
 
+### Pass 1 — Blocker Fix + Sky Maw Boss Beat + Polish Evidence (2026-06-15)
+- Critical: fixed TDZ "Cannot access 'boosting' before initialization" (the exact browser_runtime_verification failure from prior check html run at ~line 1205 in render). Root: polish-added speed lines `if (boosting)` preceded the `const boosting = ...` declaration. Moved declaration immediately after sim updates; removed duplicate later decl. Single source of truth.
+- Re-ran headless Chromium verification (file:// + virtual-time rAF loops, multiple invocations, http-serve variant): zero game JS errors, no ReferenceError/pageerror/console.error on load + full render + idle/play paths. Confirmed with grep on logs.
+- Implemented the required "clear boss/escalation beat": Sky Maw — distance-gated (~780m) large undulating flame-serpent (segmented heavy body + head, sin-wave motion + breathing gap thickness, bright vent lines to read). Weave its curve or crash; clean passage = big ember/combo award + "MAW CHAIN" float + gold particles + HUD flash. Dramatic entry shake/flash. While active, status = "SKY MAW • WEAVE THE GAPS". Fits house: weight, heat, consequence, mythic presence (player is small witness to ancient fire force).
+- Added maw state, update/collision/reward logic, drawMaw (multi-layer stroke for body/heat/gaps/head), hook exposure, reset handling, HUD text reactivity. ~5.5kB delta, still tiny.
+- Evidence: updated firstframe.png + new play-maw.png (captured via headless with temp sim start to show flight + Maw); archived in work order dir. play-sim.png retained from prior.
+- Game feel: input still <100ms direct; all new motion eased via existing dt/phase; hit on Maw = full crash juice (already good); near-miss flash on edges; score feedback on success. Core verb (weave+timed-dash) remains primary, now with a memorable set-piece beat 20-40s in.
+- Updated: VERIFICATION.md (detailed Pass 1), PREVIEW.md, this WORKLOG. TECHNICAL_SYSTEM_DESIGN.md still reflects the intent (now realized).
+- Size: 46.7kB. All checklist items from Pass 0 carried; escalation now concrete. No new audio (post-gesture gate preserved). No external.
+- Next: commit on canonical, push, update PR#77 body (include full prompt + current evidence + status), re-inspect for reviews/comments, continue small juice if time before deadline. Same branch/PR throughout.
+
+**Current Status:** TDZ blocker resolved + Sky Maw added for full goal scope. Playable first screen + heroic kinetic loop + escalation beat verified in real browser runtime. Ready for push + PR update + live preview confirmation. Polish continues to deadline.
+
 ---
 
 *(Historical context from prior WO on same factory carried in main .factoryx/WORKLOG.md; this WO is fresh creative_game for Emberflight action title.)*
