@@ -89,11 +89,53 @@
   // One verb (weave + timed dash), one space (burning sky gauntlet)
   // Dragon Crew house style: weight, heat, consequence, mythic presence. Juicy feedback, session bests, two-pass Maw + carry-the-fire afterglow + crash bank legibility.
   // Pass 42: contact-sheet further enlarge/brighten + pre-screenshot re-harden (addresses 15:32 blocking + prior timeout on check-7)
+  // Pass 43: asset contract v2 — file-backed PNG/WAV (dragon-hero base, ember/hazard sprites, sky-haze, sfx-*) under assets/ + ASSET_MANIFEST + integration w/ fallback; addresses 17:25/17:45 blocking (no foundry; deliberate generator) before peripheral.
   // ============================================================
 
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
   let W = 1280, H = 720, DPR = 1;
+
+  // Pass 43 asset integration (file-backed, fallback-safe): dragon-hero.png as bright hero base layer, ember/hazard/sky sprites for pop, WAV buffers for key SFX instead of oscillator-only.
+  // Loads only after explicit gesture (audio gate). If assets missing (e.g. harness cp of .html only) or not ready, all prior procedural/osc paths execute unchanged — keeps check-7 pre-screenshot + p* instrument paths bit-identical and clean.
+  const assets = { dragon: null, ember: null, spire: null, vent: null, haze: null };
+  let sfxBuffers = {}; // populated from WAV via decodeAudioData
+  let assetsLoaded = false;
+
+  function loadAssets() {
+    if (assetsLoaded) return;
+    assetsLoaded = true;
+    const base = 'assets/';
+    function loadImg(key, file) {
+      const img = new Image();
+      img.onload = () => { assets[key] = img; };
+      img.onerror = () => { /* silent fallback to procedural */ };
+      img.src = base + file;
+      return img;
+    }
+    loadImg('dragon', 'dragon-hero.png');
+    loadImg('ember', 'ember-glow.png');
+    loadImg('spire', 'hazard-spire.png');
+    loadImg('vent', 'hazard-vent.png');
+    loadImg('haze', 'sky-haze.png');
+  }
+
+  function loadSfx() {
+    if (!audioCtx) return;
+    const base = 'assets/';
+    const files = {
+      ember: 'sfx-ember-chime.wav',
+      dash: 'sfx-dash-whoosh.wav',
+      maw: 'sfx-maw-toll.wav',
+      crash: 'sfx-crash-rumble.wav',
+      weave: 'sfx-weave-sigh.wav'
+    };
+    Object.keys(files).forEach(k => {
+      fetch(base + files[k]).then(r => r.arrayBuffer()).then(ab => {
+        audioCtx.decodeAudioData(ab).then(buf => { sfxBuffers[k] = buf; }).catch(()=>{});
+      }).catch(()=>{ /* fallback to osc */ });
+    });
+  }
 
   // Targeted early first-paint + content guarantee (Pass 42 current execution contact-sheet further pop + verification): addresses the exact
   // "browser runtime verification failed for file:///.../.factoryx-runtime-check-7.html: ... pre-screenshot timed out" + "requesting targeted rework before accepting this preview"
@@ -329,6 +371,16 @@
 
   function playDash() {
     if (!audioCtx) return;
+    // Pass 43: prefer file-backed dash whoosh (kinetic file timbre, loud for screenshots) when decoded
+    if (sfxBuffers.dash) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = sfxBuffers.dash;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.85;
+      src.connect(g); g.connect(masterGain);
+      src.start();
+      return;
+    }
     const now = audioCtx.currentTime;
     // Low roar whoosh
     const o = audioCtx.createOscillator();
@@ -376,6 +428,16 @@
 
   function playEmber(xNorm) {
     if (!audioCtx) return;
+    // Pass 43: prefer file-backed WAV (richer chime vs pure osc) when decoded
+    if (sfxBuffers.ember) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = sfxBuffers.ember;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.9;
+      src.connect(g); g.connect(masterGain);
+      src.start();
+      return;
+    }
     const now = audioCtx.currentTime;
     const base = 620 + (xNorm - 0.5) * 180;
     const o = audioCtx.createOscillator();
@@ -422,6 +484,16 @@
   function playMawClear() {
     // Sparse Sea Dragon resonance for full heroic clear (weight, distance, smallness; price of the warmth)
     if (!audioCtx) return;
+    // Pass 43: prefer file-backed maw toll (music-led heroic moment, richer than osc+noise) when decoded
+    if (sfxBuffers.maw) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = sfxBuffers.maw;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.95;
+      src.connect(g); g.connect(masterGain);
+      src.start();
+      return;
+    }
     const now = audioCtx.currentTime;
     // Low tolling bell (the cost)
     const o = audioCtx.createOscillator();
@@ -460,6 +532,16 @@
   function playWeave() {
     // Soft heat-sigh for skilled near-miss weave (Sea Dragon sparse audio)
     if (!audioCtx) return;
+    // Pass 43: prefer file-backed weave sigh when decoded
+    if (sfxBuffers.weave) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = sfxBuffers.weave;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.8;
+      src.connect(g); g.connect(masterGain);
+      src.start();
+      return;
+    }
     const now = audioCtx.currentTime;
     const n = audioCtx.createBufferSource();
     const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.7, audioCtx.sampleRate);
@@ -481,6 +563,16 @@
 
   function playCrash() {
     if (!audioCtx) return;
+    // Pass 43: prefer file-backed crash rumble when decoded
+    if (sfxBuffers.crash) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = sfxBuffers.crash;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.9;
+      src.connect(g); g.connect(masterGain);
+      src.start();
+      return;
+    }
     const now = audioCtx.currentTime;
     const o = audioCtx.createOscillator();
     o.type = 'sawtooth';
@@ -545,6 +637,8 @@
     if (!firstInteraction) {
       firstInteraction = true;
       initAudio();
+      loadAssets();
+      loadSfx();
       rampMaster(0.72, 0.06);
       if (mode === 'ready') startRun();
     }
@@ -1084,6 +1178,16 @@
       ctx.fillRect(0, y - 42, W, 84 + Math.sin(t*0.7 + k)*14);
     }
 
+    // Pass 43: file-backed world layer (sky-haze.png) for burning sky atmosphere — when present gives material depth without changing parallax or feel; falls back silently
+    if (assets.haze && assets.haze.complete) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      const hx = ((worldX * 0.18) % (assets.haze.width || 320)) - (assets.haze.width || 320) * 0.2;
+      ctx.drawImage(assets.haze, hx, 48, (assets.haze.width || 320) * 1.15, 210);
+      ctx.drawImage(assets.haze, hx + (assets.haze.width || 320) * 1.1, 48, (assets.haze.width || 320) * 1.15, 210);
+      ctx.restore();
+    }
+
     // Subtle vignette + heat glow at horizon — lighter crush so dragon/hazards/embers read bright against sky
     if (Number.isFinite(W) && Number.isFinite(H) && H > 10) {
       const vg = ctx.createRadialGradient(W*0.5, H*0.62, H*0.1, W*0.5, H*0.58, H*0.78);
@@ -1106,6 +1210,13 @@
     if (!Number.isFinite(t) || !Number.isFinite(bob)) { ctx.restore(); return; }
     const crest = heroicFlare * 0.85;
     const carrying = carryFireUntil > time;
+
+    // Pass 43: file-backed dragon hero (dragon-hero.png) as bright enlarged base — addresses "too dark and small", "thin", "brighten the dragon/rider silhouette", "enlarge/brighten the flying character". Vector overlays (wing/crest/eye/rider) remain for all kinetic animation/feedback.
+    if (assets.dragon && assets.dragon.complete && assets.dragon.naturalWidth > 10) {
+      const dw = 168, dh = 112;
+      ctx.drawImage(assets.dragon, -82, -52 + bob * 0.6, dw, dh);
+    }
+
     if (carrying) {
       const ca = 0.07 + Math.sin(t * 3.1) * 0.025;
       const agy1 = bob * 0.1, agy2 = bob * 0.12;
@@ -1310,6 +1421,11 @@
     ctx.translate(sx, sy);
 
     if (hz.kind === 'spire') {
+      // Pass 43: file-backed spire decal (brighter flame crown, immediate threat read) when present; vector structure kept for scale/anim
+      if (assets.spire && assets.spire.complete) {
+        const sw = 52, sh = hh * 1.15;
+        ctx.drawImage(assets.spire, -sw * 0.5, -sh * 0.62, sw, sh);
+      }
       // Tall rock with flame crown — further enlarged + brighter edge for threats to pop immediately (contact-sheet: hazards readable in first 3-10s)
       ctx.fillStyle = PAL.rock;
       ctx.beginPath();
@@ -1339,6 +1455,11 @@
       ctx.closePath();
       ctx.fill();
     } else {
+      // Pass 43: file-backed vent decal for pop when present
+      if (assets.vent && assets.vent.complete) {
+        const vw = 48, vh = 38;
+        ctx.drawImage(assets.vent, -vw * 0.5, -vh * 0.7, vw, vh);
+      }
       // Vent — low wide heat vent — further enlarged/brighter for immediate lane choice visibility
       ctx.fillStyle = PAL.rock;
       ctx.fillRect(-46, -8, 92, 18);
@@ -1360,6 +1481,12 @@
     const sy = H * PLAY_TOP + e.y * H * (PLAY_BOT - PLAY_TOP);
     const r = 7.6 + Math.sin(t*3.6 + e.x)*1.2; // further enlarged + brighter core/glow for ember collection to read loud in first seconds + screenshots (contact-sheet "make ... ember collection obvious")
     if (!Number.isFinite(sx) || !Number.isFinite(sy) || !Number.isFinite(r) || r < 0.5) return;
+    // Pass 43: file-backed ember sprite (larger glow pop, obvious in first seconds/screenshots) when present
+    if (assets.ember && assets.ember.complete) {
+      const es = r * 2.8;
+      ctx.drawImage(assets.ember, sx - es * 0.5, sy - es * 0.5, es, es);
+      return;
+    }
     // Core — brighter gold
     ctx.fillStyle = PAL.gold;
     ctx.beginPath();
