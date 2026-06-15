@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <title>Skybound Dragon Runner • The Dragon Crew</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* inline critical to avoid FOUC */
+    body { background: #0a1420; }
+    canvas { image-rendering: crisp-edges; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="960" height="540" aria-label="Skybound Dragon Runner game canvas. Use keyboard or touch controls to run, jump, and fly."></canvas>
+
+  <!-- HUD -->
+  <div class="hud" aria-live="polite">
+    <div class="hud-left">
+      <div class="hud-item" id="time-hud"><span>TIME</span><span class="val" id="time-val">0.0</span></div>
+      <div class="hud-item" id="runes-hud"><span>RUNES</span><span class="val" id="runes-val">0/8</span></div>
+      <div class="hud-item" id="score-hud"><span>SCORE</span><span class="val" id="score-val">0000</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-item" id="hud-stamina" title="Wing Stamina — hold/tap flight to spend, collect runes or thermals to recover">
+        <span>FLIGHT</span>
+        <div class="stamina"><i id="stamina-fill" style="width:100%"></i></div>
+      </div>
+      <button id="mute-btn" class="hud-item" aria-label="Toggle sound (M)">🔊</button>
+      <button id="restart-btn" class="hud-item" aria-label="Restart run (R)">↻</button>
+    </div>
+  </div>
+
+  <!-- Touch Controls (mobile + desktop) -->
+  <div id="touch-controls" aria-hidden="true">
+    <button class="touch-btn" id="btn-jump" aria-label="Jump">JUMP</button>
+    <button class="touch-btn fly" id="btn-fly" aria-label="Hold for flight burst">HOLD TO FLY</button>
+    <button class="touch-btn dive" id="btn-dive" aria-label="Dive / fast fall">DIVE</button>
+  </div>
+
+  <!-- Start Overlay -->
+  <div id="start-overlay" class="active" role="dialog" aria-modal="true" aria-labelledby="start-title">
+    <div class="overlay-card">
+      <h1 id="start-title">Skybound Dragon Runner</h1>
+      <p>The Dragon Crew’s small runner crosses floating ruins above the clouds.<br>
+      Sprint, leap gaps, catch thermals, and spend short magical flight bursts.<br>
+      Movement feels like befriending the sky.</p>
+      <button id="start-btn" class="btn">Press Start or Space to Run</button>
+      <div style="margin-top:14px;font-size:12px;color:var(--muted)">Desktop: Space/W/↑ jump • Hold Space/Shift/F fly • ↓ dive • R restart • M mute<br>
+      Touch: tap JUMP • hold FLY • tap DIVE • generous targets</div>
+    </div>
+  </div>
+
+  <!-- End / Replay Overlay -->
+  <div id="end-overlay" role="dialog" aria-modal="true" aria-labelledby="end-title">
+    <div class="overlay-card">
+      <h1 id="end-title">Flight Complete</h1>
+      <div class="stats">
+        <div><div class="label">TIME</div><div class="num" id="end-time">0.0s</div></div>
+        <div><div class="label">RUNES</div><div class="num" id="end-runes">0/8</div></div>
+        <div><div class="label">SCORE</div><div class="num" id="end-score">0000</div></div>
+        <div><div class="label">BEST</div><div class="num" id="end-best">—</div></div>
+      </div>
+      <div class="blessing" id="end-blessing">The sky remembers your wings.</div>
+      <div class="btn.row">
+        <button id="replay-btn" class="btn">Fly Again</button>
+        <button id="menu-btn" class="btn secondary">Back to Start</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="debug" id="debug">D+Shift or ?debug=1 for debug • reduced motion respected</div>
+
+  <script src="game.js"></script>
+</body>
+</html>

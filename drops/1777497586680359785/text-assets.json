@@ -1,0 +1,72 @@
+{
+  "hook": "In the space between waking and dreaming, six ancient dragons wait to be called. Each one carries a fragment of magic born from a different element. Summon them, one by one, and watch the dream take shape.",
+  "creatures": [
+    {
+      "id": "fire-dragon",
+      "name": "Fire Dragon",
+      "role": "Director",
+      "description": "Warm ember glow and a golden, generous gaze. The Fire Dragon radiates radiant courage — a guardian whose fiery heart invites rather than intimidates. Polished amber scales catch the light like a lighthouse in a twilight sky.",
+      "element": "Fire"
+    },
+    {
+      "id": "ice-dragon",
+      "name": "Ice Dragon",
+      "role": "Coder",
+      "description": "Precise, crystalline, and quietly brilliant. The Ice Dragon speaks in shards of frost — cool, composed, and unmistakably wise. Glassy ice patterns trace every scale like frozen starlight.",
+      "element": "Ice"
+    },
+    {
+      "id": "snow-dragon",
+      "name": "Snow Dragon",
+      "role": "Artist",
+      "description": "White, luminous, and soft-edged. The Snow Dragon drifts like a winter aurora, beautiful and serene. Feathery light clings to its coat, making every movement feel like a gentle snowfall.",
+      "element": "Snow"
+    },
+    {
+      "id": "water-dragon",
+      "name": "Water Dragon",
+      "role": "Coder",
+      "description": "Fluid, patient, and endlessly adaptable. The Water Dragon moves through space like a silver river — elegant, observant, and soothing. Reflective scales carry ripples of calm.",
+      "element": "Water"
+    },
+    {
+      "id": "sea-dragon",
+      "name": "Sea Dragon",
+      "role": "Musician",
+      "description": "Deep-ocean calm wrapped in pearl and teal. The Sea Dragon is rhythmic and atmospheric, its presence measured in tides and resonances. Mysterious but warm, it hums the ocean into your dreams.",
+      "element": "Sea"
+    },
+    {
+      "id": "lava-dragon",
+      "name": "Lava Dragon",
+      "role": "Writer",
+      "description": "Obsidian shell veined with molten gold. The Lava Dragon is dramatic yet grounded, its volcanic colors tempered by a calm, noble face. Ancient power wrapped in a comforting glow.",
+      "element": "Lava"
+    }
+  ],
+  "ui_labels": {
+    "primary_action": "Summon",
+    "secondary_action": "Dream",
+    "reset": "Reawaken",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "mute_aria_unmuted": "Mute sound",
+    "mute_aria_muted": "Unmute sound",
+    "status_idle": "Which dragon will you summon first?",
+    "status_charging": "Charging...",
+    "status_breathing_partial": "Dragon breathes fire!",
+    "status_breathing_max": "MAXIMUM BREATH!",
+    "status_cooldown": "Recovering...",
+    "status_all_summoned": "All six dragons are present. The crew is complete!",
+    "toast_all_summoned": "All 6 dragons summoned! The Dragon Crew has gathered. Feel the magic pulse through every element!",
+    "toast_reset": "The crew has dispersed. The magic lingers — tap a dragon to begin again.",
+    "toast_duplicate": "%{name} has already been summoned! Wait for the full crew to assemble.",
+    "instruction": "Hold the dragon to charge",
+    "main_region_label": "Dragon Crew Summoning Experience",
+    "grid_label": "Choose your dragons to summon",
+    "page_title": "Dragon Crew — Summon the Magic",
+    "hero_heading": "The Dragon Crew",
+    "hero_tagline": "We build magical experiences that make people dream of magical creatures."
+  },
+  "audio_rationale": "Audio is fully implemented and central to the experience. Every interaction state — hover, hold-to-charge, fire-burst, cooldown tick, and reset — has paired procedural sound via the Web Audio API. The charge phase uses a dual-oscillator growl (sawtooth + sine) that rises in pitch and volume with charge progress. The breath release generates layered noise: a filtered roar, a bandpass whoosh, random crackle bursts, and a rising impact sine, all intensity-scaled. A success chime (C-E-G-C ascending triad) plays on full charge, and a soft sine tick marks cooldown. All audio respects the mute toggle, prefers-reduced-motion, and gracefully degrades to silence if Web Audio is unavailable — no external audio files are required for core playback."
+}

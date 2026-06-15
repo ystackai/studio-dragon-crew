@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dragonbound Depths</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="title-screen">
+    <div class="title-art">
+      <canvas id="title-canvas" width="720" height="240"></canvas>
+    </div>
+    <h1>DRAGONBOUND DEPTHS</h1>
+    <p class="tagline">A co-op fantasy action RPG • Bond with dragons • Descend together</p>
+
+    <div class="select-section">
+      <div class="select-group">
+        <h2>Choose Your Hero</h2>
+        <div class="card-row" id="hero-cards"></div>
+      </div>
+
+      <div class="select-group">
+        <h2>Choose Your Dragon Companion</h2>
+        <div class="card-row" id="dragon-cards"></div>
+      </div>
+
+      <div class="coop-toggle">
+        <label>
+          <input type="checkbox" id="p2-toggle">
+          <span>Enable Local Co-op (Player 2 on keyboard)</span>
+        </label>
+        <div class="controls-hint">P1: WASD • Space attack • Q special • E dash &nbsp;&nbsp;|&nbsp;&nbsp; P2: Arrows • Enter attack • U special • O dash</div>
+      </div>
+    </div>
+
+    <button id="start-btn" class="start-btn">ENTER THE DEPTHS</button>
+    <div class="footer-note">Local co-op on one keyboard • Solo fully supported • Best on desktop</div>
+  </div>
+
+  <div id="game-container" style="display:none;">
+    <canvas id="game-canvas"></canvas>
+    <div id="hud">
+      <div class="hud-top">
+        <div id="room-label">Grove of Echoes</div>
+        <div id="progress">1 / 6</div>
+        <div id="p1-status" class="player-status">
+          <span class="p-label">P1</span>
+          <div class="bar"><div class="fill" id="p1-hp"></div></div>
+          <div class="cooldowns">
+            <div class="cd" id="p1-cd1" title="Attack"></div>
+            <div class="cd" id="p1-cd2" title="Special"></div>
+            <div class="cd" id="p1-cd3" title="Dash"></div>
+          </div>
+        </div>
+        <div id="p2-status" class="player-status" style="display:none;">
+          <span class="p-label">P2</span>
+          <div class="bar"><div class="fill" id="p2-hp"></div></div>
+          <div class="cooldowns">
+            <div class="cd" id="p2-cd1" title="Attack"></div>
+            <div class="cd" id="p2-cd2" title="Special"></div>
+            <div class="cd" id="p2-cd3" title="Dash"></div>
+          </div>
+        </div>
+      </div>
+      <div id="minimap"></div>
+    </div>
+    <div id="overlay" style="display:none;">
+      <div class="overlay-panel">
+        <div id="overlay-title"></div>
+        <canvas id="victory-canvas" width="420" height="116" style="display:none; margin: 6px auto 10px; border-radius: 6px; box-shadow: 0 10px 28px rgba(0,0,0,0.45);"></canvas>
+        <div id="overlay-body"></div>
+        <div id="overlay-actions"></div>
+      </div>
+    </div>
+    <div id="toast"></div>
+    <button id="pause-btn" class="pause-btn">PAUSE</button>
+    <button id="mute-btn" class="mute-btn">🔊</button>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
