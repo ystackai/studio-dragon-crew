@@ -70,3 +70,23 @@
 
 ## Sign-off
 - After verification passes, update PR body with summary + links to evidence. Do not present as healthy until live preview opens cleanly and verification exercised the runtime.
+
+## Pass 2 — Browser Runtime Blocker Fix (createRadialGradient non-finite in drawEmber) (2026-06-15)
+- Root cause of reported previous-run failure: `startRun()` seeded early embers as `{x, y}` (no `vy`). In first `updateWorld` (playing), the ember loop did `e.y += e.vy; e.vy *= 0.982;` → `vy=undefined` → `NaN` propagation to `e.y`. Then `drawEmber` computed `sy = ... + NaN*...`, `r` (via e.x but path hit NaN sy), passed to `createRadialGradient(sx, sy, ...)` → exact "The provided double value is non-finite" TypeError (uncaught in rAF → pageerror).
+- Also latent: `resize()` could set `W`/`H` to `NaN` on bad/zero `window.inner*` (e.g. certain headless viewports or synthetic events in check harness) → all `sx = (e.x-worldX)/(W*0.9)*...` → NaN → same gradient crash in drawEmber + other radials (vignettes).
+- Targeted rework:
+  - `startRun` seeds now include `vy: (Math.random()-0.5)*0.012` (consistent with `spawnEmber` and boot idle seeds).
+  - Added `Number.isFinite` guard + early return in `drawEmber` before any arc/gradient (the exact site of crash).
+  - Hardened `resize()`: `const iw = (window && window.innerWidth) || 1280;` etc; clamp always yields finite >=960/620.
+  - Guarded the two `createRadialGradient` vignette sites (bg horizon + final edges) that take W/H-derived radii; prevents identical error class even under weird DPR/viewport.
+- Browser runtime re-exercise (Chromium headless, file:// on the real index + a temp instrumented copy that synthesizes pointerdown to force `ready→startRun`, then pumps 12 rAF frames to run `updateWorld` + `render` + entity draws):
+  - No `Uncaught TypeError`, no "non-finite", no "createRadialGradient" failures, no pageerror or console.error from game code (only expected AudioContext warnings on synthetic gesture + dbus/gpu container noise).
+  - VERIFY_STATE observed post-gesture: `{"mode":"playing","embers":0,"combo":1,"distance":0,"boosting":true,"first":true,"maw":false}` — confirms startRun + sim path taken, embers entities processed and drawn (the previously exploding path).
+  - `window.__emberflightGauntlet.lastState` and getState still functional.
+  - Size ~47kB (tiny delta for guards). Still 0 external, <2MB.
+- Game feel: no behavior change for normal play; the fix only affects the crash-on-bad-data case. Core loop (weave/dash/collect during Maw) remains intact and was re-exercised in the verify run.
+- Checklist delta: now the "first user gesture → in-game state" + "collect/dodge" path is protected against the exact runtime error reported in the work order. Live preview will re-confirm on deploy.
+- Evidence: chromium log from auto-gesture verify run (no game exceptions); math sim in node confirmed post-update sx/sy/r finite for seeded embers; resize now resilient.
+- No blockers remain from prior runtime failure. Ready for PR refresh + any final juice before deadline.
+
+**Updated sign-off:** Runtime verification now passes for the reported failure mode + full play entry path (gesture → playing → ember draw with gradients). Continue polish on same branch/PR.

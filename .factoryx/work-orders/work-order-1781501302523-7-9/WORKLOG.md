@@ -71,6 +71,18 @@
 
 **Current Status:** TDZ blocker resolved + Sky Maw added + collision feel refined for full goal scope. Playable first screen + heroic kinetic loop + escalation beat verified in real browser runtime (multiple headless passes, CI green). Pushed to canonical; PR#77 updated with evidence + full prompt context (no new reviews/comments/blocks found on re-inspect). Polish continues to deadline on same branch/PR.
 
+### Pass 2 — Address Prior Browser Runtime Blocker (non-finite radial in drawEmber) + Small Coherence Polish (2026-06-15)
+- Before any peripheral polish: directly fixed the exact error from the work order prompt (`__FACTORYX_BROWSER_RUNTIME_ERROR__ ... createRadialGradient ... non-finite ... at drawEmber ... in render`).
+  - Root: missing `vy` on the two "early ember" seeds in `startRun()` (unlike `spawnEmber`); update loop assumed it → NaN y → gradient blowup on first frames after gesture. Also W/H NaN risk in resize.
+  - Fix: added vy to seeds; finite guards in drawEmber + resize harden + vignette radials.
+  - Verified with: node math sim of seed+update+project (all finite); chromium headless on instrumented copy that forces synthetic pointerdown (triggers startRun) + rAF pumps (exercises update+drawEmber in playing); logs show VERIFY_STATE playing + "embers path exercised", ZERO game TypeErrors or non-finite (only normal audio gesture warnings).
+- Small product-shaped polish while here (no scope creep): made `restart()` reseed a few idle embers + hazards so that returning to ready state after crash looks/ feels like the initial first-screen atmosphere (consistent "first screen = playable game", no dead empty sky on retry). This improves the restart loop juice without adding systems.
+- Updated: VERIFICATION.md (full Pass 2 with evidence), this WORKLOG, index.html (47kB still).
+- Game feel: restart now returns player to a living gauntlet sky (prompt + drifting embers + spire/vent), matching the "take wing" entry. All prior checklist holds; the blocker is gone so live preview can be presented clean.
+- Next: commit the fix + coherence on canonical branch, push (rebase if needed but in sync), refresh PR#77 body (include full original prompt in FactoryX context section + new verification summary + screenshots note + "browser runtime now passes the previously failing path"), re-inspect gh for feedback. Keep polishing feel/evidence until 2026-06-15T14:28:32Z or hard blocker.
+
+**Status after Pass 2:** Runtime error addressed at source + re-verified in real browser (post-gesture play path exercised cleanly). Ready for push + PR update. Polish continues.
+
 ---
 
 *(Historical context from prior WO on same factory carried in main .factoryx/WORKLOG.md; this WO is fresh creative_game for Emberflight action title.)*

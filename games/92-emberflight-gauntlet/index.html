@@ -511,8 +511,8 @@
     resetWorld();
     document.getElementById('prompt').classList.add('hidden');
     // Seed a couple early embers so first 8s has something to do
-    embersArr.push({ x: worldX + 420, y: 0.32 + Math.random()*0.36 });
-    embersArr.push({ x: worldX + 780, y: 0.28 + Math.random()*0.42 });
+    embersArr.push({ x: worldX + 420, y: 0.32 + Math.random()*0.36, vy: (Math.random()-0.5)*0.012 });
+    embersArr.push({ x: worldX + 780, y: 0.28 + Math.random()*0.42, vy: (Math.random()-0.5)*0.012 });
   }
 
   function crash() {
@@ -544,6 +544,12 @@
     playerY = 0.5;
     steerTarget = 0.5;
     rampMaster(0.0, 0.01);
+    // Reseed idle atmosphere so restart returns to same living first-screen as boot (no empty sky)
+    for (let i=0; i<4; i++) {
+      embersArr.push({ x: 280 + i*160, y: 0.28 + Math.random()*0.44, vy: (Math.random()-0.5)*0.01 });
+    }
+    hazards.push({ x: 780, y: 0.36, kind:'spire', h:0.09, phase:0.9 });
+    hazards.push({ x: 1060, y: 0.69, kind:'vent', h:0.07, phase:1.8 });
     // Ready for next gesture to start
   }
 
@@ -824,12 +830,14 @@
     }
 
     // Subtle vignette + heat glow at horizon
-    const vg = ctx.createRadialGradient(W*0.5, H*0.62, H*0.1, W*0.5, H*0.58, H*0.78);
-    vg.addColorStop(0, 'transparent');
-    vg.addColorStop(0.6, 'rgba(0,0,0,0.0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.55)');
-    ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, W, H);
+    if (Number.isFinite(W) && Number.isFinite(H) && H > 10) {
+      const vg = ctx.createRadialGradient(W*0.5, H*0.62, H*0.1, W*0.5, H*0.58, H*0.78);
+      vg.addColorStop(0, 'transparent');
+      vg.addColorStop(0.6, 'rgba(0,0,0,0.0)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   function drawDragon(px, py, t, boosting) {
@@ -1033,6 +1041,7 @@
     const sx = (e.x - worldX) / (W * 0.9) * (W * 0.5) + W * 0.26;
     const sy = H * PLAY_TOP + e.y * H * (PLAY_BOT - PLAY_TOP);
     const r = 3.2 + Math.sin(t*3.6 + e.x)*0.6;
+    if (!Number.isFinite(sx) || !Number.isFinite(sy) || !Number.isFinite(r) || r < 0.5) return;
     // Core
     ctx.fillStyle = PAL.gold;
     ctx.beginPath();
@@ -1270,11 +1279,13 @@
     }
 
     // Subtle vignette edges for mythic focus
-    const vg2 = ctx.createRadialGradient(W*0.5, H*0.5, Math.min(W,H)*0.32, W*0.5, H*0.5, Math.max(W,H)*0.72);
-    vg2.addColorStop(0, 'transparent');
-    vg2.addColorStop(1, 'rgba(0,0,0,0.35)');
-    ctx.fillStyle = vg2;
-    ctx.fillRect(0, 0, W, H);
+    if (Number.isFinite(W) && Number.isFinite(H) && H > 10) {
+      const vg2 = ctx.createRadialGradient(W*0.5, H*0.5, Math.min(W,H)*0.32, W*0.5, H*0.5, Math.max(W,H)*0.72);
+      vg2.addColorStop(0, 'transparent');
+      vg2.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = vg2;
+      ctx.fillRect(0, 0, W, H);
+    }
 
     ctx.restore();
 
@@ -1305,8 +1316,10 @@
   // BOOT
   // ============================================================
   function resize() {
-    W = Math.max(960, Math.min(1680, window.innerWidth));
-    H = Math.max(620, Math.min(980, window.innerHeight));
+    const iw = (window && window.innerWidth) || 1280;
+    const ih = (window && window.innerHeight) || 720;
+    W = Math.max(960, Math.min(1680, iw));
+    H = Math.max(620, Math.min(980, ih));
     // keep DPR handled in render
   }
 
