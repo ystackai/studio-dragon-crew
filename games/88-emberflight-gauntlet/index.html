@@ -101,6 +101,10 @@ let rings = []; // {x, y, hit:false}
 let hazards = []; // {x, y, vx:0, vy:0, r:HAZARD_R, kind:'rock'|'cinder'}
 let orbs = [];    // {x, y, hit:false}
 let particles = []; // {x,y,vx,vy,life,size,hue,alpha,kind:'ember'|'spark'|'smoke'|'breath'}
+let crew = [];    // {x, y, hit:false} — rescue allies / ember crew for chain boosts
+let boss = null;  // {x, y, hp, attackT, hitFlash} — escalation boss (Ember Sovereign)
+let screenShake = 0;
+let flash = 0;    // brief white flash on heavy impact / boss shatter
 
 let input = { y: null, pressing: false, lastDown: 0 };
 let keys = {};
@@ -179,6 +183,10 @@ function resetGame(){
   hazards.length = 0;
   orbs.length = 0;
   particles.length = 0;
+  crew.length = 0;
+  boss = null;
+  screenShake = 0;
+  flash = 0;
   // seed initial canyon
   let wx = -120;
   for(let i=0; i<42; i++){
@@ -241,6 +249,11 @@ function spawnIfNeeded(){
     const wy = sampleGapY(spawnX + 80) + rand(-38,38);
     orbs.push({x: spawnX + rand(30,120), y: clamp(wy, 80, LOGICAL_H-80), hit:false});
   }
+  // crew / rescue allies (chain boost targets) — appear as small witness figures
+  if (crew.length < 1 && rnd() < 0.0075){
+    const wy = sampleGapY(spawnX + 50) + rand(-28,28);
+    crew.push({x: spawnX + rand(40,110), y: clamp(wy, 95, LOGICAL_H-95), hit:false});
+  }
 }
 
 function sampleGapY(wx){
@@ -292,10 +305,23 @@ function updateWorld(dt){
   cameraX += speed * dt;
   depth += speed * dt * 0.011;
   // gentle speed ramp
-  speed = lerp(speed, 138 + clamp(depth/63, 0, 72), dt * 0.2);
+  let targetSpeed = 138 + clamp(depth/63, 0, 72);
+  // chain boost (juicy escalation on high combo)
+  if (combo >= 4) targetSpeed += Math.min(28, (combo-3)*6);
+  speed = lerp(speed, targetSpeed, dt * 0.2);
 
   advanceWalls();
   spawnIfNeeded();
+
+  // boss escalation trigger (clear "boss beat" at depth threshold)
+  if (!boss && depth > 6800 && rnd() < 0.9){
+    const by = clamp(dragon.y + rand(-80,80), 110, LOGICAL_H-110);
+    boss = { x: cameraX + LOGICAL_W + 180, y: by, hp: 3, attackT: now() + 420, hitFlash: 0 };
+    // dramatic entrance particles
+    for(let i=0; i<22; i++){
+      particles.push({x: boss.x-20, y: boss.y + rand(-30,30), vx: rand(-80,-30), vy: rand(-20,20), life:0.6+rand(0,0.5), size:rand(2.2,4.8), hue:8+rand(0,12), alpha:0.7+rand(0,0.25), kind:'spark'});
+    }
+  }
 
   // move rings
   for(let i=rings.length-1; i>=0; i--){
@@ -354,6 +380,101 @@ function updateWorld(dt){
       }
     }
   }
+
+  // crew rescues (fly near or flame to "rescue" — chain boost + score)
+  for(let i=crew.length-1; i>=0; i--){
+    const c = crew[i];
+    if (c.x < cameraX - 30){ crew.splice(i,1); continue; }
+    if (!c.hit){
+      const dx = (cameraX + DRAGON_X) - c.x;
+      const dy = dragon.y - c.y;
+      const touched = (dx*dx + dy*dy < (ORB_R+18)*(ORB_R+18));
+      const flamed = (now() < breathUntil && distToBreath(c.x, c.y) < 58);
+      if (touched || flamed){
+        c.hit = true;
+        const t = now();
+        if (t - lastChainAt < 2200){ combo = Math.min(9, combo+1); } else { combo = 1; }
+        lastChainAt = t;
+        score += flamed ? 280 : 95;
+        if (flamed) combo = Math.min(9, combo+1);
+        spawnCollectFX(c.x, c.y, flamed ? '#ffaa66' : '#ccaa88');
+        playChime(Math.min(6, combo));
+      }
+    }
+  }
+
+  // boss update + escalation combat (weave + breathe the vents to break the Sovereign)
+  if (boss){
+    // approach + hover with presence (eased, weighty)
+    const targetBX = cameraX + DRAGON_X + 210 + Math.sin(now()*0.0009)*28;
+    boss.x = lerp(boss.x, targetBX, 0.018);
+    boss.y = lerp(boss.y, clamp(dragon.y + Math.sin(now()*0.0006)*42, 95, LOGICAL_H-95), 0.012);
+    boss.hitFlash = Math.max(0, boss.hitFlash - dt*3.2);
+
+    // periodic directed attacks (fireballs that must be dodged or breathed)
+    const tnow = now();
+    if (tnow > boss.attackT && boss.hp > 0){
+      boss.attackT = tnow + (180 + Math.random()*140);
+      const ax = boss.x - 12;
+      const ay = boss.y + (rnd()-0.5)*18;
+      const vx = -92 + rand(-18, -4);
+      hazards.push({x: ax, y: ay, vx: vx, vy: (dragon.y - ay)*0.018 + rand(-18,18), r: 11, kind:'cinder'});
+      // attack tell sparks
+      for(let k=0; k<5; k++) particles.push({x:ax, y:ay, vx:rand(-30,10), vy:rand(-24,24), life:0.22+rand(0,0.1), size:1.6+rand(0,1), hue:14, alpha:0.9, kind:'spark'});
+    }
+
+    // breath damage on vents (3 weak points along the body silhouette)
+    if (now() < breathUntil && boss.hp > 0){
+      for(let v=0; v<3; v++){
+        const vx = boss.x - 28 + v*22;
+        const vy = boss.y - 11 + v*11 + (v===1 ? 4 : 0);
+        if (distToBreath(vx, vy) < 46){
+          // hit vent
+          boss.hp -= 1;
+          boss.hitFlash = 1.0;
+          spawnPopFX(vx, vy, '#ffdd88');
+          score += 310;
+          combo = Math.min(9, combo+1);
+          lastChainAt = now();
+          playChime(5);
+          if (boss.hp <= 0){
+            // shatter payoff (clear escalation beat)
+            for(let i=0; i<46; i++){
+              const ang = rand(-1.8,1.8);
+              const sp = 36 + rnd()*72;
+              particles.push({x:boss.x, y:boss.y, vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp*0.8, life:0.32+rand(0,0.28), size:rand(1.9,3.8), hue:10+rand(0,18), alpha:0.85, kind:'spark'});
+            }
+            for(let i=0; i<18; i++){
+              particles.push({x:boss.x+rand(-12,12), y:boss.y+rand(-18,18), vx:rand(-48,48), vy:rand(-38,22), life:0.7+rand(0,0.6), size:rand(3.2,6.5), hue:8, alpha:0.22+rand(0,0.1), kind:'smoke'});
+            }
+            flash = 0.7;
+            screenShake = Math.max(screenShake, 18);
+            score += 1400;
+            combo = Math.min(9, combo+2);
+            // brief calm after victory
+            speed = Math.max(118, speed*0.6);
+            boss = null;
+            break;
+          }
+          break; // one vent per breath frame
+        }
+      }
+    }
+
+    // body collision with boss = death (vast presence has consequence)
+    if (boss){
+      const dx = (cameraX + DRAGON_X) - boss.x;
+      const dy = dragon.y - boss.y;
+      if (dx*dx + dy*dy < (58*58)){
+        die();
+        return;
+      }
+    }
+  }
+
+  // decay screen shake + flash (juice)
+  if (screenShake > 0.1) screenShake = lerp(screenShake, 0, dt*4.8); else screenShake = 0;
+  if (flash > 0.01) flash = lerp(flash, 0, dt*3.6); else flash = 0;
 
   // wall collision
   if (collideWalls(dragon.y)){
@@ -452,7 +573,9 @@ function spawnPopFX(x, y, col){
 
 function die(){
   if (state !== 'playing') return;
-  // impact burst
+  // impact burst + juice
+  screenShake = 22;
+  flash = 0.85;
   for(let i=0; i<38; i++){
     const ang = rand(-1.6,1.6);
     const sp = 40 + rnd()*80;
@@ -476,6 +599,7 @@ function update(dt){
     cooldownUntil = t + BREATH_MS + BREATH_COOLDOWN;
     spawnBreathFX();
     playBreathBurst();
+    screenShake = Math.max(screenShake, 4.5); // juicy kick on powerful breath
   }
   if (now() > breathUntil && particles.some(p=>p.kind==='breath')){
     // keep breathing fx only while active
@@ -654,6 +778,70 @@ function drawOrbs(){
   }
 }
 
+function drawCrew(){
+  for(const c of crew){
+    if (c.hit) continue;
+    const sx = c.x - cameraX;
+    if (sx < -18 || sx > LOGICAL_W+18) continue;
+    ctx.save();
+    ctx.translate(sx, c.y);
+    // small witness/crew silhouette (humble, practical next to dragon)
+    ctx.fillStyle = '#3a2a22';
+    ctx.beginPath(); ctx.arc(0,-3,3.2,0,Math.PI*2); ctx.fill(); // head
+    ctx.fillRect(-1.6,1,3.2,7); // body
+    ctx.fillStyle = '#221a15';
+    ctx.fillRect(-4.5,3,2.2,5); // arm
+    ctx.fillRect(2.3,3,2.2,5);
+    ctx.fillStyle = '#ffcc88';
+    ctx.beginPath(); ctx.arc(-0.4,-3.5,1.1,0,Math.PI*2); ctx.fill(); // ember core
+    ctx.restore();
+  }
+}
+
+function drawBoss(){
+  if (!boss) return;
+  const sx = boss.x - cameraX;
+  if (sx < -120 || sx > LOGICAL_W+140) return;
+  ctx.save();
+  ctx.translate(sx, boss.y);
+  const hf = boss.hitFlash;
+  // vast sovereign silhouette (ancient, not mascot; looms with weight)
+  ctx.fillStyle = (hf > 0.1) ? '#4a2a1f' : '#2a211c';
+  ctx.beginPath();
+  ctx.moveTo(-58, -22);
+  ctx.quadraticCurveTo(-12, -48, 38, -19);
+  ctx.quadraticCurveTo(66, 2, 42, 31);
+  ctx.quadraticCurveTo(-4, 47, -52, 18);
+  ctx.quadraticCurveTo(-71, -3, -58, -22);
+  ctx.closePath();
+  ctx.fill();
+  // scale ridges
+  ctx.strokeStyle = 'rgba(255,140,60,0.18)';
+  ctx.lineWidth = 2.5;
+  for(let i=0; i<4; i++){
+    ctx.beginPath(); ctx.moveTo(-44 + i*18, -14 + i*4); ctx.lineTo(-18 + i*19, 6 + i*5); ctx.stroke();
+  }
+  // glowing vents (the 3 hittable weak points)
+  const ventCols = ['#ffaa44', '#ffcc66', '#ff8844'];
+  for(let v=0; v<3; v++){
+    const vx = -24 + v*22;
+    const vy = -8 + v*10 + (v===1?3:0);
+    const on = (hf > 0.1 && v === 0) || (boss.hp > v);
+    ctx.fillStyle = on ? ventCols[v] : '#442a22';
+    ctx.beginPath(); ctx.arc(vx, vy, 5.5 + (hf*1.5), 0, Math.PI*2); ctx.fill();
+    if (on){
+      ctx.fillStyle = 'rgba(255,235,170,0.5)';
+      ctx.beginPath(); ctx.arc(vx-1, vy-1, 2.2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  // horn / crown suggestion
+  ctx.strokeStyle = '#221a15';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(18,-22); ctx.lineTo(28,-38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(26,-18); ctx.lineTo(36,-32); ctx.stroke();
+  ctx.restore();
+}
+
 function drawDragon(){
   const x = DRAGON_X;
   const y = dragon.y;
@@ -830,12 +1018,14 @@ function draw(){
   ctx.fillStyle = '#0a0604';
   ctx.fillRect(0,0,viewW,viewH);
 
-  // world space
+  // world space (with screen shake juice on heavy moments)
   ctx.save();
   const scale = Math.min(viewW / LOGICAL_W, viewH / LOGICAL_H);
   const offX = (viewW - LOGICAL_W * scale) * 0.5;
   const offY = (viewH - LOGICAL_H * scale) * 0.5;
-  ctx.translate(offX, offY);
+  const shakeX = (screenShake > 0.5) ? (Math.sin(now()*0.09) * screenShake * 0.6) : 0;
+  const shakeY = (screenShake > 0.5) ? (Math.cos(now()*0.11) * screenShake * 0.5) : 0;
+  ctx.translate(offX + shakeX, offY + shakeY);
   ctx.scale(scale, scale);
 
   drawBackground();
@@ -843,9 +1033,17 @@ function draw(){
   drawRings();
   drawHazards();
   drawOrbs();
+  drawCrew();
+  drawBoss();
   drawParticles();
   drawDragon();
   drawVignette();
+
+  // impact / shatter flash overlay (juice)
+  if (flash > 0.02){
+    ctx.fillStyle = `rgba(255,245,220,${flash*0.28})`;
+    ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  }
 
   // subtle speed lines when fast
   if (speed > 170){
