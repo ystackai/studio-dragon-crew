@@ -58,5 +58,19 @@ Core verb (explore + tune/trace/rotate/guide) obvious in <30s. Input <100ms + fe
 **Status:** Review feedback addressed + extra polish + sound; verification pending live run.
 **Last updated:** 2026-06-16 (address review + more audio + preview redirect + WO memory)
 
+## Follow-up pass (post 6a7af00, addressing persistent human review)
+- Re-inspected Water keyboard impl + Ice sim + audio wiring at HEAD.
+- Ice/Crystal Refraction: start angles changed to verifiable near-miss [15,30,45] (gp~44, !hits); gate tolerance +4 to 42px, proximity guide threshold raised to 36 for early "Close" cue; sim + node confirmed: from start, one global left-arrow (tweaks mid mirror -8) or small drag on center produces gold beam + hitsGate true (gp~6). Hints updated in UI + timeout tip to point at the exact small steer needed. Mirror tones wired on slider/arrow/drag for more tactile audio.
+- Water/River of Memory: keyboard fully contained (no doc-global listener from water to prevent cross-trial leaks); gridEl key capture for arrows (move custom sel highlight from anywhere inside incl. focused tiles) + Space/Enter on grid rotates *selected* (skips if originated on tile child); per-tile key handlers still allow direct-Tab-to-tile + Space/Enter to rotate exactly that piece (stopProp). Default sel on the L(4,0), focus(grid) on open, larger 48px tiles (44px mobile). Cleanup removes capture listener reliably. Node flood confirms 1 rotate on L solves. Instruction text clarified.
+- More sound (Sea Dragon): added playWaterFlow + playMirrorTone; richer playSeaChord (extra pad layer on success); 2-osc ambient (base + low pad ramps with blessing count for growing sanctuary "wake"); fire good releases now chain warm low bloom + chime tail; ice arrows/sliders call mirror tones; water rotate calls flow plink on progress or win chord; all still gated by mute + have visual (color, label, transform, particles).
+- Polish: water tiles 48/44px (thumbable), stronger selected+focus rings (no layout shift), sea notes 66/56px, word-ring buttons larger min-height + active press, flow-tile:active scale feedback, ice hints + instructions tuned for the actual winnable path, fire onboarding text mentions keyboard hold, assets/README keyboard section updated with Water/Ice specifics. CSS focus-visible already strong; mobile trial panel scroll preserved.
+- Verification: node --check all 11 modules clean; node sims for Ice win-from-start-steer + Water 1-rotate both pass; chromium headless load (virtual time) exits 0 with zero game JS errors in output (only expected container dbus noise).
+- No unrelated scope; focused on the 4 review bullets (keyboard, ice path, more sound, polish).
+- Next: commit only the functional+doc deltas, push the canonical branch ref, refresh PR_UPDATE + this WORKLOG, update VERIFICATION with evidence.
+
+**Current artifact:** drops/1779032436881/
+**Status:** Review items (Water kb, Ice path, sound, supporting polish) directly addressed + verified via logic + headless. Ready to push + request re-review.
+**Last updated:** 2026-06-17 (rework for human review feedback on Water/Ice/sound/polish)
+
 ## Historical notes (from branch)
 See git log for prior passes on sanctuary-of-six-lights and the 67a5b9b rework. This continues on the work-order- prefixed canonical branch.

@@ -281,7 +281,7 @@ canvas#sanctuary {
 /* Water flow tiles */
 #flow-grid {
   display: grid;
-  grid-template-columns: repeat(5, 46px);
+  grid-template-columns: repeat(5, 48px);
   gap: 4px;
   justify-content: center;
   margin: 12px auto;
@@ -290,12 +290,12 @@ canvas#sanctuary {
   border-radius: 8px;
 }
 #flow-grid:focus {
-  outline: 1px dashed rgba(244,217,168,0.45);
-  outline-offset: 4px;
+  outline: 2px solid rgba(244,217,168,0.6);
+  outline-offset: 3px;
 }
 .flow-tile {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   background: #0c1a2a;
   border: 1px solid rgba(79, 179, 216, 0.3);
   display: flex;
@@ -309,6 +309,7 @@ canvas#sanctuary {
   touch-action: manipulation;
 }
 .flow-tile:hover { background: #13253a; }
+.flow-tile:active { transform: scale(0.96); background: #0a2533; }
 .flow-tile:focus, .flow-tile:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
@@ -340,15 +341,15 @@ canvas#sanctuary {
   margin: 20px 0;
 }
 .sea-note {
-  width: 62px;
-  height: 62px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
   border: 2px solid var(--tide);
   background: rgba(58, 168, 168, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--tide);
   cursor: pointer;
   transition: all 0.1s ease;
@@ -391,12 +392,14 @@ canvas#sanctuary {
   background: none;
   border: none;
   color: inherit;
-  padding: 3px 6px;
+  padding: 4px 6px;
   cursor: pointer;
   font-family: inherit;
   font-size: 12px;
+  min-height: 26px;
 }
 .word-ring button:hover { background: rgba(244,217,168,0.1); }
+.word-ring button:active { background: rgba(244,217,168,0.18); transform: translateY(1px); }
 
 /* Finale */
 #finale-overlay {
@@ -509,9 +512,9 @@ canvas#sanctuary {
   #progress .rune { width: 15px; height: 15px; font-size: 8px; }
   canvas#sanctuary { max-height: calc(100vh - 116px); }
   #trial-panel { width: 96vw; max-height: 82vh; overflow: auto; -webkit-overflow-scrolling: touch; }
-  .flow-tile { width: 40px; height: 40px; font-size: 16px; }
-  #flow-grid { grid-template-columns: repeat(5, 40px); }
-  .sea-note { width: 54px; height: 54px; font-size: 14px; }
+  .flow-tile { width: 44px; height: 44px; font-size: 16px; }
+  #flow-grid { grid-template-columns: repeat(5, 44px); }
+  .sea-note { width: 56px; height: 56px; font-size: 14px; }
   #word-rings { gap: 6px; }
   .word-ring { width: 92px; }
 }

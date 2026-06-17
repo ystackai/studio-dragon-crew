@@ -29,6 +29,7 @@ The dim floating sanctuary with 6 shrines around the Sky Loom. Click/tap a shrin
 - Complete path ~8-12 min; taste slice (Fire + Ice + Water) is first 2-3 min.
 - All 6 dragons distinct: hold/release, rotate mirrors to gold path, rotate pipes to connect, catch glyphs calmly, echo 3-note shells, click word rings for mythic name.
 - Visual env transforms on each blessing (waves, snow, braziers, etc).
-- Sound optional + visual everywhere (new ambient grows with progress, per-interaction tones).
+- Sound optional + visual everywhere (growing 2-layer ambient with blessings, per-interaction tones for rotate/mirror/flow/catch/chord/ember; all feedback has DOM equiv).
+- Review feedback addressed in this drop: Water pipes rotate on Enter/Space (contained handlers + sel), Ice has steerable gold win path from start angles (proximity + hint), more sound + polish (44px+ targets, focus, hints).
 
-**Status:** Ready for browser runtime verification + human play on live preview.
+**Status:** Review items fixed + verified (node sims + headless load clean). Ready for live preview human play + re-review.

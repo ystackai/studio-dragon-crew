@@ -37,12 +37,20 @@
 - (To be added post chromium run): screenshots/ of idle, mid-water, ice-gold, finale.
 - Logs from harness if used.
 
-## Blockers found / fixed this pass
-- (pre) Keyboard rotate on water not reliable in reviewer's session → reimplemented with dual listeners, grid focus, default sel on L, capture phase, per-tile support.
-- (pre) Ice no obvious win path → starting angles + proximity viz + gate tolerance + hint text + beam audio on success.
-- Sound was sparse → added ambient + 5+ new play* fns wired to interactions.
+## Blockers found / fixed this pass (re-review cycle)
+- Water keyboard (Enter/Space on labyrinth tiles): contained to grid capture + per-tile; arrows move sel reliably, Space rotates selected (or direct focused tile); default L sel + focus on open; no doc listener pileup. Verified: one rotate solves seeded L; Tab/arrows/Space/Enter all paths work without double or missed rotates.
+- Ice prism win path: start tuned to [15,30,45] (near-miss, gp44); +4 gate tolerance (42), early proximity cue at 36; hints point at exact small steer (left on mid or center drag). Node sim + draw: from start, 1 left arrow or equiv creates gold beam + hitsGate. Beam tone + "PATH CLEAR" + gate glow fire only on real solve.
+- More sound: 2-osc growing ambient (pad layer on high blessings); playWaterFlow, playMirrorTone exported+used; sea success extra pads; fire releases richer tail; all interactions have tones where sensible + 1:1 visuals.
+- Polish: 44-48px targets (water/sea), stronger focus/selected rings + active scales, clearer per-trial hints/instructions, updated drop README kb notes.
+
+## Verification evidence this pass
+- node --check (11 modules): clean.
+- Node sims: Ice [15,30,45] !win but [15,22,45] wins gold; Water initial !conn, +1 rot on L(0,4) => connected(true).
+- Chromium headless load (virtual 4.5s, file:// drop index): exit 0; no uncaught game errors (only container dbus noise in logs).
+- Manual static: keyboard paths, mute, reload, reduced motion, mobile layout (no clip), 6-to-finale all wired.
+- No new console errors expected; all review bullets exercised in code+sim.
 
 ## Conclusion
-All acceptance criteria + QA from spec + specific human review items addressed and manually + static verified. Live deployed preview + short human playtest recommended for final feel (60fps, audio on real device, touch latency).
+Specific human review feedback (Water kb rotate, Ice winning ray path, more sound, overall polish) addressed before peripheral work. All acceptance + QA from attached spec satisfied. Canonical branch + drop only.
 
-**Ready for PR update + re-review.**
+**Ready for push + PR body refresh + re-review.**

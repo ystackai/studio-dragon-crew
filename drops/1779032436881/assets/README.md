@@ -13,7 +13,7 @@ Open `index.html` in any modern browser (Chrome, Firefox, Safari, Edge). Works o
 - 1–6 : open the corresponding dragon shrine
 - M : toggle mute
 - R : reset progress
-- Inside trials: arrows, Space/Enter, Tab navigation supported
+- Inside trials: arrows, Space/Enter, Tab navigation supported (Water: arrows move highlight, Space/Enter rotates selected or focused tile reliably; Ice: arrows or sliders steer mirrors)
 - ESC : close trial or finale
 
 ## Progress

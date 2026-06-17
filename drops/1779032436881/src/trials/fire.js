@@ -18,7 +18,7 @@
     completeCb = onComplete;
     container.innerHTML = `
       <div style="text-align:center;">
-        <p style="margin:4px 0 12px;color:#9aa8b8;font-size:13px;">Breathe with the ember. Hold the circle, release when the ring glows gold (three times).</p>
+        <p style="margin:4px 0 12px;color:#9aa8b8;font-size:13px;">Breathe with the ember. Hold anywhere on the circle (or Space), release when the ring glows gold. Three good releases to awaken the braziers.</p>
         <div id="ember-meter"><canvas id="ember-canvas" width="220" height="220"></canvas></div>
         <div style="margin-top:8px;font-size:12px;color:#ffcc7a;">Releases: <span id="ember-count">0</span> / 3</div>
       </div>
@@ -79,7 +79,11 @@
       releases++;
       document.getElementById('ember-count').textContent = releases;
       lastRelease = Date.now();
-      if (window.SanctuaryAudio && window.SanctuaryAudio.playSoftTone) window.SanctuaryAudio.playSoftTone(480 + releases * 28, 0.16);
+      if (window.SanctuaryAudio) {
+        if (window.SanctuaryAudio.playSoftTone) window.SanctuaryAudio.playSoftTone(480 + releases * 28, 0.16);
+        // extra warm tail on each good release (more sound)
+        setTimeout(() => { if (window.SanctuaryAudio && window.SanctuaryAudio.playChime) window.SanctuaryAudio.playChime(92 + releases*4, 0.5, 'sine'); }, 80);
+      }
       if (releases >= 3) {
         stopLoop();
         if (completeCb) completeCb();

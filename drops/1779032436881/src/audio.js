@@ -45,16 +45,28 @@
         const lfo = audioCtx.createOscillator();
         lfo.type = 'sine'; lfo.frequency.value = 0.07;
         const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 4.5;
-        const shaper = audioCtx.createGain(); shaper.gain.value = 0.6;
         lfo.connect(lfoGain); lfoGain.connect(ambientOsc.frequency);
         ambientOsc.connect(ambientFilter); ambientFilter.connect(ambientGain); ambientGain.connect(masterGain);
         lfo.start(); ambientOsc.start();
+        // second soft layer for richer waking sanctuary (more ambient depth with blessings)
+        const pad = audioCtx.createOscillator(); pad.type = 'sine'; pad.frequency.value = 87;
+        const padG = audioCtx.createGain(); padG.gain.value = 0.0001;
+        const padF = audioCtx.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 260;
+        pad.connect(padF); padF.connect(padG); padG.connect(masterGain);
+        pad.start();
+        // store for ramp
+        ambientOsc._pad = pad; ambientOsc._padG = padG;
       } catch (e) {}
     }
     if (ambientGain) {
       const target = 0.0001 + (blessingCount * 0.013);
       ambientGain.gain.cancelScheduledValues(audioCtx.currentTime);
       ambientGain.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 1.2);
+      if (ambientOsc && ambientOsc._padG) {
+        const pTarget = 0.0001 + (blessingCount * 0.007);
+        ambientOsc._padG.gain.cancelScheduledValues(audioCtx.currentTime);
+        ambientOsc._padG.gain.linearRampToValueAtTime(pTarget, audioCtx.currentTime + 1.6);
+      }
     }
   }
 
@@ -106,6 +118,11 @@
     if (muted || !ensureCtx()) return;
     const chord = ok ? [312, 392, 466, 622] : [280, 355, 420];
     chord.forEach((f, i) => setTimeout(() => playChime(f, ok ? 0.7 : 0.22, 'sine'), i * 38));
+    if (ok) {
+      // extra distant choir pad layer for success (more sound, visual tide/pearl always present)
+      setTimeout(() => playChime(740, 1.1, 'sine'), 120);
+      setTimeout(() => playChime(495, 0.9, 'triangle'), 260);
+    }
   }
   function playLavaTurn() {
     if (muted || !ensureCtx()) return;
@@ -114,6 +131,17 @@
   function playSnowCatch(n) {
     if (muted || !ensureCtx()) return;
     playChime(810 + ((n||0)%3)*22, 0.11, 'sine');
+  }
+  function playWaterFlow(ok) {
+    if (muted || !ensureCtx()) return;
+    // soft liquid plink for flow progress or win
+    const f = ok ? 520 : 410;
+    playChime(f, ok ? 0.18 : 0.09, 'sine');
+    if (ok) setTimeout(() => playChime(680, 0.22, 'triangle'), 70);
+  }
+  function playMirrorTone(i) {
+    if (muted || !ensureCtx()) return;
+    playChime(265 + (i||0)*9, 0.07, 'sine');
   }
 
   // public
@@ -129,6 +157,8 @@
     playSeaChord,
     playLavaTurn,
     playSnowCatch,
+    playWaterFlow,
+    playMirrorTone,
     updateAmbientForBlessings,
     isMuted: () => muted
   };

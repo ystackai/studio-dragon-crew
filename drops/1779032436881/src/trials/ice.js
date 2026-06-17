@@ -5,15 +5,15 @@
  * Success: crystalline bridges + sharper stars in sanctuary.
  */
 (function (global) {
-  let angles = [22, 68, 115]; // starting (misses gate); steer with sliders/drag/keyboard until the path glows gold into gate
+  let angles = [15, 30, 45]; // near-miss start (gp~44); small left on middle mirror or drags around it creates the winning path to gate (gp<38)
   let canvas, ctx, onCompleteRef = null;
   let dragging = -1;
   let keyHandler = null;
 
   function init(container, onComplete) {
     onCompleteRef = onComplete;
-    // Start near a known winnable path (e.g. ~8/22/38 or small tweaks around it). Player can discover by small drags or arrows.
-    angles = [12, 27, 41];
+    // Start near-miss so player must steer (small adjustments on middle mirror win from here). Live preview + proximity guide make the path discoverable.
+    angles = [15, 30, 45];
     container.innerHTML = `
       <div style="text-align:center;">
         <p style="margin:0 0 10px;color:#9aa8b8;font-size:13px;">Drag mirrors or ←→ on sliders or arrows. Steer the beam through reflections until it reaches the gate on the right. Small adjustments near 8–45° often clear the path.</p>
@@ -26,7 +26,7 @@
             </div>
           `).join('')}
         </div>
-        <div id="ice-hint" style="margin-top:8px;font-size:11px;color:#a8d5ff;opacity:0.7;">Live path shows bends. Gold beam + gate glow = win. Try small steps around 12° / 27° / 41°.</div>
+        <div id="ice-hint" style="margin-top:8px;font-size:11px;color:#a8d5ff;opacity:0.7;">Live path shows bends. Gold beam + gate glow = win. From 15/30/45, steer the middle mirror a little (left arrow or drag) until it flies gold into the gate.</div>
       </div>
     `;
 
@@ -40,7 +40,7 @@
         angles[i] = parseFloat(r.value);
         draw();
         checkWin();
-        if (window.SanctuaryAudio && window.SanctuaryAudio.playSoftTone) window.SanctuaryAudio.playSoftTone(310 + i*18, 0.07);
+        if (window.SanctuaryAudio && window.SanctuaryAudio.playMirrorTone) window.SanctuaryAudio.playMirrorTone(i);
       });
     });
 
@@ -74,16 +74,16 @@
     const sliders = [0,1,2].map(i => container.querySelector(`#ice-m${i}`));
     sliders.forEach((s, i) => {
       s.addEventListener('keydown', (ev) => {
-        if (ev.key === 'ArrowLeft') { angles[i] = Math.max(0, angles[i] - 6); s.value = angles[i]; draw(); checkWin(); ev.preventDefault(); }
-        if (ev.key === 'ArrowRight') { angles[i] = Math.min(180, angles[i] + 6); s.value = angles[i]; draw(); checkWin(); ev.preventDefault(); }
+        if (ev.key === 'ArrowLeft') { angles[i] = Math.max(0, angles[i] - 6); s.value = angles[i]; draw(); checkWin(); if (window.SanctuaryAudio && window.SanctuaryAudio.playMirrorTone) window.SanctuaryAudio.playMirrorTone(i); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { angles[i] = Math.min(180, angles[i] + 6); s.value = angles[i]; draw(); checkWin(); if (window.SanctuaryAudio && window.SanctuaryAudio.playMirrorTone) window.SanctuaryAudio.playMirrorTone(i); ev.preventDefault(); }
       });
     });
 
     // global arrows when no focus (nice for game feel)
     keyHandler = (ev) => {
       if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-      if (ev.key === 'ArrowLeft') { angles[1] = Math.max(0, angles[1]-8); syncSliders(container); draw(); checkWin(); }
-      if (ev.key === 'ArrowRight') { angles[1] = Math.min(180, angles[1]+8); syncSliders(container); draw(); checkWin(); }
+      if (ev.key === 'ArrowLeft') { angles[1] = Math.max(0, angles[1]-8); syncSliders(container); draw(); checkWin(); if (window.SanctuaryAudio && window.SanctuaryAudio.playMirrorTone) window.SanctuaryAudio.playMirrorTone(1); }
+      if (ev.key === 'ArrowRight') { angles[1] = Math.min(180, angles[1]+8); syncSliders(container); draw(); checkWin(); if (window.SanctuaryAudio && window.SanctuaryAudio.playMirrorTone) window.SanctuaryAudio.playMirrorTone(1); }
     };
     document.addEventListener('keydown', keyHandler);
 
@@ -91,7 +91,7 @@
     // gentle auto-hint after 12s if not solved
     setTimeout(() => {
       const hint = container.querySelector('#ice-hint');
-      if (hint && !isSolved()) hint.textContent = 'Tip: Try ~8° / 22° / 38° (or nearby); steer until beam flies into the gate and glows gold.';
+      if (hint && !isSolved()) hint.textContent = 'Tip: From the start 15°/30°/45°, press left on middle slider or drag the center mirror down ~8°; watch for gold beam into gate.';
     }, 12000);
 
     return () => { document.removeEventListener('keydown', keyHandler); };
@@ -158,14 +158,14 @@
     const proj = { x: pos.x + dir.x * march, y: pos.y + dir.y * march };
     points.push(proj);
 
-    // does the free-flight ray cross the gate rect? (slightly forgiving y for tactile discovery)
+    // does the free-flight ray cross the gate rect? (forgiving y for tactile discovery; player can steer a clear path)
     const atGateX = (gateX - pos.x) / (dir.x || 0.0001);
     let hitsGate = false;
     let gateProximity = 999;
     if (atGateX > 6 && atGateX < 115) {
       const yAtGate = pos.y + dir.y * atGateX;
       gateProximity = Math.abs(yAtGate - gateY);
-      if (yAtGate > gateY - 38 && yAtGate < gateY + 38) hitsGate = true;
+      if (yAtGate > gateY - 42 && yAtGate < gateY + 42) hitsGate = true;
     }
     return { points, hitsGate, gateProximity };
   }
@@ -245,8 +245,8 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // proximity "warm" guide when close but not yet through gate (helps discovery)
-    if (!solved && gateProximity < 28) {
+    // proximity "warm" guide when close but not yet through gate (helps discovery; wider now for feel)
+    if (!solved && gateProximity < 36) {
       ctx.strokeStyle = 'rgba(244,217,168,0.45)';
       ctx.lineWidth = 1.2;
       ctx.beginPath();
@@ -284,7 +284,7 @@
       ctx.strokeStyle = '#f4d9a8';
       ctx.lineWidth = 3;
       ctx.strokeRect(gateX - 16, gateY - 24, 32, 48);
-    } else if (gateProximity < 22) {
+    } else if (gateProximity < 30) {
       ctx.fillStyle = 'rgba(244,217,168,0.8)';
       ctx.font = '500 11px system-ui';
       ctx.fillText('Close — keep steering the final leg', 102, 26);

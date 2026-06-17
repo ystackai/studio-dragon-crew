@@ -54,9 +54,9 @@
 
     container.innerHTML = `
       <div style="text-align:center;">
-        <p style="margin:2px 0 8px;color:#9aa8b8;font-size:13px;">Tap or select tiles to rotate pipes. Turn the L (top-right) to connect spring to basin. Blue = flowing.</p>
+        <p style="margin:2px 0 8px;color:#9aa8b8;font-size:13px;">Tap/click or use keyboard on tiles to rotate pipes. Turn the L (top-right corner) to connect spring to basin. Blue = flowing.</p>
         <div id="flow-grid" tabindex="0" aria-label="Pipe grid 5 by 5. Use arrows to move, Space or Enter to rotate focused pipe."></div>
-        <div style="margin-top:8px;font-size:11px;color:#4fb3d8;opacity:0.75;">Keyboard: Tab/arrows select, Space/Enter rotates focused tile. One turn solves the L corner.</div>
+        <div style="margin-top:8px;font-size:11px;color:#4fb3d8;opacity:0.75;">Keyboard: focus grid or Tab to tiles, arrows move highlight, Space/Enter rotates. One turn on the top-right L solves it.</div>
       </div>
     `;
 
@@ -64,38 +64,49 @@
 
     const gridEl = container.querySelector('#flow-grid');
 
-    // Robust scoped + global keyboard: arrows always move selection; Space/Enter rotates the selected (or focused tile)
-    const key = (e) => {
+    // Contained, reliable keyboard for Water (addresses review: Enter/Space must rotate reliably).
+    // Capture on grid routes arrows (from tiles or self) to custom selection; space on grid (not direct tile) rotates selected.
+    // Direct Tab to tiles + their space rotates the focused tile immediately. Focus grid on open for arrow+space without extra tabs.
+    const onGridKey = (e) => {
       const isSpaceEnter = (e.key === ' ' || e.key === 'Enter');
-      // If a flow-tile is focused, let its own key handler also fire (it will call rotate); we still allow global as safety
-      if (isSpaceEnter && selected) {
+      if (e.key === 'ArrowLeft') { moveSel(-1, 0); e.preventDefault(); return; }
+      if (e.key === 'ArrowRight') { moveSel(1, 0); e.preventDefault(); return; }
+      if (e.key === 'ArrowUp') { moveSel(0, -1); e.preventDefault(); return; }
+      if (e.key === 'ArrowDown') { moveSel(0, 1); e.preventDefault(); return; }
+      if (isSpaceEnter) {
         e.preventDefault();
-        const c = getContainer();
-        rotate(selected.x, selected.y, c);
-        return;
+        // If the key originated on a specific tile (Tab direct), let its handler do the per-tile rotate (avoids double).
+        if (e.target && e.target.classList && e.target.classList.contains('flow-tile')) {
+          return;
+        }
+        if (selected) {
+          const c = getContainer();
+          rotate(selected.x, selected.y, c);
+        }
       }
-      if (e.key === 'ArrowLeft') { moveSel(-1, 0); e.preventDefault(); }
-      if (e.key === 'ArrowRight') { moveSel(1, 0); e.preventDefault(); }
-      if (e.key === 'ArrowUp') { moveSel(0, -1); e.preventDefault(); }
-      if (e.key === 'ArrowDown') { moveSel(0, 1); e.preventDefault(); }
     };
-    // attach to both document (for when focus is on body) and gridEl for better scoping
-    document.addEventListener('keydown', key, true);
-    if (gridEl) gridEl.addEventListener('keydown', key);
-    container._waterKey = key;
-    container._waterGridKey = key;
+    if (gridEl) {
+      gridEl.addEventListener('keydown', onGridKey, true); // capture so arrows from child tiles are routed to moveSel
+      container._waterGridKey = onGridKey;
+    }
 
     // ensure a useful default selection on the L tile that needs the one rotate
     if (!selected) {
       selected = { x: 4, y: 0 };
       renderGrid(container);
     }
-    // focus the grid for immediate keyboard use
-    setTimeout(() => { if (gridEl) gridEl.focus(); }, 30);
+    // focus the grid for immediate keyboard use (arrows + space work without tabbing into tiles)
+    setTimeout(() => { if (gridEl) { gridEl.focus(); } }, 40);
+
+    // per-tile handlers (for direct Tab navigation): rotate the *tapped* tile
+    // (these are re-attached on every renderGrid)
+    // Note: the tile key handler does stopProp + rotate directly.
 
     return () => {
-      document.removeEventListener('keydown', key, true);
-      if (gridEl && container._waterGridKey) gridEl.removeEventListener('keydown', container._waterGridKey);
+      if (gridEl && container._waterGridKey) {
+        gridEl.removeEventListener('keydown', container._waterGridKey, true);
+      }
+      // no document listener to clean
     };
   }
 
@@ -118,7 +129,8 @@
         div.style.transform = `rotate(${((tile.rot % 4) * 90)}deg)`;
         if (selected && selected.x === x && selected.y === y) {
           div.style.outline = '2px solid #f4d9a8';
-          div.style.boxShadow = '0 0 0 1px rgba(244,217,168,0.3)';
+          div.style.boxShadow = '0 0 0 3px rgba(244,217,168,0.25)';
+          div.style.borderColor = '#f4d9a8';
         }
 
         const isFlowing = isConnected(x, y);
@@ -137,9 +149,8 @@
             ev.stopPropagation();
             select(x, y, container);
             rotate(x, y, container);
-          } else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight' || ev.key === 'ArrowUp' || ev.key === 'ArrowDown') {
-            // allow arrow nav to bubble to global handler for selection move
           }
+          // arrows: grid-level capture listener moves the selection highlight; no action needed here
         });
         gridEl.appendChild(div);
       }
@@ -230,10 +241,16 @@
   }
 
   function checkWin(container) {
-    if (isConnected(SIZE-1, SIZE-1) && onCompleteRef) {
+    const won = isConnected(SIZE-1, SIZE-1);
+    if (won && onCompleteRef) {
+      if (window.SanctuaryAudio && window.SanctuaryAudio.playWaterFlow) window.SanctuaryAudio.playWaterFlow(true);
       setTimeout(() => {
         if (onCompleteRef) onCompleteRef();
       }, 420);
+    } else if (container && window.SanctuaryAudio && window.SanctuaryAudio.playWaterFlow) {
+      // light tick when a rotate makes new pipes valid (gentle progress feel)
+      // only if at least the first few are flowing
+      if (isConnected(1,0) || isConnected(2,0)) window.SanctuaryAudio.playWaterFlow(false);
     }
     if (container) renderGrid(container);
   }
