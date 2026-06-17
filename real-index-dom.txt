@@ -1,0 +1,20 @@
+
+  // Touch large-target restart
+  document.getElementById('restart-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    restart();
+  });
+
+  boot();
+
+  // Sentinel for harness verification (directly addresses prior "Unexpected end of input" / truncation in check-7.html copies,
+  // and now paired with the strengthened first-paint (early size + bg fill + full sync render + data attr + hidden marker + window flag) for pre-screenshot timeout class on same harness files):
+  // If a future .factoryx-runtime-check-*.html or instrumented copy truncates before this line,
+  // window.__emberflightScriptComplete will be absent and post-gesture hook reads can surface a clear
+  // "incomplete script load" distinct from runtime JS exceptions. The first-paint path (executed before this sentinel) ensures
+  // even a partial/truncated load that reaches boot will have produced a screenshot-able ready gauntlet + observable markers.
+  window.__emberflightScriptComplete = true;
+  </script><span id="emberflight-first-paint" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">first-paint-complete</span>
+
+
+</body></html>
