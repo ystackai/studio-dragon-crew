@@ -29,4 +29,5 @@ Under FactoryX preview copies this will be served at paths like `/factoryx/previ
 **Entrypoint file:**  
 `.factoryx/preview-entrypoint` (single line: the relative path above) — updated for this deliverable.
 
+**PR:** https://github.com/ystackai/studio-dragon-crew/pull/80 (canonical for this work-order branch)  
 **Last updated:** 2026-06-17 (rework: direct game preview root + real assets visible/audible)

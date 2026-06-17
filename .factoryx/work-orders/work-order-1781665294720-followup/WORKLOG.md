@@ -56,3 +56,7 @@
 **Status:** Implementation + local verification complete. Ready for push + PR + live re-smoke.
 
 **Last updated:** 2026-06-17 (rework pass complete locally)
+
+**PR:** https://github.com/ystackai/studio-dragon-crew/pull/80 (created after canonical push; full prompt + context in body)
+
+**Last updated:** 2026-06-17 (rework pass complete locally; PR open)
