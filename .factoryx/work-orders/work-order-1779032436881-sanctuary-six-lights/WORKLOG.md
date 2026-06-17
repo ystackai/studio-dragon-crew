@@ -69,7 +69,7 @@ Core verb (explore + tune/trace/rotate/guide) obvious in <30s. Input <100ms + fe
 - Next: commit only the functional+doc deltas, push the canonical branch ref, refresh PR_UPDATE + this WORKLOG, update VERIFICATION with evidence.
 
 **Current artifact:** drops/1779032436881/
-**Status:** Review items (Water kb, Ice path, sound, supporting polish) directly addressed + verified via logic + headless. Ready to push + request re-review.
+**Status:** Review items (Water kb, Ice path, sound, supporting polish) directly addressed + verified via logic + headless. Commit cd7d947 on branch; push attempted (auth limited in worker for https push; see PUSH_NOTE.md). PR body to be refreshed from PR_UPDATE.md with WorkOrder context + evidence for re-review.
 **Last updated:** 2026-06-17 (rework for human review feedback on Water/Ice/sound/polish)
 
 ## Historical notes (from branch)
