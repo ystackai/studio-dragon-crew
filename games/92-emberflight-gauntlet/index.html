@@ -89,14 +89,14 @@
   // One verb (weave + timed dash), one space (burning sky gauntlet)
   // Dragon Crew house style: weight, heat, consequence, mythic presence. Juicy feedback, session bests, two-pass Maw + carry-the-fire afterglow + crash bank legibility.
   // Pass 42: contact-sheet further enlarge/brighten + pre-screenshot re-harden (addresses 15:32 blocking + prior timeout on check-7)
-  // Pass 43: asset contract v2 — file-backed PNG/WAV (dragon-hero base, ember/hazard sprites, sky-haze, sfx-*) under assets/ + ASSET_MANIFEST + integration w/ fallback; addresses 17:25/17:45 blocking (no foundry; deliberate generator) before peripheral.
+  // Pass 43 + rework-1781634304247-7-1: asset contract v2 + foundry feedback pass — file-backed PNG/WAV (enhanced v2 dragon-hero etc for "better art" per operator "use the asset foundry... procedurally generated stuff looks terrible"); foundry service attempted (unreachable) → v2 local generator; see .factoryx/work-orders/work-order-1781634304247-7-1/ASSET_MANIFEST.md; integration + fallback unchanged.
   // ============================================================
 
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
   let W = 1280, H = 720, DPR = 1;
 
-  // Pass 43 asset integration (file-backed, fallback-safe): dragon-hero.png as bright hero base layer, ember/hazard/sky sprites for pop, WAV buffers for key SFX instead of oscillator-only.
+  // Pass 43 + 1781634304247-7-1 asset integration (file-backed v2, fallback-safe): enhanced dragon-hero base etc from foundry-attempt generator; same load + fallback contract.
   // Loads only after explicit gesture (audio gate). If assets missing (e.g. harness cp of .html only) or not ready, all prior procedural/osc paths execute unchanged — keeps check-7 pre-screenshot + p* instrument paths bit-identical and clean.
   const assets = { dragon: null, ember: null, spire: null, vent: null, haze: null };
   let sfxBuffers = {}; // populated from WAV via decodeAudioData
