@@ -85,6 +85,11 @@ let lastTelemetryTick = 0;
 let prevFrameTime = performance.now();
 let globalTime = 0;
 
+// === Asset skill proof pack (generated file-backed assets under drops/.../assets/generated) ===
+let dragonBadgeEl = null;
+let whooshBuffer = null;
+let audioStarted = false;
+
 // === HUD refs ===
 let elScore, elState, elBeat;
 
@@ -113,6 +118,7 @@ function handleInput(clientX, clientY, ts) {
              // Boost
             const quality = 1.0 - (deviation / tolerance);
             flowScore = Math.min(1.0, flowScore + 0.04 * quality);
+            if (quality > 0.55 && audioStarted) playWhoosh(); // use generated asset sfx on strong cadence
         } else if (deviation < tolerance * 2.5) {
             flowScore = Math.min(1.0, flowScore + 0.015);
         } else {
@@ -184,6 +190,21 @@ function updateState(dt) {
 // === Rendering ===
 function updateHUD() {
     elScore.textContent = flowScore.toFixed(2);
+}
+
+function updateBadge() {
+    if (!dragonBadgeEl) dragonBadgeEl = document.getElementById('dragon-badge');
+    if (!dragonBadgeEl) return;
+    const a = 0.72 + flowScore * 0.28;
+    dragonBadgeEl.style.opacity = a.toFixed(2);
+    // subtle reaction to state (warm glow when active/flow high)
+    if (currentState === 'active' && flowScore > 0.45) {
+        dragonBadgeEl.style.boxShadow = '0 4px 18px rgba(255,170,70,0.32)';
+        dragonBadgeEl.style.borderColor = 'rgba(255,200,120,0.55)';
+    } else {
+        dragonBadgeEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+        dragonBadgeEl.style.borderColor = 'rgba(255,200,120,0.35)';
+    }
 }
 
 function renderTwilight(time) {
@@ -322,7 +343,7 @@ function createCreatureGeometry() {
      };
 }
 
-// === Audio (WebAudio procedural) ===
+// === Audio (WebAudio procedural + generated asset sfx) ===
 let audioCtx = null;
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -339,6 +360,28 @@ function playPulseSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + 0.45);
+}
+
+// Load the generated dragon-breath-whoosh.wav (real file-backed asset from proof pack)
+function loadWhooshAsset() {
+    if (whooshBuffer) return;
+    const url = 'assets/generated/dragon-breath-whoosh.wav';
+    fetch(url).then(r => r.arrayBuffer()).then(ab => {
+        if (!audioCtx) initAudio();
+        audioCtx.decodeAudioData(ab).then(buf => { whooshBuffer = buf; }).catch(() => {});
+    }).catch(() => { /* graceful fallback; original procedural sounds still work */ });
+}
+
+function playWhoosh() {
+    if (!audioCtx || !whooshBuffer) return;
+    try {
+        const src = audioCtx.createBufferSource();
+        src.buffer = whooshBuffer;
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.65 + Math.min(0.35, flowScore * 0.4);
+        src.connect(gain).connect(audioCtx.destination);
+        src.start();
+    } catch (e) {}
 }
 
 // Ambient drone for drift state
@@ -383,6 +426,7 @@ function frame(now) {
 
     updateState(dt);
     updateHUD();
+    updateBadge();
     updateDriftPad();
 
      // Telemetry tick
@@ -441,10 +485,9 @@ function init() {
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('pointerup', () => {});
 
-     // Audio init on first interaction
-    let audioStarted = false;
+     // Audio init on first interaction (gesture gate); also load generated whoosh asset
     canvas.addEventListener('pointerdown', () => {
-        if (!audioStarted) { initAudio(); audioStarted = true; }
+        if (!audioStarted) { initAudio(); audioStarted = true; loadWhooshAsset(); }
         playPulseSound();
     }, { passive: true });
 
@@ -452,6 +495,16 @@ function init() {
     elScore  = document.getElementById('score-val');
     elState  = document.getElementById('state-val');
     elBeat   = document.getElementById('beat-val');
+
+     // Wire the generated dragon badge (proof asset from skill pack) for dynamic feel
+    dragonBadgeEl = document.getElementById('dragon-badge');
+    if (dragonBadgeEl) {
+        // ensure it points at our generated file (idempotent if html already set)
+        if (!dragonBadgeEl.src || !dragonBadgeEl.src.includes('generated')) {
+            dragonBadgeEl.src = 'assets/generated/dragon-icon.jpg';
+        }
+        dragonBadgeEl.style.display = 'block';
+    }
 
      // Resize handler
     window.addEventListener('resize', () => {
