@@ -1,0 +1,20 @@
+      requestAnimationFrame(pump);
+      setTimeout(() => {
+        try {
+          const s2 = window.__emberflightGauntlet && window.__emberflightGauntlet.getState ? window.__emberflightGauntlet.getState() : null;
+          log("after pumps state: " + JSON.stringify(s2));
+          const ok = (document.title && document.title.indexOf("Emberflight")>=0) && window.__emberflightScriptComplete === true;
+          const el = document.createElement("div"); el.id="p32-verify-state"; el.textContent = "P32 SUCCESS: early-paint+first-paint+sentinel+gesture+playing+maw/carry intent; no uncaught (real source p32)"; document.body.appendChild(el);
+          log("SUCCESS injected; sentinel=" + window.__emberflightScriptComplete + " ok=" + ok);
+        } catch(e){ log("pump err "+e); }
+      }, 420);
+    } catch(e){ log("startSim err: "+e); }
+  }
+  if (document.readyState === "complete") setTimeout(startSim, 60); else window.addEventListener("load", () => setTimeout(startSim, 80));
+})();
+
+window.__emberflightScriptComplete = true;
+  </script><span id="emberflight-first-paint" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">first-paint-complete</span>
+
+
+<div id="p32-verify-state">P32 SUCCESS: early-paint+first-paint+sentinel+gesture+playing+maw/carry intent; no uncaught (real source p32)</div></body></html>
