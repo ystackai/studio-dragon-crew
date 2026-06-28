@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Dragon Crew: Sanctuary of the Six Lights</title>
+  <meta name="description" content="Befriend six elemental dragons and restore the floating Sanctuary through gentle magical trials. A cozy 2D fantasy experience from The Dragon Crew.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Critical inline styles for first paint */
+    #sanctuary { background: #0a121f; }
+    .loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #9aa8b8; font-size: 13px; letter-spacing: 0.1em; }
+  </style>
+</head>
+<body>
+  <div id="sanctuary-root">
+    <header>
+      <div id="title">
+        <span>SANCTUARY OF THE SIX LIGHTS</span>
+        <span class="subtitle">THE DRAGON CREW</span>
+      </div>
+      <div id="progress" aria-label="Blessings collected">
+        <!-- Runes injected by JS -->
+      </div>
+      <div id="controls">
+        <button id="mute-btn" class="ctrl" aria-label="Toggle sound" title="Mute / Unmute (M)">🔊</button>
+        <button id="reset-btn" class="ctrl" aria-label="Reset progress" title="Reset all blessings">Reset</button>
+      </div>
+    </header>
+
+    <div id="view">
+      <canvas id="sanctuary" width="1080" height="720" aria-label="The floating sanctuary with six dragon shrines around the central Sky Loom. Click or tap a shrine to begin its trial."></canvas>
+    </div>
+
+    <!-- Trial overlay -->
+    <div id="trial-overlay" role="dialog" aria-modal="true" aria-labelledby="trial-title">
+      <div id="trial-panel">
+        <div id="trial-header">
+          <img id="trial-portrait" class="dragon-portrait" alt="Dragon portrait" src="">
+          <div class="meta">
+            <h3 id="trial-title"></h3>
+            <p id="trial-subtitle"></p>
+          </div>
+        </div>
+        <div id="trial-body">
+          <!-- Dynamic per trial -->
+          <div id="trial-instruction" class="instruction"></div>
+          <div id="trial-content"></div>
+          <div id="trial-status"></div>
+        </div>
+        <div id="trial-actions">
+          <button id="trial-skip" class="ctrl">Return to Sanctuary</button>
+          <button id="trial-complete" class="ctrl" style="display:none; background:#2a3a2a; border-color:#6ee7b7; color:#6ee7b7;">Claim Blessing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finale -->
+    <div id="finale-overlay" role="dialog" aria-modal="true">
+      <canvas id="finale-canvas" width="820" height="380"></canvas>
+      <div id="result-card">
+        <div id="blessing-title"></div>
+        <div id="blessing-text"></div>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button id="share-btn" class="ctrl">Copy Blessing to Share</button>
+          <button id="replay-btn" class="ctrl">Return to Sanctuary</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Load order: state -> dragons -> effects -> audio -> trials -> main -->
+  <script src="src/state.js"></script>
+  <script src="src/dragons.js"></script>
+  <script src="src/effects.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/trials/fire.js"></script>
+  <script src="src/trials/ice.js"></script>
+  <script src="src/trials/water.js"></script>
+  <script src="src/trials/snow.js"></script>
+  <script src="src/trials/sea.js"></script>
+  <script src="src/trials/lava.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
