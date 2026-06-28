@@ -1,0 +1,39 @@
+{
+  "id": "dragon-crew-asset-skill-smoke-20260522",
+  "generated_at": "2026-05-22T13:26:49Z",
+  "source": "FACTORYX_GAME_ASSET_SERVICE_URL/v1/proof-pack",
+  "service_url": "http://100.97.47.98:8766",
+  "prompt": "Dragon Crew small proof pack: friendly elemental dragon portrait icon 256x256 for UI button, short 2-4 second magical whoosh sound for breath attack feedback, clean transparent PNG and browser playable WAV or MP3",
+  "acceptance": "Flux image + MMAudio sfx loaded and playable in browser game with no errors",
+  "assets": [
+    {
+      "id": "dragon-icon",
+      "kind": "image",
+      "path": "/public/assets/dragon-icon.png",
+      "tool": "Flux",
+      "backend": "comfyui",
+      "prompt": "friendly elemental dragon portrait icon 256x256 for UI button, Dragon Crew style, welcoming no horror",
+      "intendedUse": "UI badge / button icon for Dragon Crew themed rhythm game; visible branding element",
+      "dimensions": "256x256",
+      "format": "PNG",
+      "status": "in-game",
+      "license": "generated for this Work Order via FactoryX asset service",
+      "verification": "PNG valid, served from /assets/, loaded via Image() in game without decode error, visible as overlay in gameplay viewport"
+    },
+    {
+      "id": "dragon-breath-sfx",
+      "kind": "audio",
+      "path": "/public/assets/dragon-breath-sfx.wav",
+      "tool": "MMAudio",
+      "backend": "mmaudio",
+      "prompt": "short magical whoosh sound for breath attack feedback, clean, browser playable",
+      "intendedUse": "gameplay audio feedback for dragon elemental action in Rhythm Drift game",
+      "duration": "approx 3s",
+      "format": "WAV",
+      "status": "in-game",
+      "license": "generated for this Work Order via FactoryX asset service",
+      "verification": "WAV valid RIFF/WAVE, decoded via WebAudio, played on first user gesture, no console decode errors, graceful fallback if autoplay blocked"
+    }
+  ],
+  "notes": "Only real generated assets (Flux + MMAudio) copied; unavailable providers used procedural-smoke fallbacks and were skipped. Service health confirmed OK before request. Existing Rhythm Drift game inspected and confirmed bootable (WebGL canvas, pointer input, procedural audio init on gesture, no fatal errors in source)."
+}
