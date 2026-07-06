@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bunny Orbit</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:absolute;top:0;left:0;width:100%;pointer-events:none;z-index:10}
+#hud-top{display:flex;justify-content:space-between;padding:12px 16px;color:#fff;font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+#planet-counter{font-weight:700;color:#ffd54f}
+#speed-indicator{font-size:12px;color:#aaa}
+#burn-bar{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:200px;height:6px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+#burn-fill{width:0%;height:100%;background:linear-gradient(90deg,#ff6f00,#ffab00);border-radius:3px;transition:none}
+#message{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:28px;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.9);pointer-events:none;opacity:0;transition:opacity .4s}
+#message.visible{opacity:1}
+#title-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(20,10,40,.7),rgba(0,0,0,.95));z-index:20;color:#fff;text-align:center}
+#title-overlay h1{font-size:42px;color:#ffd54f;margin-bottom:8px;text-shadow:0 0 20px rgba(255,213,79,.5)}
+#title-overlay .subtitle{font-size:16px;color:#b0bec5;margin-bottom:24px}
+#title-overlay .start-btn{pointer-events:auto;padding:14px 36px;font-size:20px;background:linear-gradient(135deg,#ff6f00,#ff8f00);color:#fff;border:none;border-radius:28px;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.3);box-shadow:0 4px 20px rgba(255,111,0,.4)}
+#title-overlay .start-btn:hover{transform:scale(1.05)}
+#title-overlay .instructions{font-size:13px;color:#90a4ae;margin-top:18px}
+#debrief-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(20,10,40,.8),rgba(0,0,0,.95));z-index:20;color:#fff;text-align:center}
+#debrief-overlay h1{font-size:36px;color:#66bb6a;margin-bottom:8px;text-shadow:0 0 20px rgba(102,187,106,.5)}
+#debrief-overlay .stat{font-size:16px;color:#b0bec5;margin:4px 0}
+#debrief-overlay .replay-btn{pointer-events:auto;padding:12px 32px;font-size:18px;background:linear-gradient(135deg,#43a047,#66bb6a);color:#fff;border:none;border-radius:24px;cursor:pointer;margin-top:20px;box-shadow:0 4px 16px rgba(67,160,71,.4)}
+#planet-label{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;text-shadow:0 1px 6px rgba(0,0,0,.8);pointer-events:none;opacity:0;transition:opacity .3s}
+#planet-label.visible{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+<div id="hud-top">
+<span id="planet-counter">Planets: 0 / 6</span>
+<span id="speed-indicator"></span>
+</div>
+</div>
+<div id="burn-bar"><div id="burn-fill"></div></div>
+<div id="message"></div>
+<div id="planet-label"></div>
+<div id="title-overlay">
+<h1>Bunny Orbit</h1>
+<div class="subtitle">Orbit-hop between planets to reach the Carrot Moon</div>
+<button class="start-btn" id="start-btn">Launch!</button>
+<div class="instructions">
+Hold <b>Space</b> or <b>click/tap</b> to burn &middot; Release to drift<br>
+Land on planets to slingshot toward the Carrot Moon
+</div>
+</div>
+<div id="debrief-overlay">
+<h1 id="debrief-title">Carrot Moon Reached!</h1>
+<div class="stat" id="debrief-planets">Planets visited: 6</div>
+<div class="stat" id="debrief-time">Time: 42s</div>
+<div class="stat" id="debrief-rating">Rating: Star Star Star</div>
+<button class="replay-btn" id="replay-btn">Play Again</button>
+</div>
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="rng.js"></script>
+<script src="tween.js"></script>
+<script src="input.js"></script>
+<script src="game-loop.js"></script>
+<script src="scenes.js"></script>
+<script src="particles.js"></script>
+<script src="webaudio-kit.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
